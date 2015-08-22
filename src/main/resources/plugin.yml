@@ -1,0 +1,8 @@
+name: ${project.name}
+version: ${project.version}
+description: '${project.description}'
+depend: []
+softdepend: [d]
+authors: [${project.authors}]
+website: ${project.url}
+main: ${project.mainClass}
