@@ -26,7 +26,15 @@ package me.st28.flexseries.flexlib.plugin.module;
 
 import me.st28.flexseries.flexlib.log.LogHelper;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
+import me.st28.flexseries.flexlib.storage.flatfile.YamlFileManager;
 import org.apache.commons.lang.Validate;
+import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.event.Listener;
+
+import java.io.File;
+import java.io.InputStreamReader;
 
 /**
  * Handles a feature of a {@link FlexPlugin}.
@@ -41,6 +49,10 @@ public abstract class FlexModule<T extends FlexPlugin> {
     protected final String name;
     protected final String description;
     protected final ModuleDescriptor descriptor;
+
+    private File dataFolder;
+
+    private YamlFileManager configFile;
 
     public FlexModule(T plugin, String name, String description, ModuleDescriptor descriptor) {
         Validate.notNull(plugin, "Plugin cannot be null.");
@@ -95,8 +107,66 @@ public abstract class FlexModule<T extends FlexPlugin> {
         return descriptor;
     }
 
+    /**
+     * @return the data folder for this module. Will be created if it doesn't already exist.
+     */
+    public final File getDataFolder() {
+        if (!dataFolder.exists()) {
+            dataFolder.mkdirs();
+        }
+        return dataFolder;
+    }
+
+    /**
+     * @return the configuration file for this module.
+     */
+    public final FileConfiguration getConfig() {
+        if (configFile == null) {
+            throw new UnsupportedOperationException("This module does not have a configuration file.");
+        }
+        return configFile.getConfig();
+    }
+
+    /**
+     * Reloads the configuration file for this module.
+     */
+    public final void reloadConfig() {
+        if (configFile != null) {
+            try {
+                configFile.reload();
+                FileConfiguration config = configFile.getConfig();
+
+                config.addDefaults(YamlConfiguration.loadConfiguration(new InputStreamReader(plugin.getResource("modules/" + name + "/config.yml"))));
+                config.options().copyDefaults(true);
+                configFile.save();
+                configFile.reload();
+            } catch (Exception ex) {
+                LogHelper.severe(this, "An exception occurred while reloading the configuration file.", ex);
+            }
+        }
+    }
+
+    /**
+     * Saves the module's configuration file.
+     */
+    public final void saveConfig() {
+        if (configFile != null) {
+            configFile.save();
+        }
+    }
+
     public final void onEnable() {
         status = ModuleStatus.LOADING;
+
+        dataFolder = new File(plugin.getDataFolder() + File.separator + name);
+
+        if (plugin.getResource("modules/" + name + "/config.yml") != null) {
+            configFile = new YamlFileManager(plugin.getDataFolder() + File.separator + "config-" + name + ".yml");
+        } else {
+            configFile = null;
+        }
+
+        reloadConfig();
 
         try {
             handleEnable();
@@ -112,11 +182,17 @@ public abstract class FlexModule<T extends FlexPlugin> {
             throw new RuntimeException("An exception occurred while reloading module '" + name + "'", ex);
         }
 
+        if (this instanceof Listener) {
+            Bukkit.getPluginManager().registerEvents((Listener) this, plugin);
+        }
+
         status = ModuleStatus.ENABLED;
     }
 
     public final void onReload() {
         status = ModuleStatus.RELOADING;
+
+        reloadConfig();
 
         try {
             handleReload();
@@ -132,18 +208,16 @@ public abstract class FlexModule<T extends FlexPlugin> {
         try {
             handleSave(async);
         } catch (Exception ex) {
-            throw new RuntimeException("An exception occurred while saving module '" + name + "'", ex);
+            LogHelper.severe(this, "An exception occurred while saving module '" + name + "'", ex);
         }
+
+        saveConfig();
     }
 
     public final void onDisable() {
         status = ModuleStatus.UNLOADING;
 
-        try {
-            handleSave(false);
-        } catch (Exception ex) {
-            LogHelper.severe(this, "An exception occurred while saving module '" + name + "'", ex);
-        }
+        onSave(false);
 
         try {
             handleDisable();
