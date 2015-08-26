@@ -158,13 +158,13 @@ public class FlexPlugin extends JavaPlugin {
 
         // Determine if this plugin has a configuration file or not, and save it if there is one.
         if (getResource("config.yml") != null) {
+            hasConfig = true;
+
             saveDefaultConfig();
             getConfig().options().copyDefaults(true);
             saveConfig();
 
             reloadConfig();
-
-            hasConfig = true;
         }
 
         // LOAD MODULES //
