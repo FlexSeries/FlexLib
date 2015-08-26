@@ -88,7 +88,7 @@ public class MessageManager<T extends FlexPlugin> extends FlexModule<T> {
             tags.put("default", "&8[&6{PLUGIN}&8] ");
         }
 
-        LogHelper.info(this, "Loaded " + messages.size() + " messages and " + tags.size() + " tags.");
+        LogHelper.info(this, "Loaded " + messages.size() + " message(s) and " + tags.size() + " tag(s).");
     }
 
     private void loadKey(ConfigurationSection section, String key) {
