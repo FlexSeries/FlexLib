@@ -1,0 +1,7 @@
+general:
+  errors:
+    plugin_not_found: '{mood=error}Plugin {o=input_sanitized}{PLUGIN}{/} not found.'
+
+lib_plugin:
+  errors:
+    plugin_not_flexplugin: '{mood=error}Plugin {o=input_sanitized}{PLUGIN}{/} is not a FlexPlugin.'

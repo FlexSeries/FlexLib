@@ -1,0 +1,17 @@
+formats:
+  moods:
+    error: '&c'
+    notice: '&9'
+
+  objects:
+    item: '&6' # Generic item
+    input: '''&6{?}{mood=.}'''
+    input_sanitized: '''&6{?}{mood=.}'''
+    player_online: '&a' # A matched online player's name
+    player_offline: '&c' # A matched offline player's name
+
+general messages: # Generic messages that can be used by other plugins
+  errors:
+    player_not_found: '{mood=error}Player {o=input}{NAME}{/} not found.'
+    player_not_found_offline: '{mood=error}Offline player {o=input}{NAME}{/} not found.'
+    no_permission: '{mood=error}You do not have permission to do this.'

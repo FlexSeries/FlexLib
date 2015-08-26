@@ -22,20 +22,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package me.st28.flexseries.flexlib;
+package me.st28.flexseries.flexlib.message.reference;
 
-import me.st28.flexseries.flexlib.message.MessageManager;
-import me.st28.flexseries.flexlib.message.MessageMasterManager;
-import me.st28.flexseries.flexlib.plugin.FlexPlugin;
+import com.stealthyone.mcb.mcml.MCMLBuilder;
+import com.stealthyone.mcb.mcml.shade.fanciful.FancyMessage;
+import org.apache.commons.lang.Validate;
+import org.bukkit.command.CommandSender;
 
-public final class FlexLib extends FlexPlugin {
+import java.util.Map;
 
-    @Override
-    public void handleLoad() {
-        registerModule(new MessageMasterManager(this));
-        registerModule(new MessageManager<>(this));
+public class FancyMessageReference implements MessageReference {
+
+    private FancyMessage message;
+
+    public FancyMessageReference(String message) {
+        this(message, null);
     }
 
+    public FancyMessageReference(String message, Map<String, Object> replacements) {
+        Validate.notNull(message, "Message cannot be null.");
+        this.message = new MCMLBuilder(message, replacements).getFancyMessage();
+    }
+
+    public FancyMessageReference(FancyMessage message) {
+        Validate.notNull(message, "Message cannot be null.");
+        this.message = message;
+    }
+
+    @Override
+    public void sendTo(CommandSender sender) {
+        Validate.notNull(sender, "Sender cannot be null.");
+        message.send(sender);
     }
 
 }

@@ -22,20 +22,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package me.st28.flexseries.flexlib;
+package me.st28.flexseries.flexlib.message.reference;
 
-import me.st28.flexseries.flexlib.message.MessageManager;
-import me.st28.flexseries.flexlib.message.MessageMasterManager;
-import me.st28.flexseries.flexlib.plugin.FlexPlugin;
+import org.bukkit.command.CommandSender;
 
-public final class FlexLib extends FlexPlugin {
+public class PlainMessageReference implements MessageReference {
 
-    @Override
-    public void handleLoad() {
-        registerModule(new MessageMasterManager(this));
-        registerModule(new MessageManager<>(this));
+    private String message;
+
+    public PlainMessageReference(String message) {
+        this.message = message;
     }
 
+    @Override
+    public void sendTo(CommandSender sender) {
+        sender.sendMessage(message);
     }
 
 }
