@@ -9,11 +9,5 @@ formats:
     input_sanitized: '&6{?}{mood=.}'
     player_online: '&a' # A matched online player's name
     player_offline: '&c' # A matched offline player's name
-    tag: '&8[&a{?}&8] '
+    tag: '&8[&6{?}&8] '
     usage: '&4USAGE: &c{?}'
-
-general messages: # Generic messages that can be used by other plugins
-  errors:
-    player_not_found: '{mood=error}Player {o=input}{NAME}{/} not found.'
-    player_not_found_offline: '{mood=error}Offline player {o=input}{NAME}{/} not found.'
-    no_permission: '{mood=error}You do not have permission to do this.'

@@ -1,6 +1,7 @@
 general:
   errors:
     item_must_be_int: '{mood=error}{ITEM} must be an integer.'
+    no_permission: '{mood=error}You do not have permission to do this.'
     player_cannot_be_self: '{mood=error}You cannot be the target of this command.'
     player_matched_multiple: '{mood=error}Name {o=input}{NAME}{/} matches multiple players. Please be more specific.'
     player_matched_none: '{mood=error}Unable to find player {o=input}{NAME}{/}.'
