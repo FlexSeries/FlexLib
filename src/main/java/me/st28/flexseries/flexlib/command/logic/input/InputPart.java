@@ -54,12 +54,20 @@ public abstract class InputPart extends LogicPart {
 
     @Override
     public void execute(CommandContext context, int curIndex) {
-        context.addGlobalObject(name, parseInput(context, context.getArgs().get(curIndex)));
+        if (curIndex < context.getArgs().size()) {
+            context.addGlobalObject(name, parseInput(context, context.getArgs().get(curIndex)));
+        } else {
+            context.addGlobalObject(name, getDefaultValue(context));
+        }
 
         handleExecution(context, curIndex);
     }
 
     public abstract Object parseInput(CommandContext context, String input);
+
+    public Object getDefaultValue(CommandContext context) {
+        return null;
+    }
 
     public List<String> getSuggestions(CommandContext context, int curIndex) {
         return null;
