@@ -25,8 +25,10 @@
 package me.st28.flexseries.flexlib.command.logic;
 
 import me.st28.flexseries.flexlib.command.CommandContext;
+import me.st28.flexseries.flexlib.command.CommandUtils;
 import me.st28.flexseries.flexlib.command.logic.hub.LogicHub;
 import me.st28.flexseries.flexlib.command.logic.input.InputPart;
+import me.st28.flexseries.flexlib.permission.PermissionNode;
 import org.apache.commons.lang.Validate;
 
 import java.util.ArrayList;
@@ -38,11 +40,13 @@ import java.util.List;
  */
 public class LogicPath {
 
+    private LogicHub parent;
+
     private final List<String> labels = new ArrayList<>();
 
     private final List<LogicPart> parts = new ArrayList<>();
 
-    private LogicHub parent;
+    private PermissionNode permission;
 
     public LogicPath(String... labels) {
         this(null, labels);
@@ -106,6 +110,10 @@ public class LogicPath {
         return Collections.unmodifiableList(labels);
     }
 
+    public void setPermissionNode(PermissionNode permission) {
+        this.permission = permission;
+    }
+
     public LogicPath append(LogicPart part) {
         if (!parts.isEmpty() && parts.get(parts.size() - 1) instanceof LogicHub) {
             throw new IllegalStateException("No more LogicParts can be added because a LogicHub was added already.");
@@ -116,12 +124,20 @@ public class LogicPath {
     }
 
     public final void execute(CommandContext context, int curIndex) {
+        if (permission != null) {
+            CommandUtils.performPermissionTest(context.getSender(), permission);
+        }
+
         for (LogicPart part : parts) {
             part.execute(context, curIndex++);
         }
     }
 
     public List<String> getSuggestions(CommandContext context, int curIndex) {
+        if (!permission.isAllowed(context.getSender())) {
+            return null;
+        }
+
         LogicPart part = parts.get(curIndex);
 
         String argument = context.getArgs().get(curIndex).toLowerCase();
