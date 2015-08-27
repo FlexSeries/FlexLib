@@ -29,31 +29,34 @@ import me.st28.flexseries.flexlib.command.CommandContext;
 import me.st28.flexseries.flexlib.command.FlexCommand;
 import me.st28.flexseries.flexlib.command.logic.LogicPath;
 import me.st28.flexseries.flexlib.command.logic.hub.PathLogicHub;
+import me.st28.flexseries.flexlib.command.logic.input.BooleanInputPart;
 import me.st28.flexseries.flexlib.command.logic.input.FlexPluginInputPart;
 import me.st28.flexseries.flexlib.message.MessageManager;
 import me.st28.flexseries.flexlib.message.ReplacementMap;
 import me.st28.flexseries.flexlib.permission.PermissionNodes;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 
-public class CmdFlexReload {
+public class CmdFlexSave {
 
-    public CmdFlexReload(FlexLib plugin) {
-        LogicPath path = new LogicPath("flexreload");
+    public CmdFlexSave(FlexLib plugin) {
+        LogicPath path = new LogicPath("flexsave");
 
-        path.setPermissionNode(PermissionNodes.RELOAD);
+        path.setPermissionNode(PermissionNodes.SAVE);
 
-        path.append(new FlexPluginInputPart("plugin", true) {
+        path.append(new FlexPluginInputPart("plugin", true));
+
+        path.append(new BooleanInputPart("async", false, true) {
             @Override
             public void handleExecution(CommandContext context, int curIndex) {
                 FlexPlugin plugin = context.getGlobalObject("plugin", FlexPlugin.class);
 
-                plugin.reloadAll();
+                plugin.saveAll(context.getGlobalObject("async", Boolean.class));
 
-                MessageManager.getMessage(FlexLib.class, "lib_plugin.notices.plugin_reloaded", new ReplacementMap("{PLUGIN}", plugin.getName()).getMap()).sendTo(context.getSender());
+                MessageManager.getMessage(FlexLib.class, "lib_plugin.notices.plugin_saved", new ReplacementMap("{PLUGIN}", plugin.getName()).getMap()).sendTo(context.getSender());
             }
         });
 
-        new FlexCommand<>(plugin, new PathLogicHub(path), "flexreload").register();
+        new FlexCommand<>(plugin, new PathLogicHub(path), "flexsave").register();
     }
 
 }

@@ -26,7 +26,10 @@ package me.st28.flexseries.flexlib.permission;
 
 public enum PermissionNodes implements PermissionNode {
 
-    BYPASS_VANISH;
+    BYPASS_VANISH,
+
+    RELOAD,
+    SAVE;
 
     private String node;
 

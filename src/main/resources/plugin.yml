@@ -11,5 +11,41 @@ commands:
     description: 'View the modules of a loaded FlexPlugin'
     aliases: []
   flexreload:
-    description: 'Ability to reload a FlexPlugin'
+    description: 'Reload command for FlexPlugin implementations'
     aliases: []
+  flexsave:
+    description: 'Save command for FlexPlugin implementations'
+    aliases: []
+
+permissions:
+  ##########
+  # Groups #
+  ##########
+
+  flexlib.admin:
+    default: op
+    children:
+      flexlib.reload: true
+      flexlib.save: true
+      flexlib.bypass.vanish: true
+
+  flexlib.user:
+    default: true
+    children: {}
+
+  #------------------------------------------------------------------------------------------------#
+
+  #########
+  # Nodes #
+  #########
+
+  flexlib.reload:
+    default: false
+    description: 'Ability to reload FlexPlugin implementations'
+  flexlib.save:
+    default: false
+    description: 'Ability to save FlexPlugin implementations'
+
+  flexlib.bypass.vanish:
+    default: false
+    description: 'Ability to bypass FlexLib vanish checks'
