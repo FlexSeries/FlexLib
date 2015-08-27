@@ -24,38 +24,59 @@
  */
 package me.st28.flexseries.flexlib.message.reference;
 
+import com.stealthyone.mcb.mcml.MCMLBuilder;
+import org.apache.commons.lang.Validate;
 import org.bukkit.command.CommandSender;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
-public class PlainMessageReference extends MessageReference {
+public class McmlMessageReference extends MessageReference {
 
     private final String message;
+    private final Map<String, Object> replacements = new HashMap<>();
 
-    public PlainMessageReference(String message) {
+    public McmlMessageReference(String message) {
+        this(message, null);
+    }
+
+    public McmlMessageReference(String message, Map<String, Object> replacements) {
+        Validate.notNull(message, "Message cannot be null.");
         this.message = message;
+
+        if (replacements != null) {
+            this.replacements.putAll(replacements);
+        }
     }
 
     @Override
     public MessageReference duplicate(Map<String, Object> replacements) {
-        return new PlainMessageReference(message);
+        return new McmlMessageReference(message, replacements);
     }
 
     @Override
     public void sendTo(CommandSender sender) {
-        sender.sendMessage(message);
+        sendTo(sender, null);
     }
 
     @Override
     public void sendTo(CommandSender sender, Map<String, Object> replacements) {
-        String newMessage = message;
+        Validate.notNull(sender, "Sender cannot be null.");
 
-        for (Entry<String, Object> entry : replacements.entrySet()) {
-            newMessage = newMessage.replace(entry.getKey(), entry.getValue().toString());
+        if (replacements == null) {
+            if (this.replacements == null) {
+                new MCMLBuilder(message).getFancyMessage().send(sender);
+            } else {
+                new MCMLBuilder(message, this.replacements).getFancyMessage().send(sender);
+            }
+            return;
         }
 
-        sender.sendMessage(newMessage);
+        Map<String, Object> allReplacements = new HashMap<>();
+        allReplacements.putAll(this.replacements);
+        allReplacements.putAll(replacements);
+
+        new MCMLBuilder(message, allReplacements).getFancyMessage().send(sender);
     }
 
 }

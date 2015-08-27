@@ -26,14 +26,26 @@ package me.st28.flexseries.flexlib.message.reference;
 
 import org.bukkit.command.CommandSender;
 
+import java.util.Map;
+
 /**
  * Represents a reference to a message that can be sent directly to a CommandSender.
  */
-public interface MessageReference {
+public abstract class MessageReference {
+
+    /**
+     * @return A copy of this MessageReference using the given replacements.
+     */
+    public abstract MessageReference duplicate(Map<String, Object> replacements);
 
     /**
      * Sends the message to a given CommandSender.
      */
-    void sendTo(CommandSender sender);
+    public abstract void sendTo(CommandSender sender);
+
+    /**
+     * Sends the message to a given CommandSender with replacements.
+     */
+    public abstract void sendTo(CommandSender sender, Map<String, Object> replacements);
 
 }
