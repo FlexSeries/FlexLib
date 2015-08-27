@@ -22,28 +22,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package me.st28.flexseries.flexlib;
+package me.st28.flexseries.flexlib.command.logic;
 
-import me.st28.flexseries.flexlib.backend.commands.CmdFlexModules;
-import me.st28.flexseries.flexlib.message.MessageManager;
-import me.st28.flexseries.flexlib.message.MessageMasterManager;
-import me.st28.flexseries.flexlib.message.list.ListManager;
-import me.st28.flexseries.flexlib.player.uuidtracker.PlayerUuidTracker;
-import me.st28.flexseries.flexlib.plugin.FlexPlugin;
+import me.st28.flexseries.flexlib.command.CommandContext;
 
-public final class FlexLib extends FlexPlugin {
+import java.util.List;
 
-    @Override
-    public void handleLoad() {
-        registerModule(new MessageMasterManager(this));
-        registerModule(new MessageManager<>(this));
-        registerModule(new ListManager(this));
-        registerModule(new PlayerUuidTracker(this));
-    }
+public abstract class LogicPart {
 
-    @Override
-    public void handleEnable() {
-        new CmdFlexModules(this);
-    }
+    public abstract void execute(CommandContext context, int curIndex);
+
+    public abstract List<String> getSuggestions(CommandContext context, int curIndex);
 
 }

@@ -22,28 +22,49 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package me.st28.flexseries.flexlib;
+package me.st28.flexseries.flexlib.command.logic.input;
 
-import me.st28.flexseries.flexlib.backend.commands.CmdFlexModules;
-import me.st28.flexseries.flexlib.message.MessageManager;
-import me.st28.flexseries.flexlib.message.MessageMasterManager;
-import me.st28.flexseries.flexlib.message.list.ListManager;
-import me.st28.flexseries.flexlib.player.uuidtracker.PlayerUuidTracker;
-import me.st28.flexseries.flexlib.plugin.FlexPlugin;
+import me.st28.flexseries.flexlib.command.CommandContext;
+import me.st28.flexseries.flexlib.command.logic.LogicPart;
 
-public final class FlexLib extends FlexPlugin {
+import java.util.List;
 
-    @Override
-    public void handleLoad() {
-        registerModule(new MessageMasterManager(this));
-        registerModule(new MessageManager<>(this));
-        registerModule(new ListManager(this));
-        registerModule(new PlayerUuidTracker(this));
+public abstract class InputPart extends LogicPart {
+
+    protected final String name;
+    protected final boolean isRequired;
+
+    public InputPart(String name, boolean isRequired) {
+        this.name = name;
+        this.isRequired = isRequired;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public boolean isRequired() {
+        return isRequired;
     }
 
     @Override
-    public void handleEnable() {
-        new CmdFlexModules(this);
+    public String toString() {
+        return String.format(isRequired ? "<%s>" : "[%s]", name);
     }
+
+    @Override
+    public void execute(CommandContext context, int curIndex) {
+        context.addGlobalObject(name, parseInput(context, context.getArgs().get(curIndex)));
+
+        handleExecution(context, curIndex);
+    }
+
+    public abstract Object parseInput(CommandContext context, String input);
+
+    public List<String> getSuggestions(CommandContext context, int curIndex) {
+        return null;
+    }
+
+    public void handleExecution(CommandContext context, int curIndex) {}
 
 }

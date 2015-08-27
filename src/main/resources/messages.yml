@@ -1,7 +1,16 @@
 general:
   errors:
-    plugin_not_found: '{mood=error}Plugin {o=input_sanitized}{PLUGIN}{/} not found.'
+    item_must_be_int: '{mood=error}{ITEM} must be an integer.'
+    player_cannot_be_self: '{mood=error}You cannot be the target of this command.'
+    player_matched_multiple: '{mood=error}Name {o=input}{NAME}{/} matches multiple players. Please be more specific.'
+    player_matched_none: '{mood=error}Unable to find player {o=input}{NAME}{/}.'
+    player_matched_none_offline: '{mood=error}Unable to find offline player {o=input}{NAME}{/}.'
+    player_must_be_online: '{mood=error}Player {o=input_sanitized}{NAME}{/} is offline.'
+    plugin_not_found: '{mood=error}Plugin {o=input}{PLUGIN}{/} not found.'
 
 lib_plugin:
   errors:
     plugin_not_flexplugin: '{mood=error}Plugin {o=input_sanitized}{PLUGIN}{/} is not a FlexPlugin.'
+  notices:
+    plugin_reloaded: '{o=tag}{PLUGIN}{/}{mood=notice}Plugin configuration &creloaded {mood=.}from the disk.'
+    plugin_saved: '{o=tag}{PLUGIN}{/}{mood=notice}Plugin data &asaved {mood=.}to the disk.'

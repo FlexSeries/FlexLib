@@ -22,28 +22,48 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package me.st28.flexseries.flexlib;
+package me.st28.flexseries.flexlib.command.logic.input;
 
-import me.st28.flexseries.flexlib.backend.commands.CmdFlexModules;
+import me.st28.flexseries.flexlib.FlexLib;
+import me.st28.flexseries.flexlib.command.CommandContext;
+import me.st28.flexseries.flexlib.command.CommandInterruptedException;
 import me.st28.flexseries.flexlib.message.MessageManager;
-import me.st28.flexseries.flexlib.message.MessageMasterManager;
-import me.st28.flexseries.flexlib.message.list.ListManager;
-import me.st28.flexseries.flexlib.player.uuidtracker.PlayerUuidTracker;
-import me.st28.flexseries.flexlib.plugin.FlexPlugin;
+import me.st28.flexseries.flexlib.message.ReplacementMap;
 
-public final class FlexLib extends FlexPlugin {
+public class IntegerInputPart extends InputPart {
 
-    @Override
-    public void handleLoad() {
-        registerModule(new MessageMasterManager(this));
-        registerModule(new MessageManager<>(this));
-        registerModule(new ListManager(this));
-        registerModule(new PlayerUuidTracker(this));
+    private int minValue;
+    private int maxValue;
+
+    public IntegerInputPart(String name, boolean isRequired) {
+        this(name, isRequired, Integer.MIN_VALUE, Integer.MAX_VALUE);
+    }
+
+    public IntegerInputPart(String name, boolean isRequired, int minValue, int maxValue) {
+        super(name, isRequired);
+
+        this.minValue = minValue;
+        this.maxValue = maxValue;
+    }
+
+    public int getMinValue() {
+        return minValue;
+    }
+
+    public int getMaxValue() {
+        return maxValue;
     }
 
     @Override
-    public void handleEnable() {
-        new CmdFlexModules(this);
+    public Object parseInput(CommandContext context, String input) {
+        int integer;
+        try {
+            integer = Integer.parseInt(input);
+        } catch (NumberFormatException ex) {
+            throw new CommandInterruptedException(MessageManager.getMessage(FlexLib.class, "general.errors.item_must_be_int", new ReplacementMap("{ITEM}", name).getMap()));
+        }
+
+        return integer;
     }
 
 }

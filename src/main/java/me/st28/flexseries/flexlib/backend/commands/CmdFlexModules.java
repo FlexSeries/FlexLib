@@ -22,28 +22,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package me.st28.flexseries.flexlib;
+package me.st28.flexseries.flexlib.backend.commands;
 
-import me.st28.flexseries.flexlib.backend.commands.CmdFlexModules;
-import me.st28.flexseries.flexlib.message.MessageManager;
-import me.st28.flexseries.flexlib.message.MessageMasterManager;
-import me.st28.flexseries.flexlib.message.list.ListManager;
-import me.st28.flexseries.flexlib.player.uuidtracker.PlayerUuidTracker;
+import me.st28.flexseries.flexlib.FlexLib;
+import me.st28.flexseries.flexlib.command.CommandContext;
+import me.st28.flexseries.flexlib.command.FlexCommand;
+import me.st28.flexseries.flexlib.command.logic.LogicPath;
+import me.st28.flexseries.flexlib.command.logic.hub.PathLogicHub;
+import me.st28.flexseries.flexlib.command.logic.input.FlexPluginInputPart;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 
-public final class FlexLib extends FlexPlugin {
+public class CmdFlexModules {
 
-    @Override
-    public void handleLoad() {
-        registerModule(new MessageMasterManager(this));
-        registerModule(new MessageManager<>(this));
-        registerModule(new ListManager(this));
-        registerModule(new PlayerUuidTracker(this));
-    }
+    public CmdFlexModules(FlexLib plugin) {
+        LogicPath path = new LogicPath("flexmodules", "modules");
 
-    @Override
-    public void handleEnable() {
-        new CmdFlexModules(this);
+        path.append(new FlexPluginInputPart("plugin", true) {
+            @Override
+            public void handleExecution(CommandContext context, int curIndex) {
+                context.getSender().sendMessage("Plugin: " + context.getGlobalObject("plugin", FlexPlugin.class).getName());
+            }
+        });
+
+        new FlexCommand<>(plugin, new PathLogicHub(path), "flexmodules").register();
     }
 
 }

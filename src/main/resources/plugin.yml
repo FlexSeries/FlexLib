@@ -2,7 +2,14 @@ name: ${project.name}
 version: ${project.version}
 description: '${project.description}'
 depend: []
-softdepend: [d]
+softdepend: []
 authors: [${project.authors}]
 website: ${project.url}
 main: ${project.mainClass}
+commands:
+  flexmodules:
+    description: 'View the modules of a loaded FlexPlugin'
+    aliases: []
+  flexreload:
+    description: 'Ability to reload a FlexPlugin'
+    aliases: []
