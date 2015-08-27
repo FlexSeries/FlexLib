@@ -76,7 +76,7 @@ public class FlexCommand<T extends FlexPlugin> implements CommandExecutor, TabCo
     public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
         CommandContext context = new CommandContext(this, sender, label, args);
 
-        List<String> suggestions = base.getSuggestions(context, 0);
+        List<String> suggestions = base.getSuggestions(context, args.length - 1);
 
         if (suggestions == null) {
             return null;
