@@ -8,6 +8,10 @@ general:
     player_must_be_online: '{mood=error}Player {o=input_sanitized}{NAME}{/} is offline.'
     plugin_not_found: '{mood=error}Plugin {o=input}{PLUGIN}{/} not found.'
 
+lib_command:
+  errors:
+    usage: '{o=usage}{USAGE}{/}'
+
 lib_plugin:
   errors:
     plugin_not_flexplugin: '{mood=error}Plugin {o=input_sanitized}{PLUGIN}{/} is not a FlexPlugin.'

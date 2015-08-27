@@ -24,9 +24,13 @@
  */
 package me.st28.flexseries.flexlib.command.logic.hub;
 
+import me.st28.flexseries.flexlib.FlexLib;
 import me.st28.flexseries.flexlib.command.CommandContext;
+import me.st28.flexseries.flexlib.command.CommandInterruptedException;
 import me.st28.flexseries.flexlib.command.logic.LogicPart;
 import me.st28.flexseries.flexlib.command.logic.LogicPath;
+import me.st28.flexseries.flexlib.message.MessageManager;
+import me.st28.flexseries.flexlib.message.ReplacementMap;
 import org.apache.commons.lang.Validate;
 
 import java.util.HashMap;
@@ -62,6 +66,10 @@ public abstract class LogicHub extends LogicPart {
         if (curIndex < args.size()) {
             LogicPath path = paths.get(args.get(curIndex).toLowerCase());
             if (path != null) {
+                if (args.size() < path.getRequiredArgs()) {
+                    throw new CommandInterruptedException(MessageManager.getMessage(FlexLib.class, "lib_command.errors.usage", new ReplacementMap("{USAGE}", path.buildUsage()).getMap()));
+                }
+
                 path.execute(context, curIndex + 1);
                 return;
             }

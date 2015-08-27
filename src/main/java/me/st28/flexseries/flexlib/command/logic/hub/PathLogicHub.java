@@ -24,8 +24,12 @@
  */
 package me.st28.flexseries.flexlib.command.logic.hub;
 
+import me.st28.flexseries.flexlib.FlexLib;
 import me.st28.flexseries.flexlib.command.CommandContext;
+import me.st28.flexseries.flexlib.command.CommandInterruptedException;
 import me.st28.flexseries.flexlib.command.logic.LogicPath;
+import me.st28.flexseries.flexlib.message.MessageManager;
+import me.st28.flexseries.flexlib.message.ReplacementMap;
 import org.apache.commons.lang.Validate;
 
 import java.util.List;
@@ -44,6 +48,10 @@ public class PathLogicHub extends LogicHub {
 
     @Override
     public void handleExecute(CommandContext context, int curIndex) {
+        if (context.getArgs().size() < defaultPath.getRequiredArgs()) {
+            throw new CommandInterruptedException(MessageManager.getMessage(FlexLib.class, "lib_command.errors.usage", new ReplacementMap("{USAGE}", defaultPath.buildUsage()).getMap()));
+        }
+
         defaultPath.execute(context, curIndex);
     }
 

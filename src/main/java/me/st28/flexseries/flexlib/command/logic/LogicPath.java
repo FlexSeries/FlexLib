@@ -25,6 +25,9 @@
 package me.st28.flexseries.flexlib.command.logic;
 
 import me.st28.flexseries.flexlib.command.CommandContext;
+import me.st28.flexseries.flexlib.command.logic.hub.LogicHub;
+import me.st28.flexseries.flexlib.command.logic.input.InputPart;
+import org.apache.commons.lang.Validate;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,8 +42,64 @@ public class LogicPath {
 
     private final List<LogicPart> parts = new ArrayList<>();
 
+    private LogicHub parent;
+
     public LogicPath(String... labels) {
+        this(null, labels);
+    }
+
+    public LogicPath(LogicHub parent, String... labels) {
+        this.parent = parent;
         Collections.addAll(this.labels, labels);
+    }
+
+    public LogicPart getParent() {
+        return parent;
+    }
+
+    public void setParent(LogicHub parent) {
+        Validate.notNull(parent, "Parent cannot be null.");
+        if (this.parent != null) {
+            throw new IllegalStateException("Parent is already set.");
+        }
+
+        this.parent = parent;
+    }
+
+    public int getRequiredArgs() {
+        int count = 0;
+
+        for (LogicPart part : parts) {
+            if (part instanceof InputPart) {
+                if (((InputPart) part).isRequired()) {
+                    count++;
+                }
+            }
+        }
+
+        return count;
+    }
+
+    public String buildUsage() {
+        StringBuilder builder = new StringBuilder();
+
+        if (parent == null) {
+            builder.append("/").append(labels.get(0));
+        }
+
+        for (LogicPart part : parts) {
+            if (part instanceof LogicHub) {
+                break;
+            }
+
+            if (builder.length() > 0) {
+                builder.append(" ");
+            }
+
+            builder.append(part.toString());
+        }
+
+        return builder.toString();
     }
 
     public List<String> getLabels() {
@@ -48,6 +107,10 @@ public class LogicPath {
     }
 
     public LogicPath append(LogicPart part) {
+        if (!parts.isEmpty() && parts.get(parts.size() - 1) instanceof LogicHub) {
+            throw new IllegalStateException("No more LogicParts can be added because a LogicHub was added already.");
+        }
+
         parts.add(part);
         return this;
     }
