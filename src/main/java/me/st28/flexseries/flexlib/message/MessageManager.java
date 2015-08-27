@@ -25,7 +25,7 @@
 package me.st28.flexseries.flexlib.message;
 
 import me.st28.flexseries.flexlib.log.LogHelper;
-import me.st28.flexseries.flexlib.message.reference.FancyMessageReference;
+import me.st28.flexseries.flexlib.message.reference.McmlMessageReference;
 import me.st28.flexseries.flexlib.message.reference.MessageReference;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 import me.st28.flexseries.flexlib.plugin.module.FlexModule;
@@ -148,7 +148,7 @@ public class MessageManager<T extends FlexPlugin> extends FlexModule<T> {
     }
 
     public static MessageReference getMessage(Class<? extends FlexPlugin> plugin, String path, Map<String, Object> replacements) {
-        return new FancyMessageReference(FlexPlugin.getPluginModule(plugin, MessageManager.class).getMessage(path), replacements);
+        return new McmlMessageReference(FlexPlugin.getPluginModule(plugin, MessageManager.class).getMessage(path), replacements);
     }
 
 }

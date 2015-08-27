@@ -24,7 +24,7 @@
  */
 package me.st28.flexseries.flexlib.message;
 
-import me.st28.flexseries.flexlib.message.reference.FancyMessageReference;
+import me.st28.flexseries.flexlib.message.reference.McmlMessageReference;
 import me.st28.flexseries.flexlib.message.reference.MessageReference;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 import org.apache.commons.lang.Validate;
@@ -66,10 +66,10 @@ public class MessageBuilder {
     }
 
     /**
-     * @return builds the message into a {@link FancyMessageReference} in the default implementation.
+     * @return builds the message into a {@link McmlMessageReference} in the default implementation.
      */
     public MessageReference toMessageReference(Map<String, Object> replacements) {
-        return new FancyMessageReference(toString(), replacements);
+        return new McmlMessageReference(toString(), replacements);
     }
 
     /**
