@@ -30,17 +30,70 @@ import me.st28.flexseries.flexlib.command.FlexCommand;
 import me.st28.flexseries.flexlib.command.logic.LogicPath;
 import me.st28.flexseries.flexlib.command.logic.hub.PathLogicHub;
 import me.st28.flexseries.flexlib.command.logic.input.FlexPluginInputPart;
+import me.st28.flexseries.flexlib.command.logic.input.PageInputPart;
+import me.st28.flexseries.flexlib.message.list.ListBuilder;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
+import me.st28.flexseries.flexlib.plugin.module.FlexModule;
+import me.st28.flexseries.flexlib.utils.QuickMap;
+import org.bukkit.ChatColor;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 public class CmdFlexModules {
 
     public CmdFlexModules(FlexLib plugin) {
         LogicPath path = new LogicPath("flexmodules", "modules");
 
-        path.append(new FlexPluginInputPart("plugin", true) {
+        path.append(new FlexPluginInputPart("plugin", true));
+
+        path.append(new PageInputPart() {
             @Override
             public void handleExecution(CommandContext context, int curIndex) {
-                context.getSender().sendMessage("Plugin: " + context.getGlobalObject("plugin", FlexPlugin.class).getName());
+                final FlexPlugin plugin = context.getGlobalObject("plugin", FlexPlugin.class);
+
+                List<FlexModule> modules = new ArrayList<>(plugin.getModules());
+                Collections.sort(modules, new Comparator<FlexModule>() {
+                    @Override
+                    public int compare(FlexModule o1, FlexModule o2) {
+                        return o1.getName().toLowerCase().compareTo(o2.getName().toLowerCase());
+                    }
+                });
+
+                ListBuilder builder = new ListBuilder("page_subtitle", "Modules", plugin.getName(), context.getLabel());
+
+                for (FlexModule module : modules) {
+                    String status;
+                    switch (module.getStatus()) {
+                        case ENABLED:
+                            status = ChatColor.GREEN + "enabled";
+                            break;
+
+                        case DISABLED:
+                            status = ChatColor.DARK_RED + "disabled";
+                            break;
+
+                        case DISABLED_ERROR:
+                            status = ChatColor.RED + "error";
+                            break;
+
+                        case DISABLED_DEPENDENCY:
+                            status = ChatColor.RED + "missing dependency";
+                            break;
+
+                        default:
+                            status = ChatColor.RED + "error";
+                            break;
+                    }
+
+                    builder.addMessage("lib_plugin_module", new QuickMap<>("{STATUS}", status).put("{NAME}", module.getName()).put("{DESCRIPTION}", module.getDescription()).getMap());
+                }
+
+                //TODO: Don't include page number if one was specified
+                //builder.enableNextPageNotice(command.replace("/", ""));
+                builder.sendTo(context.getSender(), context.getGlobalObject("page", Integer.class));
             }
         });
 
