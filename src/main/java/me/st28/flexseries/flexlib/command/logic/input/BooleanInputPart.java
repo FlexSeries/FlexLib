@@ -31,7 +31,7 @@ import java.util.List;
 
 public class BooleanInputPart extends InputPart {
 
-    private boolean defaultValue;
+    private Boolean defaultValue;
 
     public BooleanInputPart(String name, boolean isRequired) {
         this(name, isRequired, false);
