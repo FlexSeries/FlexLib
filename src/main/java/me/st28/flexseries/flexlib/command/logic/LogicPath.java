@@ -123,6 +123,20 @@ public class LogicPath {
         return this;
     }
 
+    /**
+     * @return The final {@link LogicPart} in this path's logic execution order, if it's a {@link LogicHub}.<br />
+     *         Null if the last part isn't a hub.
+     */
+    public LogicHub getEndHub() {
+        if (!parts.isEmpty()) {
+            LogicPart part = parts.get(parts.size() - 1);
+            if (part instanceof LogicHub) {
+                return (LogicHub) part;
+            }
+        }
+        return null;
+    }
+
     public final void execute(CommandContext context, int curIndex) {
         if (permission != null) {
             CommandUtils.performPermissionTest(context.getSender(), permission);
