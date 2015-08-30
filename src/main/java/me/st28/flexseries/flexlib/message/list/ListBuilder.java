@@ -111,11 +111,12 @@ public final class ListBuilder {
             try {
                 returnList.add(messages.get(i).duplicate(new ReplacementMap("{LABEL}", label).put("{INDEX}", Integer.toString(i + 1)).getMap()));
             } catch (Exception ex) {
-                if (i == 0) {
-                    returnList.add(new McmlMessageReference(listManager.msgNoElements));
-                }
                 break;
             }
+        }
+
+        if (returnList.size() == 1) {
+            returnList.add(new McmlMessageReference(listManager.msgNoElements));
         }
 
         return returnList;
