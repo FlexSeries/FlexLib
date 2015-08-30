@@ -193,11 +193,15 @@ public class PlayerInputPart extends InputPart {
         CommandSender sender = context.getSender();
         if (found != null && notSender && sender instanceof Player && ((Player) sender).getUniqueId().equals(found)) {
             throw new CommandInterruptedException(MessageManager.getMessage(FlexLib.class, "general.errors.player_cannot_be_self"));
-        } else if (found != null && (onlineOnly && Bukkit.getPlayer(found) == null) || (hideVanished && !canSenderView(sender, Bukkit.getPlayer(found)))) {
+        } else if (found != null && ((onlineOnly && Bukkit.getPlayer(found) == null) || (hideVanished && !canSenderView(sender, Bukkit.getPlayer(found))))) {
             String cleanName = uuidTracker.getLatestName(found);
             throw new CommandInterruptedException(MessageManager.getMessage(FlexLib.class, "general.errors.player_matched_offline", new ReplacementMap("{NAME}", cleanName).getMap()));
         } else if (found == null) {
-            throw new CommandInterruptedException(MessageManager.getMessage(FlexLib.class, "general.errors.player_matched_none_offline", new ReplacementMap("{NAME}", input).getMap()));
+            if (onlineOnly) {
+                throw new CommandInterruptedException(MessageManager.getMessage(FlexLib.class, "general.errors.player_matched_none", new ReplacementMap("{NAME}", input).getMap()));
+            } else {
+                throw new CommandInterruptedException(MessageManager.getMessage(FlexLib.class, "general.errors.player_matched_none_offline", new ReplacementMap("{NAME}", input).getMap()));
+            }
         }
 
         return new PlayerReference(found);

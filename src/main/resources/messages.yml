@@ -8,7 +8,7 @@ general:
     player_matched_multiple: '{mood=error}Name {o=input}{NAME}{/} matches multiple players. Please be more specific.'
     player_matched_none: '{mood=error}Unable to find player {o=input}{NAME}{/}.'
     player_matched_none_offline: '{mood=error}Unable to find offline player {o=input}{NAME}{/}.'
-    player_must_be_online: '{mood=error}Player {o=input_sanitized}{NAME}{/} is offline.'
+    player_matched_offline: '{mood=error}Player {o=input_sanitized}{NAME}{/} is offline.'
     plugin_not_found: '{mood=error}Plugin {o=input}{PLUGIN}{/} not found.'
 
 lib_command:

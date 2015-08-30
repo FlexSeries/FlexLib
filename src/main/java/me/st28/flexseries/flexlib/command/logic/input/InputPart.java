@@ -26,6 +26,7 @@ package me.st28.flexseries.flexlib.command.logic.input;
 
 import me.st28.flexseries.flexlib.FlexLib;
 import me.st28.flexseries.flexlib.command.CommandContext;
+import me.st28.flexseries.flexlib.command.CommandInterruptedException;
 import me.st28.flexseries.flexlib.command.InvalidInputException;
 import me.st28.flexseries.flexlib.command.logic.LogicPart;
 import me.st28.flexseries.flexlib.message.MessageManager;
@@ -65,6 +66,8 @@ public abstract class InputPart extends LogicPart {
                 context.addGlobalObject(name, getDefaultValue(context));
                 context.indicateDefaultValue(name);
             }
+        } catch (CommandInterruptedException ex) {
+            throw ex;
         } catch (Exception ex) {
             throw new InvalidInputException(MessageManager.getMessage(FlexLib.class, "lib_command.errors.invalid_input", new ReplacementMap("{ARGUMENT}", name).put("{INPUT}", "NYI").getMap()));
         }
