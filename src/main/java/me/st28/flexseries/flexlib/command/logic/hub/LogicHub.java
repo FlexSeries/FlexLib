@@ -34,10 +34,7 @@ import me.st28.flexseries.flexlib.message.ReplacementMap;
 import me.st28.flexseries.flexlib.permission.PermissionNode;
 import org.apache.commons.lang.Validate;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 
 /**
@@ -45,11 +42,25 @@ import java.util.Map.Entry;
  */
 public abstract class LogicHub extends LogicPart {
 
-    protected final Map<String, LogicPath> paths = new HashMap<>();
+    private int firstArgumentIndex = -1;
+
+    private final Map<String, LogicPath> paths = new HashMap<>();
 
     public LogicHub() {}
 
-    public void addPath(LogicPath path) {
+    public final void setFirstArgumentIndex(int index) {
+        if (firstArgumentIndex != -1) {
+            throw new IllegalStateException("First argument index has already been set.");
+        }
+
+        this.firstArgumentIndex = index;
+    }
+
+    public final int getFirstArgumentIndex() {
+        return firstArgumentIndex;
+    }
+
+    public final void addPath(LogicPath path) {
         Validate.notNull(path, "Path cannot be null.");
 
         for (String label : path.getLabels()) {
@@ -58,8 +69,13 @@ public abstract class LogicHub extends LogicPart {
                 continue;
             }
 
+            path.setParent(this);
             paths.put(label, path);
         }
+    }
+
+    public final Map<String, LogicPath> getPaths() {
+        return Collections.unmodifiableMap(paths);
     }
 
     @Override
@@ -85,19 +101,21 @@ public abstract class LogicHub extends LogicPart {
     public List<String> getSuggestions(CommandContext context, int curIndex) {
         final List<String> suggestions = new ArrayList<>();
 
-        for (Entry<String, LogicPath> entry : paths.entrySet()) {
-            PermissionNode permission = entry.getValue().getPermission();
-            if (permission != null && permission.isAllowed(context.getSender())) {
-                suggestions.add(entry.getKey());
+        if (getFirstArgumentIndex() == curIndex) {
+            for (Entry<String, LogicPath> entry : paths.entrySet()) {
+                PermissionNode permission = entry.getValue().getPermission();
+                if (permission != null && permission.isAllowed(context.getSender())) {
+                    suggestions.add(entry.getKey());
+                }
             }
         }
 
         final List<String> args = context.getArgs();
 
-        if (curIndex < args.size()) {
-            LogicPath path = paths.get(args.get(curIndex).toLowerCase());
+        if (curIndex > 0 && curIndex < args.size()) {
+            LogicPath path = paths.get(args.get(curIndex - 1).toLowerCase());
             if (path != null) {
-                suggestions.addAll(path.getSuggestions(context, curIndex));
+                suggestions.addAll(path.getSuggestions(context, curIndex - getFirstArgumentIndex() - 1));
             }
         }
 

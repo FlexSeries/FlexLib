@@ -40,7 +40,7 @@ public class DummyLogicHub extends LogicHub {
     @Override
     public List<String> getSuggestions(CommandContext context, int curIndex) {
         List<String> superList = super.getSuggestions(context, curIndex);
-        return superList == null ? new ArrayList<>(paths.keySet()) : superList;
+        return superList == null ? new ArrayList<>(getPaths().keySet()) : superList;
     }
 
 }

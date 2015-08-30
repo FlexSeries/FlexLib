@@ -48,6 +48,7 @@ public class FlexCommand<T extends FlexPlugin> implements CommandExecutor, TabCo
 
         this.plugin = plugin;
         this.base = base;
+        base.setFirstArgumentIndex(0);
         this.name = name;
     }
 
