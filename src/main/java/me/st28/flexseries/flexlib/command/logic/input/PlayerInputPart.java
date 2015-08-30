@@ -75,6 +75,11 @@ public class PlayerInputPart extends InputPart {
      */
     private boolean notSender = false;
 
+    /**
+     * If true, {@link #getDefaultValue(CommandContext)} will return the sender if they are a player.
+     */
+    private boolean inferSender = true;
+
     public PlayerInputPart(String name, boolean isRequired) {
         super(name, isRequired);
     }
@@ -142,6 +147,15 @@ public class PlayerInputPart extends InputPart {
         return this;
     }
 
+    /**
+     * @see #inferSender
+     * @return This instance, for chaining.
+     */
+    public PlayerInputPart inferSender(boolean inferSender) {
+        this.inferSender = inferSender;
+        return this;
+    }
+
     @Override
     public Object parseInput(CommandContext context, String input) {
         PlayerUuidTracker uuidTracker = FlexPlugin.getGlobalModule(PlayerUuidTracker.class);
@@ -187,6 +201,14 @@ public class PlayerInputPart extends InputPart {
         }
 
         return found;
+    }
+
+    @Override
+    public Object getDefaultValue(CommandContext context) {
+        if (inferSender && !notSender && context.getSender() instanceof Player) {
+            return context.getSender();
+        }
+        return null;
     }
 
     private boolean canSenderView(CommandSender sender, Player other) {
