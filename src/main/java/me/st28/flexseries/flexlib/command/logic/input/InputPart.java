@@ -58,6 +58,7 @@ public abstract class InputPart extends LogicPart {
             context.addGlobalObject(name, parseInput(context, context.getArgs().get(curIndex)));
         } else {
             context.addGlobalObject(name, getDefaultValue(context));
+            context.indicateDefaultValue(name);
         }
 
         handleExecution(context, curIndex);
