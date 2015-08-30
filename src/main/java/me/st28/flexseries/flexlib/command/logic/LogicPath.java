@@ -148,7 +148,7 @@ public class LogicPath {
     }
 
     public List<String> getSuggestions(CommandContext context, int curIndex) {
-        if (!permission.isAllowed(context.getSender())) {
+        if (permission != null && !permission.isAllowed(context.getSender())) {
             return null;
         }
 
