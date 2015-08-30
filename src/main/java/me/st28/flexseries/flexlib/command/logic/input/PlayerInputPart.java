@@ -58,7 +58,7 @@ public class PlayerInputPart extends InputPart {
     /**
      * The permission nodes that allow the sender to bypass {@link #hideVanished}.
      */
-    private Set<PermissionNode> vanishBypassPerms = new HashSet<>(Collections.singletonList(PermissionNodes.BYPASS_VANISH));
+    private final Set<PermissionNode> vanishBypassPerms = new HashSet<>(Collections.singletonList(PermissionNodes.BYPASS_VANISH));
 
     /**
      * If true, will add online player names to the tab completion list.
@@ -160,7 +160,7 @@ public class PlayerInputPart extends InputPart {
     public Object parseInput(CommandContext context, String input) {
         PlayerUuidTracker uuidTracker = FlexPlugin.getGlobalModule(PlayerUuidTracker.class);
 
-        UUID found = null;
+        UUID found;
 
         // 1) Try exact name
         found = uuidTracker.getLatestUuid(input);
@@ -200,13 +200,13 @@ public class PlayerInputPart extends InputPart {
             throw new CommandInterruptedException(MessageManager.getMessage(FlexLib.class, "general.errors.player_matched_none_offline", new ReplacementMap("{NAME}", input).getMap()));
         }
 
-        return found;
+        return new PlayerReference(found);
     }
 
     @Override
     public Object getDefaultValue(CommandContext context) {
         if (inferSender && !notSender && context.getSender() instanceof Player) {
-            return context.getSender();
+            return new PlayerReference((Player) context.getSender());
         }
         return null;
     }
