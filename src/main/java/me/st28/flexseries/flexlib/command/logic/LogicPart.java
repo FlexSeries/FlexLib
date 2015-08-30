@@ -24,11 +24,28 @@
  */
 package me.st28.flexseries.flexlib.command.logic;
 
+import me.st28.flexseries.flexlib.FlexLib;
 import me.st28.flexseries.flexlib.command.CommandContext;
+import me.st28.flexseries.flexlib.command.CommandInterruptedException;
+import me.st28.flexseries.flexlib.message.MessageManager;
+import me.st28.flexseries.flexlib.message.reference.MessageReference;
+import me.st28.flexseries.flexlib.permission.PermissionNode;
+import org.apache.commons.lang.Validate;
 
 import java.util.List;
 
 public abstract class LogicPart {
+
+    public void performPermissionCheck(CommandContext context, PermissionNode permission) {
+        performPermissionCheck(context, permission, MessageManager.getMessage(FlexLib.class, "general.errors.no_permission"));
+    }
+
+    public void performPermissionCheck(CommandContext context, PermissionNode permission, MessageReference noPermMessage) {
+        Validate.notNull(noPermMessage, "No permission message cannot be null.");
+        if (permission != null && !permission.isAllowed(context.getSender())) {
+            throw new CommandInterruptedException(noPermMessage);
+        }
+    }
 
     public abstract void execute(CommandContext context, int curIndex);
 
