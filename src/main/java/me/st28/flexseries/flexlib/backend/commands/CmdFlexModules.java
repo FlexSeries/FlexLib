@@ -32,6 +32,7 @@ import me.st28.flexseries.flexlib.command.logic.hub.PathLogicHub;
 import me.st28.flexseries.flexlib.command.logic.input.FlexPluginInputPart;
 import me.st28.flexseries.flexlib.command.logic.input.PageInputPart;
 import me.st28.flexseries.flexlib.message.list.ListBuilder;
+import me.st28.flexseries.flexlib.permission.PermissionNodes;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 import me.st28.flexseries.flexlib.plugin.module.FlexModule;
 import me.st28.flexseries.flexlib.utils.QuickMap;
@@ -48,6 +49,8 @@ public class CmdFlexModules {
         LogicPath path = new LogicPath("flexmodules", "modules");
 
         path.append(new FlexPluginInputPart("plugin", true));
+
+        path.setPermissionNode(PermissionNodes.MODULES);
 
         path.append(new PageInputPart() {
             @Override

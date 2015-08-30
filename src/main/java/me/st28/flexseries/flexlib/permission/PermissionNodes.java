@@ -28,6 +28,8 @@ public enum PermissionNodes implements PermissionNode {
 
     BYPASS_VANISH,
 
+    MODULES,
+
     RELOAD,
     SAVE;
 

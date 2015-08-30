@@ -27,6 +27,7 @@ permissions:
     children:
       flexlib.reload: true
       flexlib.save: true
+      flexlib.modules: true
       flexlib.bypass.vanish: true
 
   flexlib.user:
@@ -45,6 +46,10 @@ permissions:
   flexlib.save:
     default: false
     description: 'Ability to save FlexPlugin implementations'
+
+  flexlib.modules:
+    default: false
+    dsecription: 'Ability to view a FlexPlugin''s modules'
 
   flexlib.bypass.vanish:
     default: false
