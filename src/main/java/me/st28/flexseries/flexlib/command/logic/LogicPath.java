@@ -110,6 +110,10 @@ public class LogicPath {
         return Collections.unmodifiableList(labels);
     }
 
+    public PermissionNode getPermission() {
+        return permission;
+    }
+
     public void setPermissionNode(PermissionNode permission) {
         this.permission = permission;
     }

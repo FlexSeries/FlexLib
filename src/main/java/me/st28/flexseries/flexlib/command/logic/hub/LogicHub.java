@@ -31,11 +31,14 @@ import me.st28.flexseries.flexlib.command.logic.LogicPart;
 import me.st28.flexseries.flexlib.command.logic.LogicPath;
 import me.st28.flexseries.flexlib.message.MessageManager;
 import me.st28.flexseries.flexlib.message.ReplacementMap;
+import me.st28.flexseries.flexlib.permission.PermissionNode;
 import org.apache.commons.lang.Validate;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * The base logic handler for commands.
@@ -80,16 +83,25 @@ public abstract class LogicHub extends LogicPart {
 
     @Override
     public List<String> getSuggestions(CommandContext context, int curIndex) {
+        final List<String> returnList = new ArrayList<>();
+
+        for (Entry<String, LogicPath> entry : paths.entrySet()) {
+            PermissionNode permission = entry.getValue().getPermission();
+            if (permission != null && permission.isAllowed(context.getSender())) {
+                returnList.add(entry.getKey());
+            }
+        }
+
         final List<String> args = context.getArgs();
 
         if (curIndex < args.size()) {
             LogicPath path = paths.get(args.get(curIndex).toLowerCase());
             if (path != null) {
-                return path.getSuggestions(context, curIndex);
+                returnList.addAll(path.getSuggestions(context, curIndex));
             }
         }
 
-        return null;
+        return returnList;
     }
 
     /**

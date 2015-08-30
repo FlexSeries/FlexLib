@@ -58,7 +58,10 @@ public class PathLogicHub extends LogicHub {
     @Override
     public List<String> getSuggestions(CommandContext context, int curIndex) {
         List<String> superList = super.getSuggestions(context, curIndex);
-        return superList == null ? defaultPath.getSuggestions(context, curIndex) : superList;
+
+        superList.addAll(defaultPath.getSuggestions(context, curIndex));
+
+        return superList;
     }
 
 }
