@@ -64,6 +64,7 @@ public class PlayerReference {
         Validate.notNull(player, "Player cannot be null.");
 
         this.uuid = player.getUniqueId();
+        this.name = player.getName();
 
         validate();
     }
