@@ -37,7 +37,7 @@ public class BooleanInputPart extends InputPart {
         this(name, isRequired, false);
     }
 
-    public BooleanInputPart(String name, boolean isRequired, boolean defaultValue) {
+    public BooleanInputPart(String name, boolean isRequired, Boolean defaultValue) {
         super(name, isRequired);
         this.defaultValue = defaultValue;
     }
