@@ -80,6 +80,13 @@ public abstract class FlexModule<T extends FlexPlugin> {
     }
 
     /**
+     * <b>Internal code</b> - should never be called outside of FlexLib.
+     */
+    public final void setStatus(ModuleStatus status) {
+        this.status = status;
+    }
+
+    /**
      * @return the {@link FlexPlugin} that owns this module.
      */
     public final T getPlugin() {

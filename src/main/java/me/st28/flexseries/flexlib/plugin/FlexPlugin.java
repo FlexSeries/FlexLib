@@ -256,9 +256,11 @@ public class FlexPlugin extends JavaPlugin {
         for (ModuleReference requiredDep : requiredDeps) {
             if (requiredDep.getModule() == null) {
                 LogHelper.warning(this, "Unable to load module '" + current.getName() + "': dependency '" + requiredDep.toString() + "' not found.");
+                current.setStatus(ModuleStatus.DISABLED_DEPENDENCY);
                 return;
             } else if (!requiredDep.getModule().getStatus().isEnabled()) {
                 LogHelper.warning(this, "Unable to load module '" + current.getName() + "': dependency '" + requiredDep.toString() + "' not enabled.");
+                current.setStatus(ModuleStatus.DISABLED_DEPENDENCY);
                 return;
             }
         }

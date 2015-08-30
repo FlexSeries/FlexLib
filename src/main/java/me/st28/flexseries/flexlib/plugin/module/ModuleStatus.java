@@ -50,6 +50,11 @@ public enum ModuleStatus {
     DISABLED_ERROR,
 
     /**
+     * The module is disabled due to a missing dependency.
+     */
+    DISABLED_DEPENDENCY,
+
+    /**
      * The module is enabled.
      */
     ENABLED,
