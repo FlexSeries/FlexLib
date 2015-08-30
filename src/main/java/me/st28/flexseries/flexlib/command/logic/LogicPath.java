@@ -143,7 +143,21 @@ public class LogicPath {
         }
 
         for (LogicPart part : parts) {
-            part.execute(context, curIndex++);
+            try {
+                part.execute(context, curIndex++);
+            } catch (Exception ex) {
+                if (part instanceof InputPart) {
+                    InputPart inputPart = (InputPart) part;
+
+                    if (!inputPart.isRequired()) {
+                        context.addGlobalObject(inputPart.getName(), inputPart.getDefaultValue(context));
+
+                        curIndex--;
+                        continue;
+                    }
+                }
+                throw ex;
+            }
         }
     }
 
