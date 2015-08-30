@@ -29,6 +29,7 @@ import me.st28.flexseries.flexlib.command.CommandContext;
 import me.st28.flexseries.flexlib.command.CommandInterruptedException;
 import me.st28.flexseries.flexlib.message.MessageManager;
 import me.st28.flexseries.flexlib.message.ReplacementMap;
+import org.apache.commons.lang.StringUtils;
 
 public class IntegerInputPart extends InputPart {
 
@@ -60,7 +61,13 @@ public class IntegerInputPart extends InputPart {
         try {
             integer = Integer.parseInt(input);
         } catch (NumberFormatException ex) {
-            throw new CommandInterruptedException(MessageManager.getMessage(FlexLib.class, "general.errors.item_must_be_int", new ReplacementMap("{ITEM}", name).getMap()));
+            throw new CommandInterruptedException(MessageManager.getMessage(FlexLib.class, "general.errors.item_must_be_int", new ReplacementMap("{ITEM}", StringUtils.capitalize(name)).getMap()));
+        }
+
+        if (integer < minValue) {
+            throw new CommandInterruptedException(MessageManager.getMessage(FlexLib.class, "general.errors.integer_too_low", new ReplacementMap("{ITEM}", StringUtils.capitalize(name)).put("{MIN}", Integer.toString(minValue)).getMap()));
+        } else if (integer > maxValue) {
+            throw new CommandInterruptedException(MessageManager.getMessage(FlexLib.class, "general.errors.integer_too_high", new ReplacementMap("{ITEM}", StringUtils.capitalize(name)).put("{MAX}", Integer.toString(maxValue)).getMap()));
         }
 
         return integer;
