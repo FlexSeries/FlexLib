@@ -13,6 +13,7 @@ general:
 
 lib_command:
   errors:
+    invalid_input: '{mood=error}Invalid input {o=input}{INPUT}{/} for argument {o=input_sanitized}{ARGUMENT}{/}.'
     usage: '{o=usage}{USAGE}{/}'
 
 lib_plugin:

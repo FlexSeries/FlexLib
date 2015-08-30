@@ -26,6 +26,7 @@ package me.st28.flexseries.flexlib.command.logic;
 
 import me.st28.flexseries.flexlib.command.CommandContext;
 import me.st28.flexseries.flexlib.command.CommandUtils;
+import me.st28.flexseries.flexlib.command.InvalidInputException;
 import me.st28.flexseries.flexlib.command.logic.hub.LogicHub;
 import me.st28.flexseries.flexlib.command.logic.input.InputPart;
 import me.st28.flexseries.flexlib.permission.PermissionNode;
@@ -149,7 +150,7 @@ public class LogicPath {
         for (LogicPart part : parts) {
             try {
                 part.execute(context, curIndex++);
-            } catch (Exception ex) {
+            } catch (InvalidInputException ex) {
                 if (part instanceof InputPart) {
                     InputPart inputPart = (InputPart) part;
 
@@ -170,21 +171,7 @@ public class LogicPath {
             return null;
         }
 
-        LogicPart part = parts.get(curIndex);
-
-        String argument = context.getArgs().get(curIndex).toLowerCase();
-
-        List<String> suggestions = part.getSuggestions(context, curIndex);
-
-        List<String> returnList = new ArrayList<>();
-
-        for (String suggestion : suggestions) {
-            if (suggestion.toLowerCase().startsWith(argument)) {
-                returnList.add(suggestion);
-            }
-        }
-
-        return returnList;
+        return parts.get(curIndex).getSuggestions(context, curIndex);
     }
 
 }

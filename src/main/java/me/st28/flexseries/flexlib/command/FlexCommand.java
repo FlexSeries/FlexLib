@@ -32,6 +32,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class FlexCommand<T extends FlexPlugin> implements CommandExecutor, TabCompleter {
@@ -82,7 +83,17 @@ public class FlexCommand<T extends FlexPlugin> implements CommandExecutor, TabCo
             return null;
         }
 
-        return suggestions;
+        String argument = context.getArgs().get(args.length - 1).toLowerCase();
+
+        List<String> returnList = new ArrayList<>();
+
+        for (String suggestion : suggestions) {
+            if (suggestion.toLowerCase().startsWith(argument)) {
+                returnList.add(suggestion);
+            }
+        }
+
+        return returnList;
     }
 
 }

@@ -59,7 +59,10 @@ public class PathLogicHub extends LogicHub {
     public List<String> getSuggestions(CommandContext context, int curIndex) {
         List<String> superList = super.getSuggestions(context, curIndex);
 
-        superList.addAll(defaultPath.getSuggestions(context, curIndex));
+        List<String> defSuggestions = defaultPath.getSuggestions(context, curIndex);
+        if (defSuggestions != null) {
+            superList.addAll(defSuggestions);
+        }
 
         return superList;
     }

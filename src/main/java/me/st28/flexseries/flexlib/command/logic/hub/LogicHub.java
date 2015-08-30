@@ -83,12 +83,12 @@ public abstract class LogicHub extends LogicPart {
 
     @Override
     public List<String> getSuggestions(CommandContext context, int curIndex) {
-        final List<String> returnList = new ArrayList<>();
+        final List<String> suggestions = new ArrayList<>();
 
         for (Entry<String, LogicPath> entry : paths.entrySet()) {
             PermissionNode permission = entry.getValue().getPermission();
             if (permission != null && permission.isAllowed(context.getSender())) {
-                returnList.add(entry.getKey());
+                suggestions.add(entry.getKey());
             }
         }
 
@@ -97,11 +97,11 @@ public abstract class LogicHub extends LogicPart {
         if (curIndex < args.size()) {
             LogicPath path = paths.get(args.get(curIndex).toLowerCase());
             if (path != null) {
-                returnList.addAll(path.getSuggestions(context, curIndex));
+                suggestions.addAll(path.getSuggestions(context, curIndex));
             }
         }
 
-        return returnList;
+        return suggestions;
     }
 
     /**

@@ -24,8 +24,12 @@
  */
 package me.st28.flexseries.flexlib.command.logic.input;
 
+import me.st28.flexseries.flexlib.FlexLib;
 import me.st28.flexseries.flexlib.command.CommandContext;
+import me.st28.flexseries.flexlib.command.InvalidInputException;
 import me.st28.flexseries.flexlib.command.logic.LogicPart;
+import me.st28.flexseries.flexlib.message.MessageManager;
+import me.st28.flexseries.flexlib.message.ReplacementMap;
 
 import java.util.List;
 
@@ -54,11 +58,15 @@ public abstract class InputPart extends LogicPart {
 
     @Override
     public void execute(CommandContext context, int curIndex) {
-        if (curIndex < context.getArgs().size()) {
-            context.addGlobalObject(name, parseInput(context, context.getArgs().get(curIndex)));
-        } else {
-            context.addGlobalObject(name, getDefaultValue(context));
-            context.indicateDefaultValue(name);
+        try {
+            if (curIndex < context.getArgs().size()) {
+                context.addGlobalObject(name, parseInput(context, context.getArgs().get(curIndex)));
+            } else {
+                context.addGlobalObject(name, getDefaultValue(context));
+                context.indicateDefaultValue(name);
+            }
+        } catch (Exception ex) {
+            throw new InvalidInputException(MessageManager.getMessage(FlexLib.class, "lib_command.errors.invalid_input", new ReplacementMap("{ARGUMENT}", name).put("{INPUT}", "NYI").getMap()));
         }
 
         handleExecution(context, curIndex);
