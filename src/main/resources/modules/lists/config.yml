@@ -61,6 +61,7 @@ formats:
   elements:
     command: '&c{COMMAND} &8- &e{DESCRIPTION}'
     element: '&6{KEY}'
+    help_command: '&c{o=command_suggestion}{COMMAND}{,}{COMMAND}{/} &8- &e{DESCRIPTION}'
     hook_enabled: '&e{PLUGIN}&8: &a{VERSION}'
     hook_disabled: '&e{PLUGIN}&8: &c{STATUS}'
     lib_plugin_module: '&e{NAME}&8 &8({STATUS}&8): &6{DESCRIPTION}'

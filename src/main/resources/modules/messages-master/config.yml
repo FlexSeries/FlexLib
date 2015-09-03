@@ -5,6 +5,7 @@ formats:
 
   objects:
     command: '[&b{1}];[cmd:{2}];'
+    command_suggestion: '[&b{1}];[scmd:{2}];'
     item: '&6' # Generic item
     input: '''&6{?}{mood=.}'''
     input_sanitized: '&6{?}{mood=.}'
