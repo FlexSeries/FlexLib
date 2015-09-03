@@ -4,10 +4,12 @@ formats:
     notice: '&9'
 
   objects:
+    command: '[&b{1}];[cmd:{2}];'
     item: '&6' # Generic item
     input: '''&6{?}{mood=.}'''
     input_sanitized: '&6{?}{mood=.}'
     player_online: '&a' # A matched online player's name
     player_offline: '&c' # A matched offline player's name
     tag: '&8[&6{?}&8] '
+    url: '[&b{1}];[url:{2}];'
     usage: '&4USAGE: &c{?}'

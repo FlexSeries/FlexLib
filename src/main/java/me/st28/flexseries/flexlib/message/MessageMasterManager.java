@@ -39,7 +39,8 @@ public final class MessageMasterManager extends FlexModule<FlexLib> {
 
     private static final Pattern MOOD_PATTERN = Pattern.compile("\\{mood=(\\S+?)}");
     private static final Pattern OBJECT_PATTERN = Pattern.compile("\\{o=(\\S+?)}");
-    private static final Pattern OBJECT_PATTERN_VALUE = Pattern.compile("\\{o=(\\S+?)}(\\S+?)\\{/}");
+    private static final Pattern OBJECT_VALUE_PATTERN = Pattern.compile("\\{o=(\\S+?)}(\\S+?)\\{/}");
+    private static final Pattern OBJECT_SPLIT_PATTERN = Pattern.compile("\\{,\\}");
 
     private final Map<String, String> moodFormats = new HashMap<>();
 
@@ -120,10 +121,19 @@ public final class MessageMasterManager extends FlexModule<FlexLib> {
         // Process objects with values
         StringBuilder stage1 = new StringBuilder(message);
 
-        Matcher matcherStage1 = OBJECT_PATTERN_VALUE.matcher(message);
+        Matcher matcherStage1 = OBJECT_VALUE_PATTERN.matcher(message);
         int offsetStage1 = 0;
         while (matcherStage1.find()) {
             String format = getObjectFormat(matcherStage1.group(1));
+
+            String replacement = matcherStage1.group(2);
+
+            String[] split = OBJECT_SPLIT_PATTERN.split(replacement);
+            if (split.length > 0) {
+                for (int i = 0; i < split.length; i++) {
+                    format = format.replace("{" + (i + 1) + "}", split[i]);
+                }
+            }
 
             format = format.replace("{?}", matcherStage1.group(2));
 
