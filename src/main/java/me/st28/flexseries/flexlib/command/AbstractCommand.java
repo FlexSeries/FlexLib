@@ -81,8 +81,6 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
         Validate.notNull(descriptor, "Descriptor cannot be null.");
 
         this.plugin = plugin;
-
-        descriptor.lock();
         this.descriptor = descriptor;
     }
 

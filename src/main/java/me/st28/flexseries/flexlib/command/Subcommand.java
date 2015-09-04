@@ -38,6 +38,8 @@ public abstract class Subcommand<T extends FlexPlugin> extends AbstractCommand<T
         super(parent.getPlugin(), descriptor);
 
         this.parent = parent;
+
+        descriptor.lock();
     }
 
     /**

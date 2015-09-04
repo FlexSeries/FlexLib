@@ -44,6 +44,8 @@ public abstract class FlexCommand<T extends FlexPlugin> extends AbstractCommand<
         }
 
         descriptor.description(pluginCommand.getDescription());
+
+        descriptor.lock();
     }
 
     @Override
