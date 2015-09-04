@@ -119,6 +119,10 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
         arguments.add(argument);
     }
 
+    public final Collection<Subcommand<T>> getSubcommands() {
+        return Collections.unmodifiableCollection(subcommands.values());
+    }
+
     public final void registerSubcommand(Subcommand<T> subcommand, String... directAliases) {
         Validate.notNull(subcommand, "Subcommand cannot be null.");
 

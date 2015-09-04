@@ -57,9 +57,16 @@ public abstract class Subcommand<T extends FlexPlugin> extends AbstractCommand<T
 
     @Override
     public String buildUsage(CommandContext context) {
-        String arguments = super.buildUsage(context);
+        StringBuilder builder = new StringBuilder(super.buildUsage(context));
 
-        return parent.buildUsage(context) + " " + getDescriptor().getLabels().get(0) + (arguments.length() == 0 ? "" : " " + arguments);
+        if (parent instanceof FlexCommand) {
+            if (builder.length() > 0) {
+                builder.insert(0, " ");
+            }
+            builder.insert(0, "/" + (context != null ? context.getLabel() : parent.getDescriptor().getLabels().get(0)));
+        }
+
+        return builder.toString();
     }
 
 }
