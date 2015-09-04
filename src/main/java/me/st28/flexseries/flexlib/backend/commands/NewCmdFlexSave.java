@@ -22,23 +22,38 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package me.st28.flexseries.flexlib.command.logic.input;
+package me.st28.flexseries.flexlib.backend.commands;
 
+import me.st28.flexseries.flexlib.FlexLib;
 import me.st28.flexseries.flexlib.command.CommandContext;
+import me.st28.flexseries.flexlib.command.CommandDescriptor;
+import me.st28.flexseries.flexlib.command.FlexCommand;
+import me.st28.flexseries.flexlib.command.Subcommand;
+import me.st28.flexseries.flexlib.command.argument.BooleanArgument;
 
-public class PageInputPart extends IntegerInputPart {
+public class NewCmdFlexSave extends FlexCommand<FlexLib> {
 
-    public PageInputPart() {
-        this(false);
-    }
+    public NewCmdFlexSave(FlexLib plugin) {
+        super(plugin, new CommandDescriptor("flexsave"));
 
-    public PageInputPart(boolean isRequired) {
-        super("page", isRequired, 1, Integer.MAX_VALUE);
+        addArgument(new BooleanArgument("test", false));
+
+        Subcommand<FlexLib> subcommand;
+        registerSubcommand(subcommand = new Subcommand<FlexLib>(this, new CommandDescriptor("subtest")) {
+            @Override
+            public void handleExecute(CommandContext context) {
+                context.getSender().sendMessage("subtest: " + context.getGlobalObject("subarg", Boolean.class));
+                context.getSender().sendMessage("Relargs: " + getRelativeArgs(context).toString());
+            }
+        });
+
+        subcommand.addArgument(new BooleanArgument("subarg", false));
     }
 
     @Override
-    public Object getDefaultValue(CommandContext context) {
-        return 1;
+    public void handleExecute(CommandContext context) {
+        context.getSender().sendMessage("Test: " + context.getGlobalObject("test", Boolean.class));
+        context.getSender().sendMessage("Relargs: " + getRelativeArgs(context).toString());
     }
 
 }

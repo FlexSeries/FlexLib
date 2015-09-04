@@ -22,33 +22,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package me.st28.flexseries.flexlib.command.logic.input;
+package me.st28.flexseries.flexlib.command.argument;
 
-import me.st28.flexseries.flexlib.FlexLib;
 import me.st28.flexseries.flexlib.command.CommandContext;
 import me.st28.flexseries.flexlib.command.CommandInterruptedException;
-import me.st28.flexseries.flexlib.command.InvalidInputException;
-import me.st28.flexseries.flexlib.command.logic.LogicPart;
-import me.st28.flexseries.flexlib.message.MessageManager;
-import me.st28.flexseries.flexlib.message.ReplacementMap;
+import me.st28.flexseries.flexlib.command.CommandInterruptedException.InterruptReason;
 
 import java.util.List;
 
-public abstract class InputPart extends LogicPart {
+public abstract class Argument {
 
-    protected final String name;
-    protected final boolean isRequired;
+    private final String name;
+    private final boolean isRequired;
 
-    public InputPart(String name, boolean isRequired) {
+    public Argument(String name, boolean isRequired) {
         this.name = name;
         this.isRequired = isRequired;
     }
 
-    public String getName() {
+    public final String getName() {
         return name;
     }
 
-    public boolean isRequired() {
+    public final boolean isRequired() {
         return isRequired;
     }
 
@@ -57,8 +53,7 @@ public abstract class InputPart extends LogicPart {
         return String.format(isRequired ? "<%s>" : "[%s]", name);
     }
 
-    @Override
-    public void execute(CommandContext context, int curIndex) {
+    public final void execute(CommandContext context, int curIndex) {
         try {
             if (curIndex < context.getArgs().size()) {
                 context.addGlobalObject(name, parseInput(context, context.getArgs().get(curIndex)));
@@ -67,12 +62,12 @@ public abstract class InputPart extends LogicPart {
                 context.indicateDefaultValue(name);
             }
         } catch (CommandInterruptedException ex) {
+            // No need to handle.
             throw ex;
         } catch (Exception ex) {
-            throw new InvalidInputException(MessageManager.getMessage(FlexLib.class, "lib_command.errors.invalid_input", new ReplacementMap("{ARGUMENT}", name).put("{INPUT}", "NYI").getMap()));
+            // Uncaught exception.
+            throw new CommandInterruptedException(InterruptReason.ARGUMENT_ERROR, ex);
         }
-
-        handleExecution(context, curIndex);
     }
 
     public abstract Object parseInput(CommandContext context, String input);
@@ -81,10 +76,8 @@ public abstract class InputPart extends LogicPart {
         return null;
     }
 
-    public List<String> getSuggestions(CommandContext context, int curIndex) {
+    public List<String> getSuggestions(String input) {
         return null;
     }
-
-    public void handleExecution(CommandContext context, int curIndex) {}
 
 }

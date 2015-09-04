@@ -24,9 +24,8 @@
  */
 package me.st28.flexseries.flexlib;
 
-import me.st28.flexseries.flexlib.backend.commands.CmdFlexModules;
-import me.st28.flexseries.flexlib.backend.commands.CmdFlexReload;
-import me.st28.flexseries.flexlib.backend.commands.CmdFlexSave;
+import me.st28.flexseries.flexlib.backend.commands.NewCmdFlexSave;
+import me.st28.flexseries.flexlib.command.FlexCommandWrapper;
 import me.st28.flexseries.flexlib.message.MessageManager;
 import me.st28.flexseries.flexlib.message.MessageMasterManager;
 import me.st28.flexseries.flexlib.message.list.ListManager;
@@ -45,9 +44,11 @@ public final class FlexLib extends FlexPlugin {
 
     @Override
     public void handleEnable() {
-        new CmdFlexModules(this);
-        new CmdFlexReload(this);
-        new CmdFlexSave(this);
+        //new CmdFlexModules(this);
+        //new CmdFlexReload(this);
+        //new CmdFlexSave(this);
+
+        FlexCommandWrapper.registerCommand(new NewCmdFlexSave(this));
     }
 
 }

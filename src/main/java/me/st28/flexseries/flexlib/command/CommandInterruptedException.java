@@ -24,18 +24,106 @@
  */
 package me.st28.flexseries.flexlib.command;
 
+import me.st28.flexseries.flexlib.FlexLib;
+import me.st28.flexseries.flexlib.message.MessageManager;
+import me.st28.flexseries.flexlib.message.ReplacementMap;
 import me.st28.flexseries.flexlib.message.reference.MessageReference;
+import org.apache.commons.lang.Validate;
 
 public class CommandInterruptedException extends RuntimeException {
 
-    private MessageReference reference;
+    private final InterruptReason reason;
+    private final MessageReference exitMessage;
 
-    public CommandInterruptedException(MessageReference message) {
-        this.reference = message;
+    public CommandInterruptedException(InterruptReason reason) {
+        this(reason, null, null);
     }
 
-    public MessageReference getMessageReference() {
-        return reference;
+    public CommandInterruptedException(InterruptReason reason, Exception ex) {
+        this(reason, null, ex);
+    }
+
+    public CommandInterruptedException(InterruptReason reason, MessageReference exitMessage) {
+        this(reason, exitMessage, null);
+    }
+
+    public CommandInterruptedException(InterruptReason reason, MessageReference exitMessage, Exception ex) {
+        super(ex);
+
+        Validate.notNull(reason, "Reason cannot be null.");
+
+        this.reason = reason;
+        this.exitMessage = exitMessage != null ? exitMessage : getDefaultMessage(reason);
+    }
+
+    public InterruptReason getReason() {
+        return reason;
+    }
+
+    public MessageReference getExitMessage() {
+        return exitMessage;
+    }
+
+    private MessageReference getDefaultMessage(InterruptReason reason) {
+        switch (reason) {
+            case ARGUMENT_ERROR:
+            case COMMAND_ERROR:
+                return MessageManager.getMessage(FlexLib.class, "lib_command.errors.uncaught_exception", new ReplacementMap("{MESSAGE}", getCause().getMessage()).getMap());
+
+            case NO_PERMISSION:
+                return MessageManager.getMessage(FlexLib.class, "general.errors.no_permission");
+
+            default:
+                return null;
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------ //
+
+    public enum InterruptReason {
+
+        /**
+         * An exception occurred while parsing an argument.
+         */
+        ARGUMENT_ERROR(true),
+
+        /**
+         * Invalid input for an argument.
+         */
+        ARGUMENT_INVALID_INPUT(false),
+
+        /**
+         * The command ended without any errors.
+         */
+        COMMAND_END(false),
+
+        /**
+         * An error occurred while executing the command.
+         */
+        COMMAND_ERROR(true),
+
+        /**
+         * The provided arguments are invalid.<br />
+         * Automatically sends the usage message to the sender.
+         */
+        INVALID_USAGE(false),
+
+        /**
+         * The sender doesn't have permission for the command.<br />
+         * Automatically sends the no permission message to the sender.
+         */
+        NO_PERMISSION(false);
+
+        private boolean isError;
+
+        InterruptReason(boolean isError) {
+            this.isError = isError;
+        }
+
+        public boolean isError() {
+            return isError;
+        }
+
     }
 
 }

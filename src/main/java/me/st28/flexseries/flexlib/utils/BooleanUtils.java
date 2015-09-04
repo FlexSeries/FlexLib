@@ -22,25 +22,36 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package me.st28.flexseries.flexlib.command;
+package me.st28.flexseries.flexlib.utils;
 
-import me.st28.flexseries.flexlib.FlexLib;
-import me.st28.flexseries.flexlib.message.MessageManager;
-import me.st28.flexseries.flexlib.permission.PermissionNode;
 import org.apache.commons.lang.Validate;
-import org.bukkit.command.CommandSender;
 
-public final class CommandUtils {
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
-    private CommandUtils() {}
+/**
+ * Utility methods for booleans.
+ */
+public final class BooleanUtils {
 
-    public static void performPermissionTest(CommandSender sender, PermissionNode permission) {
-        Validate.notNull(sender, "Sender cannot be null.");
-        Validate.notNull(permission, "Permission cannot be null.");
+    public final static Set<String> ALIASES_TRUE = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("true", "t", "yes", "y")));
+    public final static Set<String> ALIASES_FALSE = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("false", "f", "no", "n")));
 
-        if (!permission.isAllowed(sender)) {
-            throw new CommandInterruptedException(MessageManager.getMessage(FlexLib.class, "general.errors.no_permission"));
+    private BooleanUtils() {}
+
+    public static boolean parseBoolean(String input) {
+        Validate.notNull(input, "Input cannot be null.");
+
+        input = input.toLowerCase();
+
+        if (ALIASES_TRUE.contains(input)) {
+            return true;
+        } else if (ALIASES_FALSE.contains(input)) {
+            return false;
         }
+        throw new IllegalArgumentException("'" + input + "' is not a valid boolean.");
     }
 
 }

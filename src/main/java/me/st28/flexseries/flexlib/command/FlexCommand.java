@@ -24,77 +24,21 @@
  */
 package me.st28.flexseries.flexlib.command;
 
-import me.st28.flexseries.flexlib.command.logic.hub.LogicHub;
+import me.st28.flexseries.flexlib.permission.PermissionNode;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
-import org.apache.commons.lang.Validate;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-import org.bukkit.command.TabCompleter;
 
-import java.util.ArrayList;
-import java.util.List;
+/**
+ * Represents a registered command in a plugin's plugin.yml that uses FlexLib's command library.
+ */
+public abstract class FlexCommand<T extends FlexPlugin> extends AbstractCommand<T> {
 
-public class FlexCommand<T extends FlexPlugin> implements CommandExecutor, TabCompleter {
-
-    private final T plugin;
-    private final LogicHub base;
-    private final String name;
-
-    public FlexCommand(T plugin, LogicHub base, String name) {
-        Validate.notNull(plugin, "Plugin cannot be null.");
-        Validate.notNull(base, "Base cannot be null.");
-        Validate.notNull(name, "Name cannot be null.");
-
-        this.plugin = plugin;
-        this.base = base;
-        base.setFirstArgumentIndex(0);
-        this.name = name;
-    }
-
-    public T getPlugin() {
-        return plugin;
-    }
-
-    public void register() {
-        plugin.getCommand(name).setExecutor(this);
-        plugin.getCommand(name).setTabCompleter(this);
+    public FlexCommand(T plugin, CommandDescriptor descriptor) {
+        super(plugin, descriptor);
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        CommandContext context = new CommandContext(this, sender, label, args);
-
-        try {
-            base.execute(context, 0);
-        } catch (CommandInterruptedException ex) {
-            ex.getMessageReference().sendTo(sender);
-        }
-
-        return true;
-    }
-
-    @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
-        CommandContext context = new CommandContext(this, sender, label, args);
-
-        List<String> suggestions = base.getSuggestions(context, args.length - 1);
-
-        if (suggestions == null) {
-            return null;
-        }
-
-        String argument = context.getArgs().get(args.length - 1).toLowerCase();
-
-        List<String> returnList = new ArrayList<>();
-
-        for (String suggestion : suggestions) {
-            if (suggestion.toLowerCase().startsWith(argument)) {
-                returnList.add(suggestion);
-            }
-        }
-
-        return returnList;
+    public final PermissionNode getPermission() {
+        return getDescriptor().getPermission();
     }
 
 }

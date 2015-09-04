@@ -55,4 +55,15 @@ public class FancyMessageReference extends MessageReference {
         message.send(sender);
     }
 
+    @Override
+    public String getMessage() {
+        return message.toOldMessageFormat();
+    }
+
+    @Override
+    public String getMessage(Map<String, Object> replacements) {
+        // TODO: Use replacements
+        return getMessage();
+    }
+
 }

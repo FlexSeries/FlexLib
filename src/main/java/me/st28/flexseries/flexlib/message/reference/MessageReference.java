@@ -48,4 +48,14 @@ public abstract class MessageReference {
      */
     public abstract void sendTo(CommandSender sender, Map<String, Object> replacements);
 
+    /**
+     * @return The represented message as a string.
+     */
+    public abstract String getMessage();
+
+    /**
+     * @return The represented message as a string with replacements.
+     */
+    public abstract String getMessage(Map<String, Object> replacements);
+
 }

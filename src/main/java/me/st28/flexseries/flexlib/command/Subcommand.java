@@ -24,12 +24,33 @@
  */
 package me.st28.flexseries.flexlib.command;
 
-import me.st28.flexseries.flexlib.message.reference.MessageReference;
+import me.st28.flexseries.flexlib.permission.PermissionNode;
+import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 
-public class InvalidInputException extends CommandInterruptedException {
+/**
+ * A subcommand that is registered under another command.
+ */
+public abstract class Subcommand<T extends FlexPlugin> extends AbstractCommand<T> {
 
-    public InvalidInputException(MessageReference message) {
-        super(message);
+    private final AbstractCommand<T> parent;
+
+    public Subcommand(AbstractCommand<T> parent, CommandDescriptor descriptor) {
+        super(parent.getPlugin(), descriptor);
+
+        this.parent = parent;
+    }
+
+    /**
+     * @return The command this subcommand is registered under.
+     */
+    public final AbstractCommand<T> getParent() {
+        return parent;
+    }
+
+    @Override
+    public final PermissionNode getPermission() {
+        PermissionNode permission = getDescriptor().getPermission();
+        return permission != null || !getDescriptor().shouldInheritPermission() ? permission : getParent().getPermission();
     }
 
 }
