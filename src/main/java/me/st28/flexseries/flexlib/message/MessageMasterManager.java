@@ -30,6 +30,7 @@ import me.st28.flexseries.flexlib.plugin.module.ModuleDescriptor;
 import org.apache.commons.lang.Validate;
 import org.bukkit.configuration.ConfigurationSection;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -37,9 +38,9 @@ import java.util.regex.Pattern;
 
 public final class MessageMasterManager extends FlexModule<FlexLib> {
 
-    private static final Pattern MOOD_PATTERN = Pattern.compile("\\{mood=(\\S+?)}");
-    private static final Pattern OBJECT_PATTERN = Pattern.compile("\\{o=(\\S+?)}");
-    private static final Pattern OBJECT_VALUE_PATTERN = Pattern.compile("\\{o=(\\S+?)}(\\S+?)\\{/}");
+    private static final Pattern MOOD_PATTERN = Pattern.compile("\\{mood=(\\S+?)\\}");
+    private static final Pattern OBJECT_PATTERN = Pattern.compile("\\{o=(\\S+?)\\}");
+    private static final Pattern OBJECT_VALUE_PATTERN = Pattern.compile("\\{o=(\\S+?)\\}(.+?)\\{/\\}");
     private static final Pattern OBJECT_SPLIT_PATTERN = Pattern.compile("\\{,\\}");
 
     private final Map<String, String> moodFormats = new HashMap<>();
