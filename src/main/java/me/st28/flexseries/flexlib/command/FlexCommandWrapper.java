@@ -71,8 +71,10 @@ public class FlexCommandWrapper implements CommandExecutor, TabCompleter {
 
             switch (ex.getReason()) {
                 case INVALID_USAGE:
-                    //TODO: Send usage
+                    MessageManager.getMessage(FlexLib.class, "lib_command.errors.usage", new ReplacementMap("{USAGE}", this.command.getFinalCommand(context, 0).buildUsage(context)).getMap()).sendTo(sender);
                     return true;
+
+                default:
             }
 
             if (ex.getReason().isError()) {

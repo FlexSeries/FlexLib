@@ -31,10 +31,7 @@ import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 import org.apache.commons.lang.Validate;
 import org.bukkit.command.CommandSender;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public abstract class AbstractCommand<T extends FlexPlugin> {
 
@@ -97,8 +94,25 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
 
     public abstract PermissionNode getPermission();
 
+    public String buildUsage(CommandContext context) {
+        StringBuilder builder = new StringBuilder();
+
+        for (Argument argument : getArguments()) {
+            if (builder.length() != 0) {
+                builder.append(" ");
+            }
+            builder.append(argument.toString());
+        }
+
+        return builder.toString();
+    }
+
     public final int getArgumentOffset() {
         return argumentOffset;
+    }
+
+    public final List<Argument> getArguments() {
+        return Collections.unmodifiableList(arguments);
     }
 
     public final void addArgument(Argument argument) {
@@ -126,6 +140,30 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
         }
     }
 
+    public final AbstractCommand<T> getFinalCommand(CommandContext context, int curIndex) {
+        final List<String> args = context.getArgs();
+        final String label = context.getLabel();
+        final String directAlias = subcommandDirectAliases.get(label.toLowerCase());
+
+        Subcommand<T> subcommand = null;
+        if (directAlias != null) {
+            subcommand = subcommands.get(directAlias);
+        }
+
+        if (curIndex < args.size()) {
+            final String alias = subcommandAliases.get(args.get(curIndex).toLowerCase());
+            if (alias != null) {
+                subcommand = subcommands.get(alias);
+            }
+        }
+
+        if (subcommand != null) {
+            return subcommand;
+        }
+
+        return this;
+    }
+
     public final void execute(CommandContext context, int curIndex) {
         final List<String> args = context.getArgs();
         final String label = context.getLabel();
@@ -151,8 +189,7 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
 
         if (getRelativeArgs(context).size() < getRequiredArgs()) {
             // Show usage
-            context.getSender().sendMessage("(usage)");
-            return;
+            throw new CommandInterruptedException(InterruptReason.INVALID_USAGE);
         }
 
         for (Argument argument : this.arguments) {
