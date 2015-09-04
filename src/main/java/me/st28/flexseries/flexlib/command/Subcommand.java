@@ -63,7 +63,10 @@ public abstract class Subcommand<T extends FlexPlugin> extends AbstractCommand<T
             if (builder.length() > 0) {
                 builder.insert(0, " ");
             }
-            builder.insert(0, "/" + (context != null ? context.getLabel() : parent.getDescriptor().getLabels().get(0)));
+
+            builder.insert(0, getDescriptor().getLabels().get(0));
+
+            builder.insert(0, "/" + (context != null ? context.getLabel() : parent.getDescriptor().getLabels().get(0)) + " ");
         }
 
         return builder.toString();
