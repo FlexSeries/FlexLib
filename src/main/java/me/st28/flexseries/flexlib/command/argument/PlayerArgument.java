@@ -210,8 +210,12 @@ public class PlayerArgument extends Argument {
 
     @Override
     public Object getDefaultValue(CommandContext context) {
-        if (inferSender && !notSender && context.getSender() instanceof Player) {
-            return new PlayerReference((Player) context.getSender());
+        if (inferSender && !notSender) {
+            if (context.getSender() instanceof Player) {
+                return new PlayerReference((Player) context.getSender());
+            } else {
+                throw new CommandInterruptedException(InterruptReason.MUST_BE_PLAYER);
+            }
         }
         return null;
     }
