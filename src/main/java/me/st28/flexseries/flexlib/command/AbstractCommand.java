@@ -80,7 +80,9 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
         this.plugin = plugin;
         this.descriptor = descriptor;
 
-        registerSubcommand(new HelpSubcommand<T>(this, new CommandDescriptor()));
+        if (!(this instanceof HelpSubcommand)) {
+            registerSubcommand(new HelpSubcommand<T>(this, new CommandDescriptor()));
+        }
     }
 
     /**
