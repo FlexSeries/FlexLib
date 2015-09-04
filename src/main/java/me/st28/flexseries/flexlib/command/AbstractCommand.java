@@ -226,6 +226,7 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
                         return;
                     }
                 }
+                throw ex;
             }
             curIndex++;
         }
