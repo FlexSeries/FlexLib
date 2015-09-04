@@ -45,7 +45,7 @@ import java.util.List;
 public class CmdFlexModules extends FlexCommand<FlexLib> {
 
     public CmdFlexModules(FlexLib plugin) {
-        super(plugin, new CommandDescriptor("flexreload").permission(PermissionNodes.MODULES));
+        super(plugin, new CommandDescriptor("flexmodules").permission(PermissionNodes.MODULES));
 
         addArgument(new FlexPluginArgument("plugin", true));
         addArgument(new PageArgument(false));
