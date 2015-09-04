@@ -26,37 +26,32 @@ package me.st28.flexseries.flexlib.backend.commands;
 
 import me.st28.flexseries.flexlib.FlexLib;
 import me.st28.flexseries.flexlib.command.CommandContext;
+import me.st28.flexseries.flexlib.command.CommandDescriptor;
 import me.st28.flexseries.flexlib.command.FlexCommand;
-import me.st28.flexseries.flexlib.command.logic.LogicPath;
-import me.st28.flexseries.flexlib.command.logic.hub.PathLogicHub;
-import me.st28.flexseries.flexlib.command.logic.input.BooleanInputPart;
-import me.st28.flexseries.flexlib.command.logic.input.FlexPluginInputPart;
+import me.st28.flexseries.flexlib.command.Subcommand;
+import me.st28.flexseries.flexlib.command.argument.BooleanArgument;
+import me.st28.flexseries.flexlib.command.argument.FlexPluginArgument;
 import me.st28.flexseries.flexlib.message.MessageManager;
 import me.st28.flexseries.flexlib.message.ReplacementMap;
 import me.st28.flexseries.flexlib.permission.PermissionNodes;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 
-public class CmdFlexSave {
+public final class CmdFlexSave extends FlexCommand<FlexLib> {
 
     public CmdFlexSave(FlexLib plugin) {
-        LogicPath path = new LogicPath("flexsave");
+        super(plugin, new CommandDescriptor("flexsave").permission(PermissionNodes.SAVE));
 
-        path.setPermissionNode(PermissionNodes.SAVE);
+        addArgument(new FlexPluginArgument("plugin", true));
+        addArgument(new BooleanArgument("async", false, false));
+    }
 
-        path.append(new FlexPluginInputPart("plugin", true));
+    @Override
+    public void handleExecute(CommandContext context) {
+        FlexPlugin plugin = context.getGlobalObject("plugin", FlexPlugin.class);
 
-        path.append(new BooleanInputPart("async", false, true) {
-            @Override
-            public void handleExecution(CommandContext context, int curIndex) {
-                FlexPlugin plugin = context.getGlobalObject("plugin", FlexPlugin.class);
+        plugin.saveAll(context.getGlobalObject("async", Boolean.class));
 
-                plugin.saveAll(context.getGlobalObject("async", Boolean.class));
-
-                MessageManager.getMessage(FlexLib.class, "lib_plugin.notices.plugin_saved", new ReplacementMap("{PLUGIN}", plugin.getName()).getMap()).sendTo(context.getSender());
-            }
-        });
-
-        new FlexCommand<>(plugin, new PathLogicHub(path), "flexsave").register();
+        MessageManager.getMessage(FlexLib.class, "lib_plugin.notices.plugin_saved", new ReplacementMap("{PLUGIN}", plugin.getName()).getMap()).sendTo(context.getSender());
     }
 
 }

@@ -22,33 +22,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package me.st28.flexseries.flexlib.backend.commands;
+package me.st28.flexseries.flexlib.command.argument;
 
-import me.st28.flexseries.flexlib.FlexLib;
-import me.st28.flexseries.flexlib.command.CommandContext;
-import me.st28.flexseries.flexlib.command.CommandDescriptor;
-import me.st28.flexseries.flexlib.command.FlexCommand;
-import me.st28.flexseries.flexlib.command.argument.FlexPluginArgument;
-import me.st28.flexseries.flexlib.message.MessageManager;
-import me.st28.flexseries.flexlib.message.ReplacementMap;
-import me.st28.flexseries.flexlib.permission.PermissionNodes;
-import me.st28.flexseries.flexlib.plugin.FlexPlugin;
+public class PageArgument extends IntegerArgument {
 
-public final class CmdFlexReload extends FlexCommand<FlexLib> {
-
-    public CmdFlexReload(FlexLib plugin) {
-        super(plugin, new CommandDescriptor("flexreload").permission(PermissionNodes.RELOAD));
-
-        addArgument(new FlexPluginArgument("plugin", true));
+    public PageArgument() {
+        this(false);
     }
 
-    @Override
-    public void handleExecute(CommandContext context) {
-        FlexPlugin plugin = context.getGlobalObject("plugin", FlexPlugin.class);
-
-        plugin.reloadAll();
-
-        MessageManager.getMessage(FlexLib.class, "lib_plugin.notices.plugin_reloaded", new ReplacementMap("{PLUGIN}", plugin.getName()).getMap()).sendTo(context.getSender());
+    public PageArgument(boolean isRequired) {
+        super("page", isRequired, 1, Integer.MAX_VALUE, 1);
     }
 
 }
