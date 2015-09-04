@@ -30,6 +30,7 @@ import me.st28.flexseries.flexlib.permission.PermissionNode;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 import org.apache.commons.lang.Validate;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import java.util.*;
 
@@ -173,6 +174,7 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
     }
 
     public final void execute(CommandContext context, int curIndex) {
+        final CommandSender sender = context.getSender();
         final List<String> args = context.getArgs();
         final String label = context.getLabel();
         final String directAlias = subcommandDirectAliases.get(label.toLowerCase());
@@ -195,6 +197,16 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
             return;
         }
 
+        final PermissionNode permission = getPermission();
+
+        if (permission != null && !permission.isAllowed(sender)) {
+            throw new CommandInterruptedException(InterruptReason.NO_PERMISSION);
+        }
+
+        if (getDescriptor().isPlayerOnly() && !(sender instanceof Player)) {
+            throw new CommandInterruptedException(InterruptReason.MUST_BE_PLAYER);
+        }
+
         if (getRelativeArgs(context).size() < getRequiredArgs()) {
             // Show usage
             throw new CommandInterruptedException(InterruptReason.INVALID_USAGE);
@@ -210,7 +222,7 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
                         context.indicateDefaultValue(argument.getName());
                         continue;
                     } else {
-                        ex.getExitMessage().sendTo(context.getSender());
+                        ex.getExitMessage().sendTo(sender);
                         return;
                     }
                 }

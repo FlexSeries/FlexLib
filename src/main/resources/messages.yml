@@ -4,6 +4,7 @@ general:
     integer_too_high: '{mood=error}{ITEM} must be {MAX} or lower.'
     item_must_be_boolean: '{mood=error}{ITEM} must be a boolean.'
     item_must_be_int: '{mood=error}{ITEM} must be an integer.'
+    must_be_player: '{mood=error}You must be a player to do this.'
     no_permission: '{mood=error}You do not have permission to do this.'
     player_cannot_be_self: '{mood=error}You cannot be the target of this command.'
     player_matched_multiple: '{mood=error}Name {o=input}{NAME}{/} matches multiple players. Please be more specific.'

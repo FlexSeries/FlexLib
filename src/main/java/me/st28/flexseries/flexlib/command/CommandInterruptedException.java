@@ -70,6 +70,9 @@ public class CommandInterruptedException extends RuntimeException {
             case COMMAND_ERROR:
                 return MessageManager.getMessage(FlexLib.class, "lib_command.errors.uncaught_exception", new ReplacementMap("{MESSAGE}", getCause().getMessage()).getMap());
 
+            case MUST_BE_PLAYER:
+                return MessageManager.getMessage(FlexLib.class, "general.errors.must_be_player");
+
             case NO_PERMISSION:
                 return MessageManager.getMessage(FlexLib.class, "general.errors.no_permission");
 
@@ -107,6 +110,11 @@ public class CommandInterruptedException extends RuntimeException {
          * Automatically sends the usage message to the sender.
          */
         INVALID_USAGE(false),
+
+        /**
+         * The command is strictly for players only and the sender is not a player.
+         */
+        MUST_BE_PLAYER(false),
 
         /**
          * The sender doesn't have permission for the command.<br />
