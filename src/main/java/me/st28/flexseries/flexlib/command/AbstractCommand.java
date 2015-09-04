@@ -279,7 +279,7 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
             }
         }
 
-        if (newIndex < arguments.size() && newIndex < args.size()) {
+        if (newIndex >= 0 && newIndex < arguments.size() && newIndex < args.size()) {
             final List<String> suggestionsToAdd = arguments.get(newIndex).getSuggestions(args.get(newIndex));
 
             if (suggestionsToAdd != null) {
