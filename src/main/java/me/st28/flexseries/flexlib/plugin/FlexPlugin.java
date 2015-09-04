@@ -246,6 +246,11 @@ public class FlexPlugin extends JavaPlugin {
 
             checked.add(module);
 
+            if (module.getPlugin() != this) {
+                // Don't attempt to load a module that isn't from this plugin.
+                continue;
+            }
+
             try {
                 loadModule(unused, checked, module);
             } catch (Exception ex) {
