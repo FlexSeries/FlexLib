@@ -24,6 +24,7 @@
  */
 package me.st28.flexseries.flexlib.message.list;
 
+import me.st28.flexseries.flexlib.message.MessageMasterManager;
 import me.st28.flexseries.flexlib.message.ReplacementMap;
 import me.st28.flexseries.flexlib.message.reference.McmlMessageReference;
 import me.st28.flexseries.flexlib.message.reference.MessageReference;
@@ -41,6 +42,10 @@ public final class ListBuilder {
 
     private static ListManager getListManager() {
         return FlexPlugin.getGlobalModule(ListManager.class);
+    }
+
+    private static String processMessage(String message) {
+        return FlexPlugin.getGlobalModule(MessageMasterManager.class).processMessage(message);
     }
 
     private ListHeader header;
@@ -66,7 +71,7 @@ public final class ListBuilder {
     }
 
     public void addMessage(String message) {
-        messages.add(new McmlMessageReference(message));
+        messages.add(new McmlMessageReference(processMessage(message)));
     }
 
     public void addMessage(String format, String key, String value) {
@@ -74,7 +79,7 @@ public final class ListBuilder {
         if (value != null) {
             rawFormat = rawFormat.replace("{VALUE}", value);
         }
-        messages.add(new McmlMessageReference(rawFormat));
+        messages.add(new McmlMessageReference(processMessage(rawFormat)));
     }
 
     public void addMessage(String format, Map<String, String> replacements) {
@@ -82,7 +87,7 @@ public final class ListBuilder {
         for (Entry<String, String> entry : replacements.entrySet()) {
             rawFormat = rawFormat.replace(entry.getKey(), entry.getValue());
         }
-        messages.add(new McmlMessageReference(rawFormat));
+        messages.add(new McmlMessageReference(processMessage(rawFormat)));
     }
 
     public void enableNextPageNotice(String nextPageCommand) {
