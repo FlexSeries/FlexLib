@@ -22,23 +22,36 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package me.st28.flexseries.flexlib.command.logic.input;
+package me.st28.flexseries.flexlib.utils;
 
-import me.st28.flexseries.flexlib.command.CommandContext;
+import org.apache.commons.lang.Validate;
 
-public class PageInputPart extends IntegerInputPart {
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
-    public PageInputPart() {
-        this(false);
-    }
+/**
+ * Utility methods for booleans.
+ */
+public final class BooleanUtils {
 
-    public PageInputPart(boolean isRequired) {
-        super("page", isRequired, 1, Integer.MAX_VALUE);
-    }
+    public final static Set<String> ALIASES_TRUE = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("true", "t", "yes", "y")));
+    public final static Set<String> ALIASES_FALSE = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("false", "f", "no", "n")));
 
-    @Override
-    public Object getDefaultValue(CommandContext context) {
-        return 1;
+    private BooleanUtils() {}
+
+    public static boolean parseBoolean(String input) {
+        Validate.notNull(input, "Input cannot be null.");
+
+        input = input.toLowerCase();
+
+        if (ALIASES_TRUE.contains(input)) {
+            return true;
+        } else if (ALIASES_FALSE.contains(input)) {
+            return false;
+        }
+        throw new IllegalArgumentException("'" + input + "' is not a valid boolean.");
     }
 
 }

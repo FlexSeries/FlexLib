@@ -25,6 +25,7 @@
 package me.st28.flexseries.flexlib.message.reference;
 
 import com.stealthyone.mcb.mcml.MCMLBuilder;
+import com.stealthyone.mcb.mcml.shade.fanciful.FancyMessage;
 import org.apache.commons.lang.Validate;
 import org.bukkit.command.CommandSender;
 
@@ -63,20 +64,33 @@ public class McmlMessageReference extends MessageReference {
     public void sendTo(CommandSender sender, Map<String, Object> replacements) {
         Validate.notNull(sender, "Sender cannot be null.");
 
+        getFancyMessage(replacements).send(sender);
+    }
+
+    private FancyMessage getFancyMessage(Map<String, Object> replacements) {
         if (replacements == null) {
             if (this.replacements == null) {
-                new MCMLBuilder(message).getFancyMessage().send(sender);
+                return new MCMLBuilder(message).getFancyMessage();
             } else {
-                new MCMLBuilder(message, this.replacements).getFancyMessage().send(sender);
+                return new MCMLBuilder(message, this.replacements).getFancyMessage();
             }
-            return;
         }
 
         Map<String, Object> allReplacements = new HashMap<>();
         allReplacements.putAll(this.replacements);
         allReplacements.putAll(replacements);
 
-        new MCMLBuilder(message, allReplacements).getFancyMessage().send(sender);
+        return new MCMLBuilder(message, allReplacements).getFancyMessage();
+    }
+
+    @Override
+    public String getMessage() {
+        return getFancyMessage(null).toOldMessageFormat();
+    }
+
+    @Override
+    public String getMessage(Map<String, Object> replacements) {
+        return getFancyMessage(replacements).toOldMessageFormat();
     }
 
 }

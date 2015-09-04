@@ -22,14 +22,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package me.st28.flexseries.flexlib.command;
+package me.st28.flexseries.flexlib.command.argument;
 
-import me.st28.flexseries.flexlib.message.reference.MessageReference;
+public class PageArgument extends IntegerArgument {
 
-public class InvalidInputException extends CommandInterruptedException {
+    public PageArgument() {
+        this(false);
+    }
 
-    public InvalidInputException(MessageReference message) {
-        super(message);
+    public PageArgument(boolean isRequired) {
+        super("page", isRequired, 1, Integer.MAX_VALUE, 1);
     }
 
 }

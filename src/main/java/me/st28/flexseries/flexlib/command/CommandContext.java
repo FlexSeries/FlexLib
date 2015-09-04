@@ -24,7 +24,6 @@
  */
 package me.st28.flexseries.flexlib.command;
 
-import me.st28.flexseries.flexlib.command.logic.input.InputPart;
 import org.apache.commons.lang.Validate;
 import org.bukkit.command.CommandSender;
 
@@ -42,9 +41,6 @@ public class CommandContext {
 
     private final Map<String, Object> globalObjects = new HashMap<>();
 
-    /**
-     * Values from {@link InputPart}s that were retrieved via {@link InputPart#getDefaultValue(CommandContext)}.
-     */
     private final Set<String> defaultValues = new HashSet<>();
 
     public CommandContext(FlexCommand command, CommandSender sender, String label, String... args) {

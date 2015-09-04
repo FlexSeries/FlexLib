@@ -24,23 +24,42 @@
  */
 package me.st28.flexseries.flexlib.command;
 
-import me.st28.flexseries.flexlib.FlexLib;
-import me.st28.flexseries.flexlib.message.MessageManager;
 import me.st28.flexseries.flexlib.permission.PermissionNode;
-import org.apache.commons.lang.Validate;
-import org.bukkit.command.CommandSender;
+import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 
-public final class CommandUtils {
+/**
+ * A subcommand that is registered under another command.
+ */
+public abstract class Subcommand<T extends FlexPlugin> extends AbstractCommand<T> {
 
-    private CommandUtils() {}
+    private final AbstractCommand<T> parent;
 
-    public static void performPermissionTest(CommandSender sender, PermissionNode permission) {
-        Validate.notNull(sender, "Sender cannot be null.");
-        Validate.notNull(permission, "Permission cannot be null.");
+    public Subcommand(AbstractCommand<T> parent, CommandDescriptor descriptor) {
+        super(parent.getPlugin(), descriptor);
 
-        if (!permission.isAllowed(sender)) {
-            throw new CommandInterruptedException(MessageManager.getMessage(FlexLib.class, "general.errors.no_permission"));
-        }
+        this.parent = parent;
+
+        descriptor.lock();
+    }
+
+    /**
+     * @return The command this subcommand is registered under.
+     */
+    public final AbstractCommand<T> getParent() {
+        return parent;
+    }
+
+    @Override
+    public final PermissionNode getPermission() {
+        PermissionNode permission = getDescriptor().getPermission();
+        return permission != null || !getDescriptor().shouldInheritPermission() ? permission : getParent().getPermission();
+    }
+
+    @Override
+    public String buildUsage(CommandContext context) {
+        String arguments = super.buildUsage(context);
+
+        return parent.buildUsage(context) + " " + getDescriptor().getLabels().get(0) + (arguments.length() == 0 ? "" : " " + arguments);
     }
 
 }

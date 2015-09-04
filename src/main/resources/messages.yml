@@ -2,6 +2,7 @@ general:
   errors:
     integer_too_low: '{mood=error}{ITEM} must be {MIN} or higher.'
     integer_too_high: '{mood=error}{ITEM} must be {MAX} or lower.'
+    item_must_be_boolean: '{mood=error}{ITEM} must be a boolean.'
     item_must_be_int: '{mood=error}{ITEM} must be an integer.'
     no_permission: '{mood=error}You do not have permission to do this.'
     player_cannot_be_self: '{mood=error}You cannot be the target of this command.'
@@ -14,6 +15,7 @@ general:
 lib_command:
   errors:
     invalid_input: '{mood=error}Invalid input {o=input}{INPUT}{/} for argument {o=input_sanitized}{ARGUMENT}{/}.'
+    uncaught_exception: '{mood=error}An error occurred while running this command ({MESSAGE}).'
     usage: '{o=usage}{USAGE}{/}'
 
 lib_plugin:

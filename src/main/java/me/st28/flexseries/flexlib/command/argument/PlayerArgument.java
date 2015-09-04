@@ -22,11 +22,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package me.st28.flexseries.flexlib.command.logic.input;
+package me.st28.flexseries.flexlib.command.argument;
 
 import me.st28.flexseries.flexlib.FlexLib;
 import me.st28.flexseries.flexlib.command.CommandContext;
 import me.st28.flexseries.flexlib.command.CommandInterruptedException;
+import me.st28.flexseries.flexlib.command.CommandInterruptedException.InterruptReason;
 import me.st28.flexseries.flexlib.message.MessageManager;
 import me.st28.flexseries.flexlib.message.ReplacementMap;
 import me.st28.flexseries.flexlib.permission.PermissionNode;
@@ -41,9 +42,9 @@ import org.bukkit.entity.Player;
 import java.util.*;
 
 /**
- * An {@link InputPart} that creates a {@link PlayerReference} based on user input.
+ * An {@link Argument} that creates a {@link PlayerReference} based on user input.
  */
-public class PlayerInputPart extends InputPart {
+public class PlayerArgument extends Argument {
 
     /**
      * If true, only targets online players.
@@ -80,7 +81,7 @@ public class PlayerInputPart extends InputPart {
      */
     private boolean inferSender = true;
 
-    public PlayerInputPart(String name, boolean isRequired) {
+    public PlayerArgument(String name, boolean isRequired) {
         super(name, isRequired);
     }
 
@@ -88,7 +89,7 @@ public class PlayerInputPart extends InputPart {
      * @see #onlineOnly
      * @return This instance, for chaining.
      */
-    public PlayerInputPart onlineOnly(boolean isOnline) {
+    public PlayerArgument onlineOnly(boolean isOnline) {
         this.onlineOnly = isOnline;
         return this;
     }
@@ -97,7 +98,7 @@ public class PlayerInputPart extends InputPart {
      * @see #hideVanished
      * @return This instance, for chaining.
      */
-    public PlayerInputPart hideVanished(boolean hideVanished) {
+    public PlayerArgument hideVanished(boolean hideVanished) {
         this.hideVanished = hideVanished;
         return this;
     }
@@ -106,7 +107,7 @@ public class PlayerInputPart extends InputPart {
      * @see #vanishBypassPerms
      * @return This instance, for chaining.
      */
-    public PlayerInputPart clearVanishBypassPerms() {
+    public PlayerArgument clearVanishBypassPerms() {
         vanishBypassPerms.clear();
         return this;
     }
@@ -115,7 +116,7 @@ public class PlayerInputPart extends InputPart {
      * @see #vanishBypassPerms
      * @return This instance, for chaining.
      */
-    public PlayerInputPart addVanishBypassPerm(PermissionNode permission) {
+    public PlayerArgument addVanishBypassPerm(PermissionNode permission) {
         vanishBypassPerms.add(permission);
         return this;
     }
@@ -124,7 +125,7 @@ public class PlayerInputPart extends InputPart {
      * @see #matchOnlineNames
      * @return This instance, for chaining.
      */
-    public PlayerInputPart matchOnlineNames(boolean matchOnlineNames) {
+    public PlayerArgument matchOnlineNames(boolean matchOnlineNames) {
         this.matchOnlineNames = matchOnlineNames;
         return this;
     }
@@ -133,7 +134,7 @@ public class PlayerInputPart extends InputPart {
      * @see #matchOfflineNames
      * @return This instance, for chaining.
      */
-    public PlayerInputPart matchOfflineNames(boolean matchOfflineNames) {
+    public PlayerArgument matchOfflineNames(boolean matchOfflineNames) {
         this.matchOfflineNames = matchOfflineNames;
         return this;
     }
@@ -142,7 +143,7 @@ public class PlayerInputPart extends InputPart {
      * @see #notSender
      * @return This instance, for chaining.
      */
-    public PlayerInputPart notSender(boolean notSender) {
+    public PlayerArgument notSender(boolean notSender) {
         this.notSender = notSender;
         return this;
     }
@@ -151,7 +152,7 @@ public class PlayerInputPart extends InputPart {
      * @see #inferSender
      * @return This instance, for chaining.
      */
-    public PlayerInputPart inferSender(boolean inferSender) {
+    public PlayerArgument inferSender(boolean inferSender) {
         this.inferSender = inferSender;
         return this;
     }
@@ -171,13 +172,13 @@ public class PlayerInputPart extends InputPart {
             List<String> matchedNames = new ArrayList<>();
 
             for (String curName : uuidTracker.getAllNames()) {
-                if (name.equalsIgnoreCase(curName)) {
+                if (input.equalsIgnoreCase(curName)) {
                     // Exact match
-                    matchedNames.add(name);
+                    matchedNames.add(input);
                     break;
                 }
 
-                if (curName.toLowerCase().contains(name.toLowerCase())) {
+                if (curName.toLowerCase().contains(input.toLowerCase())) {
                     // Partial match
                     matchedNames.add(curName);
                 }
@@ -186,21 +187,21 @@ public class PlayerInputPart extends InputPart {
             if (matchedNames.size() == 1) {
                 found = uuidTracker.getLatestUuid(matchedNames.get(0));
             } else if (matchedNames.size() > 1) {
-                throw new CommandInterruptedException(MessageManager.getMessage(FlexLib.class,"general.errors.player_matched_multiple", new ReplacementMap("{NAME}", input).getMap()));
+                throw new CommandInterruptedException(InterruptReason.ARGUMENT_INVALID_INPUT, MessageManager.getMessage(FlexLib.class, "general.errors.player_matched_multiple", new ReplacementMap("{NAME}", input).getMap()));
             }
         }
 
         CommandSender sender = context.getSender();
         if (found != null && notSender && sender instanceof Player && ((Player) sender).getUniqueId().equals(found)) {
-            throw new CommandInterruptedException(MessageManager.getMessage(FlexLib.class, "general.errors.player_cannot_be_self"));
+            throw new CommandInterruptedException(InterruptReason.ARGUMENT_INVALID_INPUT, MessageManager.getMessage(FlexLib.class, "general.errors.player_cannot_be_self"));
         } else if (found != null && ((onlineOnly && Bukkit.getPlayer(found) == null) || (hideVanished && !canSenderView(sender, Bukkit.getPlayer(found))))) {
             String cleanName = uuidTracker.getLatestName(found);
-            throw new CommandInterruptedException(MessageManager.getMessage(FlexLib.class, "general.errors.player_matched_offline", new ReplacementMap("{NAME}", cleanName).getMap()));
+            throw new CommandInterruptedException(InterruptReason.ARGUMENT_INVALID_INPUT, MessageManager.getMessage(FlexLib.class, "general.errors.player_matched_offline", new ReplacementMap("{NAME}", cleanName).getMap()));
         } else if (found == null) {
             if (onlineOnly) {
-                throw new CommandInterruptedException(MessageManager.getMessage(FlexLib.class, "general.errors.player_matched_none", new ReplacementMap("{NAME}", input).getMap()));
+                throw new CommandInterruptedException(InterruptReason.ARGUMENT_INVALID_INPUT, MessageManager.getMessage(FlexLib.class, "general.errors.player_matched_none", new ReplacementMap("{NAME}", input).getMap()));
             } else {
-                throw new CommandInterruptedException(MessageManager.getMessage(FlexLib.class, "general.errors.player_matched_none_offline", new ReplacementMap("{NAME}", input).getMap()));
+                throw new CommandInterruptedException(InterruptReason.ARGUMENT_INVALID_INPUT, MessageManager.getMessage(FlexLib.class, "general.errors.player_matched_none_offline", new ReplacementMap("{NAME}", input).getMap()));
             }
         }
 
@@ -235,7 +236,7 @@ public class PlayerInputPart extends InputPart {
     }
 
     @Override
-    public List<String> getSuggestions(CommandContext context, int curIndex) {
+    public List<String> getSuggestions(String argument) {
         if (!matchOnlineNames && !matchOfflineNames) {
             return null;
         }

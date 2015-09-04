@@ -26,34 +26,29 @@ package me.st28.flexseries.flexlib.backend.commands;
 
 import me.st28.flexseries.flexlib.FlexLib;
 import me.st28.flexseries.flexlib.command.CommandContext;
+import me.st28.flexseries.flexlib.command.CommandDescriptor;
 import me.st28.flexseries.flexlib.command.FlexCommand;
-import me.st28.flexseries.flexlib.command.logic.LogicPath;
-import me.st28.flexseries.flexlib.command.logic.hub.PathLogicHub;
-import me.st28.flexseries.flexlib.command.logic.input.FlexPluginInputPart;
+import me.st28.flexseries.flexlib.command.argument.FlexPluginArgument;
 import me.st28.flexseries.flexlib.message.MessageManager;
 import me.st28.flexseries.flexlib.message.ReplacementMap;
 import me.st28.flexseries.flexlib.permission.PermissionNodes;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 
-public class CmdFlexReload {
+public final class CmdFlexReload extends FlexCommand<FlexLib> {
 
     public CmdFlexReload(FlexLib plugin) {
-        LogicPath path = new LogicPath("flexreload");
+        super(plugin, new CommandDescriptor("flexreload").permission(PermissionNodes.RELOAD));
 
-        path.setPermissionNode(PermissionNodes.RELOAD);
+        addArgument(new FlexPluginArgument("plugin", true));
+    }
 
-        path.append(new FlexPluginInputPart("plugin", true) {
-            @Override
-            public void handleExecution(CommandContext context, int curIndex) {
-                FlexPlugin plugin = context.getGlobalObject("plugin", FlexPlugin.class);
+    @Override
+    public void handleExecute(CommandContext context) {
+        FlexPlugin plugin = context.getGlobalObject("plugin", FlexPlugin.class);
 
-                plugin.reloadAll();
+        plugin.reloadAll();
 
-                MessageManager.getMessage(FlexLib.class, "lib_plugin.notices.plugin_reloaded", new ReplacementMap("{PLUGIN}", plugin.getName()).getMap()).sendTo(context.getSender());
-            }
-        });
-
-        new FlexCommand<>(plugin, new PathLogicHub(path), "flexreload").register();
+        MessageManager.getMessage(FlexLib.class, "lib_plugin.notices.plugin_reloaded", new ReplacementMap("{PLUGIN}", plugin.getName()).getMap()).sendTo(context.getSender());
     }
 
 }

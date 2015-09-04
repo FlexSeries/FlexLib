@@ -26,11 +26,10 @@ package me.st28.flexseries.flexlib.backend.commands;
 
 import me.st28.flexseries.flexlib.FlexLib;
 import me.st28.flexseries.flexlib.command.CommandContext;
+import me.st28.flexseries.flexlib.command.CommandDescriptor;
 import me.st28.flexseries.flexlib.command.FlexCommand;
-import me.st28.flexseries.flexlib.command.logic.LogicPath;
-import me.st28.flexseries.flexlib.command.logic.hub.PathLogicHub;
-import me.st28.flexseries.flexlib.command.logic.input.FlexPluginInputPart;
-import me.st28.flexseries.flexlib.command.logic.input.PageInputPart;
+import me.st28.flexseries.flexlib.command.argument.FlexPluginArgument;
+import me.st28.flexseries.flexlib.command.argument.PageArgument;
 import me.st28.flexseries.flexlib.message.list.ListBuilder;
 import me.st28.flexseries.flexlib.permission.PermissionNodes;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
@@ -43,64 +42,60 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-public class CmdFlexModules {
+public class CmdFlexModules extends FlexCommand<FlexLib> {
 
     public CmdFlexModules(FlexLib plugin) {
-        LogicPath path = new LogicPath("flexmodules", "modules");
+        super(plugin, new CommandDescriptor("flexmodules").permission(PermissionNodes.MODULES));
 
-        path.append(new FlexPluginInputPart("plugin", true));
+        addArgument(new FlexPluginArgument("plugin", true));
+        addArgument(new PageArgument(false));
+    }
 
-        path.setPermissionNode(PermissionNodes.MODULES);
+    @Override
+    public void handleExecute(CommandContext context) {
+        final FlexPlugin plugin = context.getGlobalObject("plugin", FlexPlugin.class);
 
-        path.append(new PageInputPart() {
+        List<FlexModule> modules = new ArrayList<>(plugin.getModules());
+
+        Collections.sort(modules, new Comparator<FlexModule>() {
             @Override
-            public void handleExecution(CommandContext context, int curIndex) {
-                final FlexPlugin plugin = context.getGlobalObject("plugin", FlexPlugin.class);
-
-                List<FlexModule> modules = new ArrayList<>(plugin.getModules());
-                Collections.sort(modules, new Comparator<FlexModule>() {
-                    @Override
-                    public int compare(FlexModule o1, FlexModule o2) {
-                        return o1.getName().toLowerCase().compareTo(o2.getName().toLowerCase());
-                    }
-                });
-
-                ListBuilder builder = new ListBuilder("page_subtitle", "Modules", plugin.getName(), context.getLabel());
-
-                for (FlexModule module : modules) {
-                    String status;
-                    switch (module.getStatus()) {
-                        case ENABLED:
-                            status = ChatColor.GREEN + "enabled";
-                            break;
-
-                        case DISABLED:
-                            status = ChatColor.DARK_RED + "disabled";
-                            break;
-
-                        case DISABLED_ERROR:
-                            status = ChatColor.RED + "error";
-                            break;
-
-                        case DISABLED_DEPENDENCY:
-                            status = ChatColor.RED + "missing dependency";
-                            break;
-
-                        default:
-                            status = ChatColor.RED + "error";
-                            break;
-                    }
-
-                    builder.addMessage("lib_plugin_module", new QuickMap<>("{STATUS}", status).put("{NAME}", module.getName()).put("{DESCRIPTION}", module.getDescription()).getMap());
-                }
-
-                //TODO: Don't include page number if one was specified
-                //builder.enableNextPageNotice(command.replace("/", ""));
-                builder.sendTo(context.getSender(), context.getGlobalObject("page", Integer.class));
+            public int compare(FlexModule o1, FlexModule o2) {
+                return o1.getName().toLowerCase().compareTo(o2.getName().toLowerCase());
             }
         });
 
-        new FlexCommand<>(plugin, new PathLogicHub(path), "flexmodules").register();
+        ListBuilder builder = new ListBuilder("page_subtitle", "Modules", plugin.getName(), context.getLabel());
+
+        for (FlexModule module : modules) {
+            String status;
+            switch (module.getStatus()) {
+                case ENABLED:
+                    status = ChatColor.GREEN + "enabled";
+                    break;
+
+                case DISABLED:
+                    status = ChatColor.DARK_RED + "disabled";
+                    break;
+
+                case DISABLED_ERROR:
+                    status = ChatColor.RED + "error";
+                    break;
+
+                case DISABLED_DEPENDENCY:
+                    status = ChatColor.RED + "missing dependency";
+                    break;
+
+                default:
+                    status = ChatColor.RED + "error";
+                    break;
+            }
+
+            builder.addMessage("lib_plugin_module", new QuickMap<>("{STATUS}", status).put("{NAME}", module.getName()).put("{DESCRIPTION}", module.getDescription()).getMap());
+        }
+
+        //TODO: Don't include page number if one was specified
+        //builder.enableNextPageNotice(command.replace("/", ""));
+        builder.sendTo(context.getSender(), context.getGlobalObject("page", Integer.class));
     }
 
 }

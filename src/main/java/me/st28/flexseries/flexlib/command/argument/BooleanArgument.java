@@ -22,33 +22,50 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package me.st28.flexseries.flexlib.command.logic;
+package me.st28.flexseries.flexlib.command.argument;
 
 import me.st28.flexseries.flexlib.FlexLib;
 import me.st28.flexseries.flexlib.command.CommandContext;
 import me.st28.flexseries.flexlib.command.CommandInterruptedException;
+import me.st28.flexseries.flexlib.command.CommandInterruptedException.InterruptReason;
 import me.st28.flexseries.flexlib.message.MessageManager;
-import me.st28.flexseries.flexlib.message.reference.MessageReference;
-import me.st28.flexseries.flexlib.permission.PermissionNode;
-import org.apache.commons.lang.Validate;
+import me.st28.flexseries.flexlib.message.ReplacementMap;
+import me.st28.flexseries.flexlib.utils.BooleanUtils;
+import org.apache.commons.lang.StringUtils;
 
+import java.util.Arrays;
 import java.util.List;
 
-public abstract class LogicPart {
+public class BooleanArgument extends Argument {
 
-    public void performPermissionCheck(CommandContext context, PermissionNode permission) {
-        performPermissionCheck(context, permission, MessageManager.getMessage(FlexLib.class, "general.errors.no_permission"));
+    private Boolean defaultValue;
+
+    public BooleanArgument(String name, boolean isRequired) {
+        this(name, isRequired, false);
     }
 
-    public void performPermissionCheck(CommandContext context, PermissionNode permission, MessageReference noPermMessage) {
-        Validate.notNull(noPermMessage, "No permission message cannot be null.");
-        if (permission != null && !permission.isAllowed(context.getSender())) {
-            throw new CommandInterruptedException(noPermMessage);
+    public BooleanArgument(String name, boolean isRequired, Boolean defaultValue) {
+        super(name, isRequired);
+        this.defaultValue = defaultValue;
+    }
+
+    @Override
+    public Object parseInput(CommandContext context, String input) {
+        try {
+            return BooleanUtils.parseBoolean(input);
+        } catch (IllegalArgumentException ex) {
+            throw new CommandInterruptedException(InterruptReason.ARGUMENT_INVALID_INPUT, MessageManager.getMessage(FlexLib.class, "general.errors.item_must_be_boolean", new ReplacementMap("{ITEM}", StringUtils.capitalize(getName())).getMap()));
         }
     }
 
-    public abstract void execute(CommandContext context, int curIndex);
+    @Override
+    public Object getDefaultValue(CommandContext context) {
+        return defaultValue;
+    }
 
-    public abstract List<String> getSuggestions(CommandContext context, int curIndex);
+    @Override
+    public List<String> getSuggestions(String input) {
+        return Arrays.asList("true", "false");
+    }
 
 }

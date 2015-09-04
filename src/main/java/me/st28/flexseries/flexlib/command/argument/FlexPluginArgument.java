@@ -22,11 +22,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package me.st28.flexseries.flexlib.command.logic.input;
+package me.st28.flexseries.flexlib.command.argument;
 
 import me.st28.flexseries.flexlib.FlexLib;
 import me.st28.flexseries.flexlib.command.CommandContext;
 import me.st28.flexseries.flexlib.command.CommandInterruptedException;
+import me.st28.flexseries.flexlib.command.CommandInterruptedException.InterruptReason;
 import me.st28.flexseries.flexlib.message.MessageManager;
 import me.st28.flexseries.flexlib.message.ReplacementMap;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
@@ -37,9 +38,9 @@ import org.bukkit.plugin.Plugin;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FlexPluginInputPart extends InputPart {
+public class FlexPluginArgument extends Argument {
 
-    public FlexPluginInputPart(String name, boolean isRequired) {
+    public FlexPluginArgument(String name, boolean isRequired) {
         super(name, isRequired);
     }
 
@@ -48,18 +49,18 @@ public class FlexPluginInputPart extends InputPart {
         Plugin plugin = PluginUtils.getPlugin(input);
 
         if (plugin == null) {
-            throw new CommandInterruptedException(MessageManager.getMessage(FlexLib.class, "general.errors.plugin_not_found", new ReplacementMap("{PLUGIN}", input).getMap()));
+            throw new CommandInterruptedException(InterruptReason.ARGUMENT_INVALID_INPUT, MessageManager.getMessage(FlexLib.class, "general.errors.plugin_not_found", new ReplacementMap("{PLUGIN}", input).getMap()));
         }
 
         if (!(plugin instanceof FlexPlugin)) {
-            throw new CommandInterruptedException(MessageManager.getMessage(FlexLib.class, "lib_plugin.errors.plugin_not_flexplugin", new ReplacementMap("{PLUGIN}", plugin.getName()).getMap()));
+            throw new CommandInterruptedException(InterruptReason.ARGUMENT_INVALID_INPUT, MessageManager.getMessage(FlexLib.class, "lib_plugin.errors.plugin_not_flexplugin", new ReplacementMap("{PLUGIN}", plugin.getName()).getMap()));
         }
 
         return (FlexPlugin) plugin;
     }
 
     @Override
-    public List<String> getSuggestions(CommandContext context, int curIndex) {
+    public List<String> getSuggestions(String argument) {
         List<String> returnList = new ArrayList<>();
 
         for (Plugin plugin : Bukkit.getPluginManager().getPlugins()) {
@@ -70,8 +71,5 @@ public class FlexPluginInputPart extends InputPart {
 
         return returnList;
     }
-
-    @Override
-    public void handleExecution(CommandContext context, int curIndex) {}
 
 }

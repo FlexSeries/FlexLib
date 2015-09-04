@@ -49,13 +49,27 @@ public class PlainMessageReference extends MessageReference {
 
     @Override
     public void sendTo(CommandSender sender, Map<String, Object> replacements) {
+        sender.sendMessage(handleReplacements(replacements));
+    }
+
+    private String handleReplacements(Map<String, Object> replacements) {
         String newMessage = message;
 
         for (Entry<String, Object> entry : replacements.entrySet()) {
             newMessage = newMessage.replace(entry.getKey(), entry.getValue().toString());
         }
 
-        sender.sendMessage(newMessage);
+        return newMessage;
+    }
+
+    @Override
+    public String getMessage() {
+        return message;
+    }
+
+    @Override
+    public String getMessage(Map<String, Object> replacements) {
+        return handleReplacements(replacements);
     }
 
 }
