@@ -6,6 +6,7 @@ formats:
   objects:
     command: '[&b{1}];(cmd:{2});(txt:&cClick to run command.);'
     command_suggestion: '[&b{1}];(scmd:{2});(txt:&aClick to edit command.);'
+    description_not_set: '{mood=error}&oNo description set.'
     item: '&6' # Generic item
     input: '''&6{?}{mood=.}'''
     input_sanitized: '&6{?}{mood=.}'

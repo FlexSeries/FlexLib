@@ -59,12 +59,16 @@ public class HelpSubcommand<T extends FlexPlugin> extends Subcommand<T> {
         for (String key : order) {
             String description = rawMessages.get(key);
 
+            if (description == null) {
+                description = "{o=description_not_set}";
+            }
+
             final Map<String, String> replacements = new QuickMap<>("{COMMAND}", key).put("{DESCRIPTION}", description).getMap();
 
             if (key.contains("<") || key.contains("[")) {
                 builder.addMessage("help_command_suggestion", replacements);
             } else {
-                builder.addMessage("help_command_suggestion", replacements);
+                builder.addMessage("help_command", replacements);
             }
         }
 
