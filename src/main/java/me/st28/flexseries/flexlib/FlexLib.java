@@ -36,8 +36,16 @@ import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 
 public final class FlexLib extends FlexPlugin {
 
+    private static FlexLib instance;
+
+    public static FlexLib getInstance() {
+        return instance;
+    }
+
     @Override
     public void handleLoad() {
+        instance = this;
+
         registerModule(new MessageMasterManager(this));
         registerModule(new MessageManager<>(this));
         registerModule(new ListManager(this));
