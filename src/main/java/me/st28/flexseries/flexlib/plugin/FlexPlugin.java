@@ -191,6 +191,7 @@ public class FlexPlugin extends JavaPlugin {
             }
         }
 
+        // TODO: Only ignore loading if no plugins require it (not just this plugin).
         if (!unused.isEmpty()) {
             LogHelper.info(this, "Smart load stopped " + unused.size() + " unused module(s) from loading.");
             LogHelper.debug(this, "Unused modules: " + StringUtils.collectionToSortedString(unused, new StringConverter<FlexModule>() {
