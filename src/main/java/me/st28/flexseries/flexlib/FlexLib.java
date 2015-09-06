@@ -31,9 +31,12 @@ import me.st28.flexseries.flexlib.command.FlexCommandWrapper;
 import me.st28.flexseries.flexlib.message.MessageManager;
 import me.st28.flexseries.flexlib.message.MessageMasterManager;
 import me.st28.flexseries.flexlib.message.list.ListManager;
+import me.st28.flexseries.flexlib.message.variable.MessageVariable;
 import me.st28.flexseries.flexlib.player.PlayerManager;
 import me.st28.flexseries.flexlib.player.uuidtracker.PlayerUuidTracker;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 
 public final class FlexLib extends FlexPlugin {
 
@@ -42,6 +45,8 @@ public final class FlexLib extends FlexPlugin {
     public static FlexLib getInstance() {
         return instance;
     }
+
+    private String serverName;
 
     @Override
     public void handleLoad() {
@@ -59,6 +64,47 @@ public final class FlexLib extends FlexPlugin {
         FlexCommandWrapper.registerCommand(new CmdFlexModules(this));
         FlexCommandWrapper.registerCommand(new CmdFlexReload(this));
         FlexCommandWrapper.registerCommand(new CmdFlexSave(this));
+
+        // Register default variables
+        MessageVariable.registerVariable(new MessageVariable("server") {
+            @Override
+            public String getReplacement(Player player) {
+                return serverName;
+            }
+        });
+
+        MessageVariable.registerVariable(new MessageVariable("name") {
+            @Override
+            public String getReplacement(Player player) {
+                if (player == null) return null;
+                return player.getName();
+            }
+        });
+
+        MessageVariable.registerVariable(new MessageVariable("dispname") {
+            @Override
+            public String getReplacement(Player player) {
+                if (player == null) return null;
+                return player.getDisplayName();
+            }
+        });
+
+        MessageVariable.registerVariable(new MessageVariable("world") {
+            @Override
+            public String getReplacement(Player player) {
+                if (player == null) return null;
+                return player.getWorld().getName();
+            }
+        });
+    }
+
+    @Override
+    public void handleConfigReload(FileConfiguration config) {
+        serverName = config.getString("server name", "Minecraft Server");
+    }
+
+    public String getServerName() {
+        return serverName;
     }
 
 }
