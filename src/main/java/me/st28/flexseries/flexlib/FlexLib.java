@@ -31,6 +31,7 @@ import me.st28.flexseries.flexlib.command.FlexCommandWrapper;
 import me.st28.flexseries.flexlib.message.MessageManager;
 import me.st28.flexseries.flexlib.message.MessageMasterManager;
 import me.st28.flexseries.flexlib.message.list.ListManager;
+import me.st28.flexseries.flexlib.player.PlayerManager;
 import me.st28.flexseries.flexlib.player.uuidtracker.PlayerUuidTracker;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 
@@ -49,6 +50,7 @@ public final class FlexLib extends FlexPlugin {
         registerModule(new MessageMasterManager(this));
         registerModule(new MessageManager<>(this));
         registerModule(new ListManager(this));
+        registerModule(new PlayerManager(this));
         registerModule(new PlayerUuidTracker(this));
     }
 
