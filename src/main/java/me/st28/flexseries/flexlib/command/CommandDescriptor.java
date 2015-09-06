@@ -36,7 +36,7 @@ import java.util.List;
  */
 public final class CommandDescriptor {
 
-    private boolean lock = false;
+    private boolean isLocked = false;
 
     /**
      * The label(s) for the command, with the first entry being the main label.
@@ -47,6 +47,11 @@ public final class CommandDescriptor {
      * The description of the command.
      */
     private String description;
+
+    /**
+     * If this is a dummy command, no entry will show up in the help command.
+     */
+    private boolean dummy = false;
 
     /**
      * True if this command can only be run by players.
@@ -70,14 +75,14 @@ public final class CommandDescriptor {
     }
 
     void lock() {
-        if (lock) {
+        if (isLocked) {
             throw new IllegalStateException("This descriptor is already locked.");
         }
-        this.lock = true;
+        this.isLocked = true;
     }
 
     void checkLock() {
-        if (lock) {
+        if (isLocked) {
             throw new IllegalStateException("This descriptor can no longer be modified.");
         }
     }
@@ -120,6 +125,23 @@ public final class CommandDescriptor {
     public CommandDescriptor description(String description) {
         checkLock();
         this.description = description;
+        return this;
+    }
+
+    /**
+     * @see #dummy
+     */
+    public boolean isDummy() {
+        return dummy;
+    }
+
+    /**
+     * @see #dummy
+     * @return This instance, for chaining.
+     */
+    public CommandDescriptor dummy(boolean dummy) {
+        checkLock();
+        this.dummy = dummy;
         return this;
     }
 

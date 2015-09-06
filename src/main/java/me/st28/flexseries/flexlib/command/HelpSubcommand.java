@@ -45,10 +45,14 @@ public class HelpSubcommand<T extends FlexPlugin> extends Subcommand<T> {
 
         final AbstractCommand<T> parent = getParent();
 
-        rawMessages.put(parent.buildUsage(context), parent.getDescriptor().getDescription());
+        if (!parent.getDescriptor().isDummy()) {
+            rawMessages.put(parent.buildUsage(context), parent.getDescriptor().getDescription());
+        }
 
         for (Subcommand<T> subcommand : parent.getSubcommands()) {
-            rawMessages.put(subcommand.buildUsage(context), subcommand.getDescriptor().getDescription());
+            if (!subcommand.getDescriptor().isDummy()) {
+                rawMessages.put(subcommand.buildUsage(context), subcommand.getDescriptor().getDescription());
+            }
         }
 
         List<String> order = new ArrayList<>(rawMessages.keySet());
