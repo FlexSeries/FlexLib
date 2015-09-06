@@ -33,6 +33,12 @@ public final class StringUtils {
 
     private StringUtils() {}
 
+    public static <T> String collectionToString(Collection<T> collection, String delimiter, StringConverter<T> converter, String defaultValue) {
+        String returnString = collectionToString(collection, delimiter, converter);
+
+        return returnString.length() > 0 ? returnString : defaultValue;
+    }
+
     public static <T> String collectionToString(Collection<T> collection, String delimiter, StringConverter<T> converter) {
         if (delimiter == null) {
             delimiter = ", ";
