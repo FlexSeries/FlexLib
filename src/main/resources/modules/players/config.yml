@@ -1,0 +1,7 @@
+modify join message: true # FlexLib modifies the way the player join message is sent. It shouldn't affect other plugins, but if it does, set this to false.
+modify quit message: true # FlexLib modifies the way the player leave message is sent. It shouldn't affect other plugins, but if it does, set this to false.
+auto unload interval: 5 # In minutes, auto unloads offline players
+player join:
+  message order:
+  - message.identifier
+  - message.identifier

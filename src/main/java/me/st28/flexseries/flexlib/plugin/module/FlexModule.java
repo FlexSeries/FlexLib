@@ -25,6 +25,9 @@
 package me.st28.flexseries.flexlib.plugin.module;
 
 import me.st28.flexseries.flexlib.log.LogHelper;
+import me.st28.flexseries.flexlib.player.data.DataProviderDescriptor;
+import me.st28.flexseries.flexlib.player.PlayerManager;
+import me.st28.flexseries.flexlib.player.data.PlayerDataProvider;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 import me.st28.flexseries.flexlib.storage.flatfile.YamlFileManager;
 import org.apache.commons.lang.Validate;
@@ -69,6 +72,11 @@ public abstract class FlexModule<T extends FlexPlugin> {
         }
 
         this.descriptor = descriptor;
+
+        if (this instanceof PlayerDataProvider) {
+            descriptor.addHardDependency(new ModuleReference("FlexLib", "players"));
+        }
+
         descriptor.lock();
     }
 
@@ -160,6 +168,19 @@ public abstract class FlexModule<T extends FlexPlugin> {
         if (configFile != null) {
             configFile.save();
         }
+    }
+
+    /**
+     * Registers this module as a {@link PlayerDataProvider} with the {@link PlayerManager}.
+     *
+     * @return True if successfully registered.<br />
+     *         False if already registered.
+     */
+    public final boolean registerPlayerDataProvider(DataProviderDescriptor descriptor) {
+        Validate.isTrue(this instanceof PlayerDataProvider, "This module must implement PlayerDataProvider.");
+        Validate.notNull(descriptor, "Descriptor cannot be null.");
+
+        return FlexPlugin.getGlobalModule(PlayerManager.class).registerDataProvider((PlayerDataProvider) this, descriptor);
     }
 
     public final void onEnable() {
