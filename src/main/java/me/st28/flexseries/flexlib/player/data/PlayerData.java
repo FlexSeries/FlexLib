@@ -24,6 +24,7 @@
  */
 package me.st28.flexseries.flexlib.player.data;
 
+import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 import me.st28.flexseries.flexlib.storage.flatfile.YamlFileManager;
 import org.apache.commons.lang.Validate;
 import org.bukkit.configuration.ConfigurationSection;
@@ -42,9 +43,9 @@ public final class PlayerData {
     private PlayerLoader loader;
 
     /**
-     * These are not saved/loaded automatically.
+     * These are saved/loaded automatically. Should be configuration serializable.
      */
-    private final Map<String, Object> globalObjects = new HashMap<>();
+    private final Map<String, Object> customData = new HashMap<>();
 
     public PlayerData(UUID uuid, YamlFileManager file) {
         this.uuid = uuid;
@@ -66,6 +67,31 @@ public final class PlayerData {
         this.loader = loader;
     }
 
+    public void load() {
+        ConfigurationSection customSec = file.getConfig().getConfigurationSection("custom");
+        if (customSec != null) {
+            loadCustomData(customSec, null);
+        }
+    }
+
+    private void loadCustomData(ConfigurationSection currentSec, String currentKey) {
+        for (String key : currentSec.getKeys(false)) {
+            if (currentSec.get(key) instanceof ConfigurationSection) {
+                if (currentKey == null) {
+                    loadCustomData(currentSec.getConfigurationSection(key), key);
+                } else {
+                    loadCustomData(currentSec.getConfigurationSection(key), currentKey + "." + key);
+                }
+            } else {
+                if (currentKey == null) {
+                    customData.put(key, currentSec.get(key));
+                } else {
+                    customData.put(currentKey + "." + key, currentSec.get(key));
+                }
+            }
+        }
+    }
+
     public YamlFileManager getFile() {
         return file;
     }
@@ -84,22 +110,45 @@ public final class PlayerData {
         return section;
     }
 
-    public <T> T getGlobalObject(String key, Class<T> type, T defaultValue) {
-        T returnValue = (T) globalObjects.get(key);
-        return returnValue != null ? returnValue : defaultValue;
+    public <T> T getCustomData(String key, Class<T> type) {
+        Validate.notNull(key, "Key cannot be null.");
+        Validate.notNull(type, "Type cannot be null.");
+        return (T) customData.get(key);
     }
 
-    /**
-     * @return True if no changes were made.
-     */
-    public boolean setGlobalObject(String key, Object object) {
+    public <T> T getCustomData(Class<? extends FlexPlugin> plugin, String key, T type) {
+        Validate.notNull(plugin, "Plugin cannot be null.");
+        Validate.notNull(key, "Key cannot be null.");
+        Validate.notNull(type, "Type cannot be null.");
+
+        return (T) customData.get(plugin.getCanonicalName() + "-" + key);
+    }
+
+    public boolean containsCustomData(String key) {
+        Validate.notNull(key, "Key cannot be null.");
+        return customData.containsKey(key);
+    }
+
+    public void setCustomData(String key, Object data) {
         Validate.notNull(key, "Key cannot be null.");
 
-        if (object == null) {
-            return globalObjects.remove(key) == null;
+        if (data == null) {
+            customData.remove(key);
+        } else {
+            customData.put(key, data);
         }
+    }
 
-        return globalObjects.put(key, object) != null;
+    public void setCustomData(Class<? extends FlexPlugin> plugin, String key, Object data) {
+        Validate.notNull(plugin, "Plugin cannot be null.");
+        Validate.notNull(key, "Key cannot be null.");
+
+        String fullKey = plugin.getCanonicalName() + "-" + key;
+        if (data == null) {
+            customData.remove(fullKey);
+        } else {
+            customData.put(fullKey, data);
+        }
     }
 
 }

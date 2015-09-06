@@ -172,7 +172,7 @@ public final class PlayerManager extends FlexModule<FlexLib> implements Listener
 
         if (data.getFile().isEmpty()) {
             data.getConfig().set("firstJoin", false);
-            data.setGlobalObject("firstJoin", true);
+            data.setCustomData("firstJoin", true);
         }
 
         PlayerLoader loader = new PlayerLoader(uuid, data);

@@ -87,6 +87,8 @@ public final class PlayerLoader {
         for (Entry<PlayerDataProvider, DataProviderDescriptor> entry : dataProviders.entrySet()) {
             loadProvider(checked, entry.getKey(), dataProviders);
         }
+
+        data.load();
     }
 
     private void loadProvider(Set<PlayerDataProvider> checked, PlayerDataProvider provider, Map<PlayerDataProvider, DataProviderDescriptor> descriptors) {
