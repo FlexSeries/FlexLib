@@ -25,6 +25,7 @@
 package me.st28.flexseries.flexlib.plugin;
 
 import me.st28.flexseries.flexlib.log.LogHelper;
+import me.st28.flexseries.flexlib.message.MessageManager;
 import me.st28.flexseries.flexlib.plugin.module.*;
 import me.st28.flexseries.flexlib.utils.StringConverter;
 import me.st28.flexseries.flexlib.utils.StringUtils;
@@ -130,6 +131,11 @@ public class FlexPlugin extends JavaPlugin {
     @Override
     public final void onLoad() {
         status = PluginStatus.LOADING;
+
+        // If the plugin has a messages.yml file, automatically register a message manager.
+        if (getResource("messages.yml") != null) {
+            registerModule(new MessageManager<>(this));
+        }
 
         try {
             handleLoad();

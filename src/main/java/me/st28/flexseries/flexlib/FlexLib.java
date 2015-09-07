@@ -53,7 +53,6 @@ public final class FlexLib extends FlexPlugin {
         instance = this;
 
         registerModule(new MessageMasterManager(this));
-        registerModule(new MessageManager<>(this));
         registerModule(new ListManager(this));
         registerModule(new PlayerManager(this));
         registerModule(new PlayerUuidTracker(this));
