@@ -24,6 +24,8 @@
  */
 package me.st28.flexseries.flexlib.message.reference;
 
+import org.apache.commons.lang.Validate;
+import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 
 import java.util.Map;
@@ -32,19 +34,26 @@ import java.util.Map.Entry;
 public class PlainMessageReference extends MessageReference {
 
     private final String message;
+    private final boolean color;
 
     public PlainMessageReference(String message) {
+        this(message, true);
+    }
+
+    public PlainMessageReference(String message, boolean color) {
+        Validate.notNull(message, "Message cannot be null.");
         this.message = message;
+        this.color = color;
     }
 
     @Override
     public MessageReference duplicate(Map<String, Object> replacements) {
-        return new PlainMessageReference(message);
+        return new PlainMessageReference(message, color);
     }
 
     @Override
     public void sendTo(CommandSender sender) {
-        sender.sendMessage(message);
+        sender.sendMessage(getMessage());
     }
 
     @Override
@@ -53,7 +62,7 @@ public class PlainMessageReference extends MessageReference {
     }
 
     private String handleReplacements(Map<String, Object> replacements) {
-        String newMessage = message;
+        String newMessage = getMessage();
 
         for (Entry<String, Object> entry : replacements.entrySet()) {
             newMessage = newMessage.replace(entry.getKey(), entry.getValue().toString());
@@ -64,7 +73,7 @@ public class PlainMessageReference extends MessageReference {
 
     @Override
     public String getMessage() {
-        return message;
+        return !color ? message : ChatColor.translateAlternateColorCodes('&', message);
     }
 
     @Override
