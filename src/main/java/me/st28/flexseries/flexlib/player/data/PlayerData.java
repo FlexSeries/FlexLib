@@ -111,17 +111,28 @@ public final class PlayerData {
     }
 
     public <T> T getCustomData(String key, Class<T> type) {
-        Validate.notNull(key, "Key cannot be null.");
-        Validate.notNull(type, "Type cannot be null.");
-        return (T) customData.get(key);
+        return getCustomData(key, type, null);
     }
 
-    public <T> T getCustomData(Class<? extends FlexPlugin> plugin, String key, T type) {
+    public <T> T getCustomData(String key, Class<T> type, T defaultValue) {
+        Validate.notNull(key, "Key cannot be null.");
+        Validate.notNull(type, "Type cannot be null.");
+
+        T returnValue = (T) customData.get(key);
+        return returnValue != null ? returnValue : defaultValue;
+    }
+
+    public <T> T getCustomData(Class<? extends FlexPlugin> plugin, String key, Class<T> type) {
+        return getCustomData(plugin, key, type, null);
+    }
+
+    public <T> T getCustomData(Class<? extends FlexPlugin> plugin, String key, Class<T> type, T defaultValue) {
         Validate.notNull(plugin, "Plugin cannot be null.");
         Validate.notNull(key, "Key cannot be null.");
         Validate.notNull(type, "Type cannot be null.");
 
-        return (T) customData.get(plugin.getCanonicalName() + "-" + key);
+        T returnValue = (T) customData.get(plugin.getCanonicalName() + "-" + key);
+        return returnValue != null ? returnValue : defaultValue;
     }
 
     public boolean containsCustomData(String key) {
