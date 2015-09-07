@@ -1,6 +1,6 @@
 general config:
   page items: 8
-  line length: 54
+  line length: 52
 
 messages:
   next page: '&c&oType [&6&o/{COMMAND} {NEXTPAGE}](cmd:/{COMMAND} {NEXTPAGE});(txt:&aClick to go to the next page); &c&oto view the next page.'
