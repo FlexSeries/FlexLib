@@ -128,6 +128,11 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
         return Collections.unmodifiableCollection(subcommands.values());
     }
 
+    public final Subcommand<T> getSubcommand(String name) {
+        Validate.notNull(name, "Name cannot be null.");
+        return subcommands.get(name.toLowerCase());
+    }
+
     public final void registerSubcommand(Subcommand<T> subcommand, String... directAliases) {
         Validate.notNull(subcommand, "Subcommand cannot be null.");
 
@@ -175,7 +180,7 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
 
     public final void execute(CommandContext context, int curIndex) {
         final CommandSender sender = context.getSender();
-        final List<String> args = context.getArgs();
+        final List<String> args = getRelativeArgs(context);
         final String label = context.getLabel();
         final String directAlias = subcommandDirectAliases.get(label.toLowerCase());
 
@@ -184,16 +189,18 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
             subcommand = subcommands.get(directAlias);
         }
 
-        if (curIndex < args.size()) {
-            final String alias = subcommandAliases.get(args.get(curIndex).toLowerCase());
+        int newIndex = curIndex - argumentOffset;
+
+        if (curIndex >= 0 && curIndex < args.size()) {
+            final String alias = subcommandAliases.get(args.get(0).toLowerCase());
             if (alias != null) {
                 subcommand = subcommands.get(alias);
-                curIndex++;
+                newIndex++;
             }
         }
 
         if (subcommand != null) {
-            subcommand.execute(context, curIndex);
+            subcommand.execute(context, newIndex);
             return;
         }
 
@@ -214,10 +221,10 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
 
         for (Argument argument : this.arguments) {
             try {
-                argument.execute(context, curIndex);
+                argument.execute(context, newIndex + 1);
             } catch (CommandInterruptedException ex) {
                 if (ex.getReason() == InterruptReason.ARGUMENT_INVALID_INPUT) {
-                    if (!argument.isRequired() && curIndex - argumentOffset != this.arguments.size() - 1) {
+                    if (!argument.isRequired() && newIndex != this.arguments.size() - 1) {
                         context.addGlobalObject(argument.getName(), argument.getDefaultValue(context));
                         context.indicateDefaultValue(argument.getName());
                         continue;
@@ -228,7 +235,7 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
                 }
                 throw ex;
             }
-            curIndex++;
+            newIndex++;
         }
 
         handleExecute(context);
@@ -245,7 +252,11 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
     }
 
     public final List<String> getRelativeArgs(CommandContext context) {
-        return context.getArgs().subList(argumentOffset, context.getArgs().size());
+        if (context.getArgs().isEmpty()) {
+            return new ArrayList<>();
+        } else {
+            return context.getArgs().subList(argumentOffset, context.getArgs().size());
+        }
     }
 
     public abstract void handleExecute(CommandContext context);

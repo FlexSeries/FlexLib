@@ -25,17 +25,29 @@
 package me.st28.flexseries.flexlib.command;
 
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
+import org.apache.commons.lang.Validate;
 
 /**
  * A command that contains no logic, only subcommands.
  */
 public class DummyCommand<T extends FlexPlugin> extends FlexCommand<T> {
 
-    public DummyCommand(T plugin, CommandDescriptor descriptor) {
+    private String defaultLabel;
+
+    public DummyCommand(T plugin, CommandDescriptor descriptor, String defaultLabel) {
         super(plugin, descriptor);
+
+        Validate.notNull(defaultLabel, "Default label cannot be null.");
+        this.defaultLabel = defaultLabel;
     }
 
     @Override
-    public void handleExecute(CommandContext context) {}
+    public void handleExecute(CommandContext context) {
+        final Subcommand<T> defaultSubcommand = getSubcommand(defaultLabel);
+
+        if (defaultSubcommand != null) {
+            defaultSubcommand.execute(context, 0);
+        }
+    }
 
 }
