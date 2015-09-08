@@ -66,12 +66,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot</artifactId>
-            <version>1.8.7</version>
-        </dependency>
-
-        <dependency>
             <groupId>com.stealthyone.mcb</groupId>
             <artifactId>mcml</artifactId>
             <version>2.0.0</version>
