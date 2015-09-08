@@ -66,22 +66,23 @@ public class FlexCommandWrapper implements CommandExecutor, TabCompleter {
         } catch (CommandInterruptedException ex) {
             if (ex.getExitMessage() != null) {
                 ex.getExitMessage().sendTo(sender);
-                return true;
-            }
+            } else {
+                switch (ex.getReason()) {
+                    case INVALID_USAGE:
+                        MessageManager.getMessage(FlexLib.class, "lib_command.errors.usage", new ReplacementMap("{USAGE}", this.command.getFinalCommand(context, 0).buildUsage(context)).getMap()).sendTo(sender);
+                        return true;
 
-            switch (ex.getReason()) {
-                case INVALID_USAGE:
-                    MessageManager.getMessage(FlexLib.class, "lib_command.errors.usage", new ReplacementMap("{USAGE}", this.command.getFinalCommand(context, 0).buildUsage(context)).getMap()).sendTo(sender);
-                    return true;
-
-                default:
+                    default:
+                }
             }
 
             if (ex.getReason().isError()) {
                 MessageReference message = MessageManager.getMessage(FlexLib.class, "lib_command.errors.uncaught_exception", new ReplacementMap("{ERROR}", ex.getMessage()).getMap());
                 LogHelper.severe(this.command.getPlugin(), message.getMessage(), ex);
-                message.sendTo(sender);
             }
+        } catch (Exception ex) {
+            MessageReference message = MessageManager.getMessage(FlexLib.class, "lib_command.errors.uncaught_exception", new ReplacementMap("{ERROR}", ex.getMessage()).getMap());
+            LogHelper.severe(this.command.getPlugin(), message.getMessage(), ex);
         }
 
         return true;
