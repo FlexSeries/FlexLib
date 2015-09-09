@@ -101,6 +101,11 @@ public class CommandInterruptedException extends RuntimeException {
         COMMAND_END(false),
 
         /**
+         * There was an issue while running the command that prevents it from continuing.
+         */
+        COMMAND_SOFT_ERROR(false),
+
+        /**
          * An error occurred while executing the command.
          */
         COMMAND_ERROR(true),
