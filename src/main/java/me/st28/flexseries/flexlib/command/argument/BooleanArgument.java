@@ -64,7 +64,7 @@ public class BooleanArgument extends Argument {
     }
 
     @Override
-    public List<String> getSuggestions(String input) {
+    public List<String> getSuggestions(CommandContext context, String input) {
         return Arrays.asList("true", "false");
     }
 

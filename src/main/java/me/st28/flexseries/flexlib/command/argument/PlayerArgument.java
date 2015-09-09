@@ -240,7 +240,7 @@ public class PlayerArgument extends Argument {
     }
 
     @Override
-    public List<String> getSuggestions(String argument) {
+    public List<String> getSuggestions(CommandContext context, String argument) {
         if (!matchOnlineNames && !matchOfflineNames) {
             return null;
         }

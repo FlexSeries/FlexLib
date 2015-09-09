@@ -60,7 +60,7 @@ public class FlexPluginArgument extends Argument {
     }
 
     @Override
-    public List<String> getSuggestions(String argument) {
+    public List<String> getSuggestions(CommandContext context, String argument) {
         List<String> returnList = new ArrayList<>();
 
         for (Plugin plugin : Bukkit.getPluginManager().getPlugins()) {

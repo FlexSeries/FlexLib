@@ -76,7 +76,7 @@ public abstract class Argument {
         return null;
     }
 
-    public List<String> getSuggestions(String input) {
+    public List<String> getSuggestions(CommandContext context, String input) {
         return null;
     }
 
