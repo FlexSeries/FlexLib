@@ -223,7 +223,7 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
             try {
                 argument.execute(context, newIndex + 1);
             } catch (CommandInterruptedException ex) {
-                if (ex.getReason() == InterruptReason.ARGUMENT_INVALID_INPUT) {
+                if (ex.getReason() == InterruptReason.ARGUMENT_SOFT_ERROR) {
                     if (!argument.isRequired() && newIndex != this.arguments.size() - 1) {
                         context.addGlobalObject(argument.getName(), argument.getDefaultValue(context));
                         context.indicateDefaultValue(argument.getName());

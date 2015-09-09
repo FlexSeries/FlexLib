@@ -91,9 +91,9 @@ public class CommandInterruptedException extends RuntimeException {
         ARGUMENT_ERROR(true),
 
         /**
-         * Invalid input for an argument.
+         * There was an issue while parsing an argument that prevents the command from continuing.
          */
-        ARGUMENT_INVALID_INPUT(false),
+        ARGUMENT_SOFT_ERROR(false),
 
         /**
          * The command ended without any errors.

@@ -88,13 +88,13 @@ public class IntegerArgument extends Argument {
         try {
             integer = Integer.parseInt(input);
         } catch (NumberFormatException ex) {
-            throw new CommandInterruptedException(InterruptReason.ARGUMENT_INVALID_INPUT, MessageManager.getMessage(FlexLib.class, "general.errors.item_must_be_int", new ReplacementMap("{ITEM}", StringUtils.capitalize(getName())).getMap()));
+            throw new CommandInterruptedException(InterruptReason.ARGUMENT_SOFT_ERROR, MessageManager.getMessage(FlexLib.class, "general.errors.item_must_be_int", new ReplacementMap("{ITEM}", StringUtils.capitalize(getName())).getMap()));
         }
 
         if (integer < minValue) {
-            throw new CommandInterruptedException(InterruptReason.ARGUMENT_INVALID_INPUT, MessageManager.getMessage(FlexLib.class, "general.errors.integer_too_low", new ReplacementMap("{ITEM}", StringUtils.capitalize(getName())).put("{MIN}", Integer.toString(minValue)).getMap()));
+            throw new CommandInterruptedException(InterruptReason.ARGUMENT_SOFT_ERROR, MessageManager.getMessage(FlexLib.class, "general.errors.integer_too_low", new ReplacementMap("{ITEM}", StringUtils.capitalize(getName())).put("{MIN}", Integer.toString(minValue)).getMap()));
         } else if (integer > maxValue) {
-            throw new CommandInterruptedException(InterruptReason.ARGUMENT_INVALID_INPUT, MessageManager.getMessage(FlexLib.class, "general.errors.integer_too_high", new ReplacementMap("{ITEM}", StringUtils.capitalize(getName())).put("{MAX}", Integer.toString(maxValue)).getMap()));
+            throw new CommandInterruptedException(InterruptReason.ARGUMENT_SOFT_ERROR, MessageManager.getMessage(FlexLib.class, "general.errors.integer_too_high", new ReplacementMap("{ITEM}", StringUtils.capitalize(getName())).put("{MAX}", Integer.toString(maxValue)).getMap()));
         }
 
         return integer;

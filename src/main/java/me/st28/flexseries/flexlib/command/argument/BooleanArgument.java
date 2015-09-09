@@ -54,7 +54,7 @@ public class BooleanArgument extends Argument {
         try {
             return BooleanUtils.parseBoolean(input);
         } catch (IllegalArgumentException ex) {
-            throw new CommandInterruptedException(InterruptReason.ARGUMENT_INVALID_INPUT, MessageManager.getMessage(FlexLib.class, "general.errors.item_must_be_boolean", new ReplacementMap("{ITEM}", StringUtils.capitalize(getName())).getMap()));
+            throw new CommandInterruptedException(InterruptReason.ARGUMENT_SOFT_ERROR, MessageManager.getMessage(FlexLib.class, "general.errors.item_must_be_boolean", new ReplacementMap("{ITEM}", StringUtils.capitalize(getName())).getMap()));
         }
     }
 

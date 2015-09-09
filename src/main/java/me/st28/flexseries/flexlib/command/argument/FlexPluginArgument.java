@@ -49,11 +49,11 @@ public class FlexPluginArgument extends Argument {
         Plugin plugin = PluginUtils.getPlugin(input);
 
         if (plugin == null) {
-            throw new CommandInterruptedException(InterruptReason.ARGUMENT_INVALID_INPUT, MessageManager.getMessage(FlexLib.class, "general.errors.plugin_not_found", new ReplacementMap("{PLUGIN}", input).getMap()));
+            throw new CommandInterruptedException(InterruptReason.ARGUMENT_SOFT_ERROR, MessageManager.getMessage(FlexLib.class, "general.errors.plugin_not_found", new ReplacementMap("{PLUGIN}", input).getMap()));
         }
 
         if (!(plugin instanceof FlexPlugin)) {
-            throw new CommandInterruptedException(InterruptReason.ARGUMENT_INVALID_INPUT, MessageManager.getMessage(FlexLib.class, "lib_plugin.errors.plugin_not_flexplugin", new ReplacementMap("{PLUGIN}", plugin.getName()).getMap()));
+            throw new CommandInterruptedException(InterruptReason.ARGUMENT_SOFT_ERROR, MessageManager.getMessage(FlexLib.class, "lib_plugin.errors.plugin_not_flexplugin", new ReplacementMap("{PLUGIN}", plugin.getName()).getMap()));
         }
 
         return (FlexPlugin) plugin;
