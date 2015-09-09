@@ -27,18 +27,18 @@ package me.st28.flexseries.flexlib.player.data;
 import java.util.UUID;
 
 /**
- * Represents something that loads and saves player data.
+ * Represents something that loads and/or saves player data.
  */
 public interface PlayerDataProvider {
 
     /**
      * Loads a player's data. Ideally, this should support offline players as well as online ones.
      */
-    void loadPlayer(PlayerLoader loader, PlayerData data, UUID uuid, String name);
+    default void loadPlayer(PlayerLoader loader, PlayerData data, UUID uuid, String name) {}
 
     /**
      * Saves a player's data. Ideally, this should support offline players as well as online ones.
      */
-    void savePlayer(PlayerLoader loader, PlayerData data, UUID uuid, String name);
+    default void savePlayer(PlayerLoader loader, PlayerData data, UUID uuid, String name) {}
 
 }
