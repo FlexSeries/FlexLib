@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+// TODO: API for adding mood and object formats
 public final class MessageMasterManager extends FlexModule<FlexLib> {
 
     private static final Pattern MOOD_PATTERN = Pattern.compile("\\{mood=(\\S+?)\\}");
