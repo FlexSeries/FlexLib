@@ -54,6 +54,11 @@ public final class CommandDescriptor {
     private boolean dummy = false;
 
     /**
+     * If this is set and the base command failed to run, the default command will run instead.
+     */
+    private String defaultCommand;
+
+    /**
      * True if this command can only be run by players.
      */
     private boolean playerOnly = false;
@@ -142,6 +147,23 @@ public final class CommandDescriptor {
     public CommandDescriptor dummy(boolean dummy) {
         checkLock();
         this.dummy = dummy;
+        return this;
+    }
+
+    /**
+     * @see #defaultCommand
+     * @return This instance, for chaining.
+     */
+    public String getDefaultCommand() {
+        return defaultCommand;
+    }
+
+    /**
+     * @see #defaultCommand
+     * @return This instance, for chaining.
+     */
+    public CommandDescriptor defaultCommand(String defaultCommand) {
+        this.defaultCommand = defaultCommand;
         return this;
     }
 

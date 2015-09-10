@@ -32,18 +32,19 @@ import org.apache.commons.lang.Validate;
  */
 public class DummyCommand<T extends FlexPlugin> extends FlexCommand<T> {
 
-    private String defaultLabel;
-
-    public DummyCommand(T plugin, CommandDescriptor descriptor, String defaultLabel) {
-        super(plugin, descriptor);
-
-        Validate.notNull(defaultLabel, "Default label cannot be null.");
-        this.defaultLabel = defaultLabel;
+    public DummyCommand(T plugin, CommandDescriptor descriptor) {
+        super(plugin, descriptor.dummy(true));
     }
 
     @Override
     public void handleExecute(CommandContext context) {
-        final Subcommand<T> defaultSubcommand = getSubcommand(defaultLabel);
+        final String defCommand = getDescriptor().getDefaultCommand();
+
+        if (defCommand == null) {
+            return;
+        }
+
+        final Subcommand<T> defaultSubcommand = getSubcommand(defCommand);
 
         if (defaultSubcommand != null) {
             defaultSubcommand.execute(context, 0);

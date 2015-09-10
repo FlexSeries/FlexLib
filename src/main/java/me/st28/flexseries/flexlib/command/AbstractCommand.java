@@ -180,7 +180,7 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
 
     public final void execute(CommandContext context, int curIndex) {
         final CommandSender sender = context.getSender();
-        final List<String> args = getRelativeArgs(context);
+        final List<String> args = context.getArgs();
         final String label = context.getLabel();
         final String directAlias = subcommandDirectAliases.get(label.toLowerCase());
 
@@ -189,18 +189,16 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
             subcommand = subcommands.get(directAlias);
         }
 
-        int newIndex = curIndex - argumentOffset;
-
         if (curIndex >= 0 && curIndex < args.size()) {
-            final String alias = subcommandAliases.get(args.get(0).toLowerCase());
+            final String alias = subcommandAliases.get(args.get(curIndex).toLowerCase());
             if (alias != null) {
                 subcommand = subcommands.get(alias);
-                newIndex++;
+                curIndex++;
             }
         }
 
         if (subcommand != null) {
-            subcommand.execute(context, newIndex);
+            subcommand.execute(context, curIndex);
             return;
         }
 
@@ -216,15 +214,25 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
 
         if (getRelativeArgs(context).size() < getRequiredArgs()) {
             // Show usage
+
+            final String defName = descriptor.getDefaultCommand();
+            if (defName != null) {
+                final Subcommand<T> defCommand = subcommands.get(defName.toLowerCase());
+                if (defCommand != null) {
+                    defCommand.execute(context, curIndex);
+                    return;
+                }
+            }
+
             throw new CommandInterruptedException(InterruptReason.INVALID_USAGE);
         }
 
         for (Argument argument : this.arguments) {
             try {
-                argument.execute(context, newIndex + 1);
+                argument.execute(context, curIndex);
             } catch (CommandInterruptedException ex) {
                 if (ex.getReason() == InterruptReason.ARGUMENT_SOFT_ERROR) {
-                    if (!argument.isRequired() && newIndex != this.arguments.size() - 1) {
+                    if (!argument.isRequired() && curIndex - argumentOffset != this.arguments.size() - 1) {
                         context.addGlobalObject(argument.getName(), argument.getDefaultValue(context));
                         context.indicateDefaultValue(argument.getName());
                         continue;
@@ -235,7 +243,7 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
                 }
                 throw ex;
             }
-            newIndex++;
+            curIndex++;
         }
 
         handleExecute(context);
