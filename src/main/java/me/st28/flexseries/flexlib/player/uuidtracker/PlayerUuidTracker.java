@@ -25,11 +25,16 @@
 package me.st28.flexseries.flexlib.player.uuidtracker;
 
 import me.st28.flexseries.flexlib.FlexLib;
+import me.st28.flexseries.flexlib.player.data.DataProviderDescriptor;
+import me.st28.flexseries.flexlib.player.data.PlayerData;
+import me.st28.flexseries.flexlib.player.data.PlayerDataProvider;
+import me.st28.flexseries.flexlib.player.data.PlayerLoader;
 import me.st28.flexseries.flexlib.player.uuidtracker.UuidTrackerStorageHandler.YamlStorageHandler;
 import me.st28.flexseries.flexlib.plugin.module.FlexModule;
 import me.st28.flexseries.flexlib.plugin.module.ModuleDescriptor;
 import me.st28.flexseries.flexlib.storage.flatfile.YamlFileManager;
 import org.apache.commons.lang.Validate;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -44,7 +49,7 @@ import java.util.Map.Entry;
  * Provides a name to UUID and vice versa lookup for players <i>that have joined the server before.</i>
  * This class should be used to avoid hitting the Mojang API UUID lookup limit.
  */
-public final class PlayerUuidTracker extends FlexModule<FlexLib> implements Listener {
+public final class PlayerUuidTracker extends FlexModule<FlexLib> implements Listener, PlayerDataProvider {
 
     private UuidTrackerStorageHandler storageHandler;
 
@@ -107,6 +112,8 @@ public final class PlayerUuidTracker extends FlexModule<FlexLib> implements List
 
             uuidsToNames.put(uuid, entry.currentName);
         }
+
+        registerPlayerDataProvider(new DataProviderDescriptor());
     }
 
     @Override
@@ -174,9 +181,9 @@ public final class PlayerUuidTracker extends FlexModule<FlexLib> implements List
         return returnSet;
     }
 
-    @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent e) {
-        updatePlayer(e.getPlayer());
+    @Override
+    public void loadPlayer(PlayerLoader loader, PlayerData data, UUID uuid, String name) {
+        updatePlayer(Bukkit.getPlayer(uuid));
     }
 
 }
