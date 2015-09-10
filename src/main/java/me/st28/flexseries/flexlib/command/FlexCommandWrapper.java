@@ -83,6 +83,7 @@ public class FlexCommandWrapper implements CommandExecutor, TabCompleter {
         } catch (Exception ex) {
             MessageReference message = MessageManager.getMessage(FlexLib.class, "lib_command.errors.uncaught_exception", new ReplacementMap("{ERROR}", ex.getMessage()).getMap());
             LogHelper.severe(this.command.getPlugin(), message.getMessage(), ex);
+            message.sendTo(sender);
         }
 
         return true;
