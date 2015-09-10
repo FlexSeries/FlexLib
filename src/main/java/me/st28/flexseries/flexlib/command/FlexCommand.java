@@ -45,6 +45,10 @@ public abstract class FlexCommand<T extends FlexPlugin> extends AbstractCommand<
 
         descriptor.description(pluginCommand.getDescription());
 
+        if (descriptor.getDefaultCommand() == null && descriptor.isDummy()) {
+            descriptor.defaultCommand("help");
+        }
+
         descriptor.lock();
     }
 
