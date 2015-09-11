@@ -64,6 +64,7 @@ public abstract class Hook {
         } else {
             try {
                 handleEnable();
+                isEnabled = true;
                 LogHelper.info(manager, "Found plugin hook '" + pluginName + "'");
             } catch (Exception ex) {
                 LogHelper.severe(manager, "An exception occurred while enabling hook '" + pluginName + "'", ex);
