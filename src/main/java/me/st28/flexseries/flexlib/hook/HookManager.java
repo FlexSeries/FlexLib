@@ -26,9 +26,11 @@ package me.st28.flexseries.flexlib.hook;
 
 import me.st28.flexseries.flexlib.FlexLib;
 import me.st28.flexseries.flexlib.hook.defaults.VaultHook;
+import me.st28.flexseries.flexlib.log.LogHelper;
 import me.st28.flexseries.flexlib.plugin.module.FlexModule;
 import me.st28.flexseries.flexlib.plugin.module.ModuleDescriptor;
 import org.apache.commons.lang.Validate;
+import org.bukkit.plugin.Plugin;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -60,7 +62,21 @@ public final class HookManager extends FlexModule<FlexLib> {
 
         hooks.put(plugin, hook);
         hookClasses.put(hook.getClass(), hook);
+
+        loadHook(hook);
         return true;
+    }
+
+    private void loadHook(Hook hook) {
+        final Plugin plugin = hook.getPlugin();
+        final String name = hook.getPluginName();
+
+        if (plugin == null) {
+            LogHelper.info(this, "Hook '" + name + "' was disabled: plugin not found");
+            return;
+        }
+
+        hook.enable(this);
     }
 
     /**
