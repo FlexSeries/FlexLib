@@ -1,2 +1,3 @@
 debug: false
 autosave interval: 10
+server name: 'Minecraft Server'
