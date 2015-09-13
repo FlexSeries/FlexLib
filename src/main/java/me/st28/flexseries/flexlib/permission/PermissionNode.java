@@ -24,7 +24,12 @@
  */
 package me.st28.flexseries.flexlib.permission;
 
+import me.st28.flexseries.flexlib.utils.StringUtils;
 import org.bukkit.permissions.Permissible;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Represents a permission node.
@@ -42,5 +47,20 @@ public interface PermissionNode {
      * @return the string representation of the permission node.
      */
     String getNode();
+
+    static PermissionNode buildVariableNode(PermissionNodes mainPerm, String... variables) {
+        final String node = mainPerm.getNode() + "." + StringUtils.collectionToString(Arrays.asList(variables), ".").toLowerCase();
+
+        if (VARIABLE_NODES.containsKey(node)) {
+            return VARIABLE_NODES.get(node);
+        }
+
+        PermissionNode newNode = () -> node;
+
+        VARIABLE_NODES.put(node, newNode);
+        return newNode;
+    }
+
+    Map<String, PermissionNode> VARIABLE_NODES = new HashMap<>();
 
 }
