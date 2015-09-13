@@ -33,7 +33,9 @@ import me.st28.flexseries.flexlib.message.MessageManager;
 import me.st28.flexseries.flexlib.message.MessageMasterManager;
 import me.st28.flexseries.flexlib.message.list.ListManager;
 import me.st28.flexseries.flexlib.message.variable.MessageVariable;
+import me.st28.flexseries.flexlib.permission.PermissionHelper;
 import me.st28.flexseries.flexlib.player.PlayerManager;
+import me.st28.flexseries.flexlib.player.settings.PlayerSettingsManager;
 import me.st28.flexseries.flexlib.player.uuidtracker.PlayerUuidTracker;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -57,6 +59,7 @@ public final class FlexLib extends FlexPlugin {
         registerModule(new HookManager(this));
         registerModule(new ListManager(this));
         registerModule(new PlayerManager(this));
+        registerModule(new PlayerSettingsManager(this));
         registerModule(new PlayerUuidTracker(this));
     }
 
@@ -102,6 +105,7 @@ public final class FlexLib extends FlexPlugin {
     @Override
     public void handleConfigReload(FileConfiguration config) {
         serverName = config.getString("server name", "Minecraft Server");
+        PermissionHelper.reload(config.getConfigurationSection("permission helper"));
     }
 
     public String getServerName() {
