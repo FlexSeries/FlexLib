@@ -38,6 +38,7 @@ import me.st28.flexseries.flexlib.player.PlayerManager;
 import me.st28.flexseries.flexlib.player.settings.PlayerSettingsManager;
 import me.st28.flexseries.flexlib.player.uuidtracker.PlayerUuidTracker;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
+import me.st28.flexseries.flexlib.plugin.PluginStatus;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
@@ -100,12 +101,17 @@ public final class FlexLib extends FlexPlugin {
                 return player.getWorld().getName();
             }
         });
+
+        PermissionHelper.reload(getConfig().getConfigurationSection("permission helper"));
     }
 
     @Override
     public void handleConfigReload(FileConfiguration config) {
         serverName = config.getString("server name", "Minecraft Server");
-        PermissionHelper.reload(config.getConfigurationSection("permission helper"));
+
+        if (getStatus() == PluginStatus.ENABLED) {
+            PermissionHelper.reload(config.getConfigurationSection("permission helper"));
+        }
     }
 
     public String getServerName() {
