@@ -176,7 +176,7 @@ public abstract class FlexModule<T extends FlexPlugin> {
      * @return True if successfully registered.<br />
      *         False if already registered.
      */
-    public final boolean registerPlayerDataProvider(DataProviderDescriptor descriptor) {
+    protected final boolean registerPlayerDataProvider(DataProviderDescriptor descriptor) {
         Validate.isTrue(this instanceof PlayerDataProvider, "This module must implement PlayerDataProvider.");
         Validate.notNull(descriptor, "Descriptor cannot be null.");
 
