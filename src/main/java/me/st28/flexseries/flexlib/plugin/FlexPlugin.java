@@ -400,6 +400,10 @@ public class FlexPlugin extends JavaPlugin {
         modules.put(clazz, module);
     }
 
+    public final PluginStatus getStatus() {
+        return status;
+    }
+
     public final Collection<FlexModule> getModules() {
         return Collections.unmodifiableCollection(modules.values());
     }
