@@ -77,11 +77,11 @@ public class FlexCommandWrapper implements CommandExecutor, TabCompleter {
             }
 
             if (ex.getReason().isError()) {
-                MessageReference message = MessageManager.getMessage(FlexLib.class, "lib_command.errors.uncaught_exception", new ReplacementMap("{ERROR}", ex.getMessage()).getMap());
+                MessageReference message = MessageManager.getMessage(FlexLib.class, "lib_command.errors.uncaught_exception", new ReplacementMap("{MESSAGE}", ex.getMessage()).getMap());
                 LogHelper.severe(this.command.getPlugin(), message.getMessage(), ex);
             }
         } catch (Exception ex) {
-            MessageReference message = MessageManager.getMessage(FlexLib.class, "lib_command.errors.uncaught_exception", new ReplacementMap("{ERROR}", ex.getMessage()).getMap());
+            MessageReference message = MessageManager.getMessage(FlexLib.class, "lib_command.errors.uncaught_exception", new ReplacementMap("{MESSAGE}", ex.getMessage()).getMap());
             LogHelper.severe(this.command.getPlugin(), message.getMessage(), ex);
             message.sendTo(sender);
         }
