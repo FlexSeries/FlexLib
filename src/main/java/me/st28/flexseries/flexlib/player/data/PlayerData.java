@@ -30,9 +30,8 @@ import org.apache.commons.lang.Validate;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import java.util.Map.Entry;
 
 public final class PlayerData {
 
@@ -46,6 +45,11 @@ public final class PlayerData {
      * These are saved/loaded automatically. Should be configuration serializable.
      */
     private final Map<String, Object> customData = new HashMap<>();
+
+    /**
+     * Keys of objects in {@link #customData} that should not be saved.
+     */
+    private final Set<String> transientData = new HashSet<>();
 
     public PlayerData(UUID uuid, YamlFileManager file) {
         this.uuid = uuid;
@@ -90,6 +94,21 @@ public final class PlayerData {
                 }
             }
         }
+    }
+
+    public void save() {
+        ConfigurationSection customSec = file.getConfig().getConfigurationSection("custom");
+        if (customSec == null) {
+            customSec = file.getConfig().createSection("custom");
+        }
+
+        for (Entry<String, Object> entry : customData.entrySet()) {
+            if (!transientData.contains(entry.getKey())) {
+                customSec.set(entry.getKey(), entry.getValue());
+            }
+        }
+
+        file.save();
     }
 
     public YamlFileManager getFile() {
@@ -150,6 +169,14 @@ public final class PlayerData {
         }
     }
 
+    public void setCustomData(String key, Object data, boolean isTransient) {
+        setCustomData(key, data);
+
+        if (isTransient) {
+            setTransientData(key);
+        }
+    }
+
     public void setCustomData(Class<? extends FlexPlugin> plugin, String key, Object data) {
         Validate.notNull(plugin, "Plugin cannot be null.");
         Validate.notNull(key, "Key cannot be null.");
@@ -160,6 +187,19 @@ public final class PlayerData {
         } else {
             customData.put(fullKey, data);
         }
+    }
+
+    public void setCustomData(Class<? extends FlexPlugin> plugin, String key, Object data, boolean isTransient) {
+        setCustomData(plugin, key, data);
+
+        if (isTransient) {
+            setTransientData(key);
+        }
+    }
+
+    public void setTransientData(String key) {
+        Validate.notNull(key, "Key cannot be null.");
+        transientData.add(key);
     }
 
 }

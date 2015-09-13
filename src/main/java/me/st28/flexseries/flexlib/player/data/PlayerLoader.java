@@ -158,7 +158,7 @@ public final class PlayerLoader {
             }
         }
 
-        data.getFile().save();
+        data.save();
     }
 
 }
