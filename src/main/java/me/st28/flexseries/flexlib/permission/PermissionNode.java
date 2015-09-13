@@ -48,7 +48,7 @@ public interface PermissionNode {
      */
     String getNode();
 
-    static PermissionNode buildVariableNode(PermissionNodes mainPerm, String... variables) {
+    static PermissionNode buildVariableNode(PermissionNode mainPerm, String... variables) {
         final String node = mainPerm.getNode() + "." + StringUtils.collectionToString(Arrays.asList(variables), ".").toLowerCase();
 
         if (VARIABLE_NODES.containsKey(node)) {
