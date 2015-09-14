@@ -41,4 +41,9 @@ public interface PlayerDataProvider {
      */
     default void savePlayer(PlayerLoader loader, PlayerData data, UUID uuid, String name) {}
 
+    /**
+     * Unloads a player's data.
+     */
+    default void unloadPlayer(PlayerLoader loader, PlayerData data, UUID uuid, String name) {}
+
 }

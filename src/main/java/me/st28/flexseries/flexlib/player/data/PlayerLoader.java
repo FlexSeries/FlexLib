@@ -161,4 +161,16 @@ public final class PlayerLoader {
         data.save();
     }
 
+    public void unload() {
+        for (Entry<PlayerDataProvider, ProviderLoadStatus> entry : providers.entrySet()) {
+            if (entry.getValue() == ProviderLoadStatus.SUCCESS) {
+                try {
+                    entry.getKey().unloadPlayer(this, data, uuid, name);
+                } catch (Exception ex) {
+                    LogHelper.severe(getPlayerManager(), "Provider '" + entry.getKey().getClass().getCanonicalName() + "' encountered an exception while unloading data for player '" + name + "' (" + uuid.toString() + ")", ex);
+                }
+            }
+        }
+    }
+
 }

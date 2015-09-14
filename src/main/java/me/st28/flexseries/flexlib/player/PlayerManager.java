@@ -192,6 +192,17 @@ public final class PlayerManager extends FlexModule<FlexLib> implements Listener
         }
     }
 
+    private void unloadPlayer(UUID uuid) {
+        final PlayerData data = loadedData.get(uuid);
+
+        if (data != null) {
+            data.getLoader().save();
+            data.getLoader().unload();
+        }
+
+        loadedData.remove(uuid);
+    }
+
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerJoin(PlayerJoinEvent e) {
         final Player player = e.getPlayer();
