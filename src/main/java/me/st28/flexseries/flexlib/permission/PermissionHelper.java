@@ -40,6 +40,7 @@ import java.util.stream.Collectors;
  * Since Vault does not provide a way of checking group inheritance, this provides an alternate
  * method of checking group inheritance without having to hook into each individual permission plugin.
  */
+// TODO: Make this work without Vault installed
 public final class PermissionHelper {
 
     private static VaultHook vault;
@@ -108,6 +109,20 @@ public final class PermissionHelper {
         }
 
         return entry.containsPlayer(player) || (checkInheritance && entry.playerInherits(player));
+    }
+
+    public static String getTopGroup(Player player, List<String> groups, String defaultGroup) {
+        List<String> reversed = new ArrayList<>(groupEntries.keySet());
+        Collections.reverse(reversed);
+
+        for (String group : reversed) {
+            GroupEntry entry = groupEntries.get(group);
+
+            if (groups.contains(group) && (entry.containsPlayer(player) || entry.playerInherits(player))) {
+                return group;
+            }
+        }
+        return defaultGroup;
     }
 
     // ------------------------------------------------------------------------------------------ //
