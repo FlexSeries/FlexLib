@@ -19,6 +19,17 @@ lib_command:
     uncaught_exception: '{mood=error}An error occurred while running this command ({MESSAGE}).'
     usage: '{o=usage}{USAGE}{/}'
 
+lib_player_settings:
+  errors:
+    group_not_found: '{mood=error}Unknown group {o=input}{GROUP}{/}.'
+    setting_not_found: '{mood=error}Unknown setting {o=input}{SETTING}{/}.'
+    setting_not_found_group: '{mood=error}Unknown setting {o=input}{SETTING}{/} in group {o=input}{GROUP}{/}.'
+    setting_not_toggleable: '{mood=error}Setting {o=input_sanitized}{SETTING}{/} is not toggleable.'
+    setting_not_toggleable_group: '{mood=error}Setting {o=input_sanitized}{SETTING}{/} in group {o=input_sanitized}{GROUP}{/} is not toggleable.'
+  notices:
+    toggle_enabled: '{mood=notice}Toggle {o=item}{TOGGLE}{/} was &aenabled{mood=.}.'
+    toggle_disabled: '{mood=notice}Toggle {o=item}{TOGGLE}{/} was &cdisabled{mood=.}.'
+
 lib_plugin:
   errors:
     plugin_not_flexplugin: '{mood=error}Plugin {o=input_sanitized}{PLUGIN}{/} is not a FlexPlugin.'
