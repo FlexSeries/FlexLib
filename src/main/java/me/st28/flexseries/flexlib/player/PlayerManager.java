@@ -172,7 +172,7 @@ public final class PlayerManager extends FlexModule<FlexLib> implements Listener
 
         if (data.getFile().isEmpty()) {
             data.getConfig().set("firstJoin", false);
-            data.setCustomData("firstJoin", true);
+            data.setCustomData("firstJoin", true, true);
         }
 
         PlayerLoader loader = new PlayerLoader(uuid, data);
@@ -206,6 +206,8 @@ public final class PlayerManager extends FlexModule<FlexLib> implements Listener
         }
 
         Bukkit.getPluginManager().callEvent(newEvent);
+
+        data.setCustomData("firstJoin", false, true);
 
         if (enableJoinMessageChange) {
             e.setJoinMessage(null);
