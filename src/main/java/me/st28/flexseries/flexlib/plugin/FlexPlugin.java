@@ -231,6 +231,13 @@ public class FlexPlugin extends JavaPlugin {
     }
 
     private void loadModule(Set<FlexModule> unused, Set<FlexModule> checked, FlexModule current) {
+        if (modules.get(current.getClass()) != null) {
+            ModuleStatus status = modules.get(current.getClass()).getStatus();
+            if (status.isEnabled()) {
+                return;
+            }
+        }
+
         long moduleStartTime = System.currentTimeMillis();
         LogHelper.info(this, "Loading module '" + current.getName() + "'");
 
