@@ -46,7 +46,7 @@ public final class PotionEffectRef {
     }
 
     public PotionEffect getPotionEffect() {
-        return new PotionEffect(type, duration, amplifier, ambient, particles);
+        return new PotionEffect(type, duration * 20, amplifier, ambient, particles);
     }
 
 }
