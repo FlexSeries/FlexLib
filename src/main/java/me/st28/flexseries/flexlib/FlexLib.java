@@ -28,6 +28,7 @@ import me.st28.flexseries.flexlib.backend.commands.CmdFlexModules;
 import me.st28.flexseries.flexlib.backend.commands.CmdFlexReload;
 import me.st28.flexseries.flexlib.backend.commands.CmdFlexSave;
 import me.st28.flexseries.flexlib.command.FlexCommandWrapper;
+import me.st28.flexseries.flexlib.gui.GuiManager;
 import me.st28.flexseries.flexlib.hook.HookManager;
 import me.st28.flexseries.flexlib.message.MessageManager;
 import me.st28.flexseries.flexlib.message.MessageMasterManager;
@@ -57,6 +58,7 @@ public final class FlexLib extends FlexPlugin {
         instance = this;
 
         registerModule(new MessageMasterManager(this));
+        registerModule(new GuiManager(this));
         registerModule(new HookManager(this));
         registerModule(new ListManager(this));
         registerModule(new PlayerManager(this));
