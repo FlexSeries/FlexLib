@@ -1,5 +1,5 @@
 /**
- * FlexCore - Licensed under the MIT License (MIT)
+ * FlexLib - Licensed under the MIT License (MIT)
  *
  * Copyright (c) Stealth2800 <http://stealthyone.com/>
  * Copyright (c) contributors <https://github.com/FlexSeries>
