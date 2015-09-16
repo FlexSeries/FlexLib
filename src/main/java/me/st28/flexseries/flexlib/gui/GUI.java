@@ -278,7 +278,6 @@ public class GUI {
             throw new IllegalStateException("Player '" + player.getName() + "' does not have this inventory open.");
         }
 
-        player.closeInventory();
         handleClose(player);
 
         if (removeInstanceOnClose) {
@@ -290,6 +289,7 @@ public class GUI {
         if (autoDestroy && playerInstances.isEmpty()) {
             destroy();
         }
+        player.closeInventory();
     }
 
     /**
