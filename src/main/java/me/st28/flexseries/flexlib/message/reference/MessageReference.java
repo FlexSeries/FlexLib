@@ -24,7 +24,10 @@
  */
 package me.st28.flexseries.flexlib.message.reference;
 
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.omg.CORBA.OBJ_ADAPTER;
 
 import java.util.Map;
 
@@ -57,5 +60,15 @@ public abstract class MessageReference {
      * @return The represented message as a string with replacements.
      */
     public abstract String getMessage(Map<String, Object> replacements);
+
+    public void broadcast() {
+        broadcast(null);
+    }
+
+    public void broadcast(Map<String, Object> replacements) {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            sendTo(player, replacements);
+        }
+    }
 
 }

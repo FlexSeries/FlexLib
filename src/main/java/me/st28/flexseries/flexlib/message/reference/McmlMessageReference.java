@@ -27,6 +27,7 @@ package me.st28.flexseries.flexlib.message.reference;
 import com.stealthyone.mcb.mcml.MCMLBuilder;
 import com.stealthyone.mcb.mcml.shade.fanciful.FancyMessage;
 import org.apache.commons.lang.Validate;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 
 import java.util.HashMap;
@@ -91,6 +92,11 @@ public class McmlMessageReference extends MessageReference {
     @Override
     public String getMessage(Map<String, Object> replacements) {
         return getFancyMessage(replacements).toOldMessageFormat();
+    }
+
+    @Override
+    public void broadcast(Map<String, Object> replacements) {
+        getFancyMessage(replacements).send(Bukkit.getOnlinePlayers());
     }
 
 }
