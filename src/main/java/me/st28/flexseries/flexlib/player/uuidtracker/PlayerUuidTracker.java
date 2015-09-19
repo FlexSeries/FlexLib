@@ -146,6 +146,13 @@ public final class PlayerUuidTracker extends FlexModule<FlexLib> implements List
     }
 
     /**
+     * @return All cached UUIDs.
+     */
+    public Collection<UUID> getAllUuids() {
+        return Collections.unmodifiableCollection(uuidsToNames.keySet());
+    }
+
+    /**
      * @return The cached name for the given UUID.
      */
     public String getLatestName(UUID uuid) {
