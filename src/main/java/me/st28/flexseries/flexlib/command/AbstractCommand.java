@@ -225,7 +225,6 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
             throw new CommandInterruptedException(InterruptReason.MUST_BE_PLAYER);
         }
 
-        System.out.println("RELATIVE ARGS: " + getRelativeArgs(context).toString());
         if (getRelativeArgs(context).size() < getRequiredArgs()) {
             // Show usage
 
