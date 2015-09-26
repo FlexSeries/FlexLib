@@ -122,6 +122,13 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
 
     public final void addArgument(Argument argument) {
         arguments.add(argument);
+
+        int newOffset = argumentOffset + arguments.size() + 2;
+        for (Subcommand<T> subcommand : subcommands.values()) {
+            if (subcommand instanceof ReverseSubcommand) {
+                ((AbstractCommand) subcommand).argumentOffset = newOffset;
+            }
+        }
     }
 
     public final Collection<Subcommand<T>> getSubcommands() {
@@ -139,7 +146,11 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
         final List<String> labels = subcommand.getDescriptor().getLabels();
         final String mainLabel = labels.get(0);
 
-        ((AbstractCommand) subcommand).argumentOffset = argumentOffset + 1;
+        if (subcommand instanceof ReverseSubcommand) {
+            ((AbstractCommand) subcommand).argumentOffset = argumentOffset + arguments.size() + 2;
+        } else {
+            ((AbstractCommand) subcommand).argumentOffset = argumentOffset + 1;
+        }
 
         subcommands.put(mainLabel, subcommand);
 
@@ -197,7 +208,7 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
             }
         }
 
-        if (subcommand != null) {
+        if (subcommand != null && !(subcommand instanceof ReverseSubcommand)) {
             subcommand.execute(context, curIndex);
             return;
         }
@@ -212,6 +223,7 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
             throw new CommandInterruptedException(InterruptReason.MUST_BE_PLAYER);
         }
 
+        System.out.println("RELATIVE ARGS: " + getRelativeArgs(context).toString());
         if (getRelativeArgs(context).size() < getRequiredArgs()) {
             // Show usage
 
@@ -244,6 +256,14 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
                 throw ex;
             }
             curIndex++;
+        }
+
+        if (curIndex < args.size()) {
+            Subcommand<T> preSubcommand = subcommands.get(args.get(curIndex));
+            if (preSubcommand != null && preSubcommand instanceof ReverseSubcommand) {
+                preSubcommand.execute(context, curIndex + 1);
+                return;
+            }
         }
 
         handleExecute(context);
@@ -303,6 +323,22 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
 
         if (newIndex == 0) {
             for (Subcommand<T> curSubcommand : subcommands.values()) {
+                if (curSubcommand instanceof ReverseSubcommand) {
+                    continue;
+                }
+
+                PermissionNode curPermission = curSubcommand.getPermission();
+
+                if (curPermission == null || curPermission.isAllowed(sender)) {
+                    returnList.add(curSubcommand.getDescriptor().getLabels().get(0));
+                }
+            }
+        } else {
+            for (Subcommand<T> curSubcommand : subcommands.values()) {
+                if (!(curSubcommand instanceof ReverseSubcommand) || curIndex != curSubcommand.getArgumentOffset() - 1) {
+                    continue;
+                }
+
                 PermissionNode curPermission = curSubcommand.getPermission();
 
                 if (curPermission == null || curPermission.isAllowed(sender)) {
