@@ -99,7 +99,7 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
 
     public abstract PermissionNode getPermission();
 
-    public String buildUsage(CommandContext context) {
+    String buildArgumentUsage() {
         StringBuilder builder = new StringBuilder();
 
         for (Argument argument : getArguments()) {
@@ -111,6 +111,8 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
 
         return builder.toString();
     }
+
+    public abstract String buildUsage(CommandContext context);
 
     public final int getArgumentOffset() {
         return argumentOffset;

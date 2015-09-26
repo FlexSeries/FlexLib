@@ -59,7 +59,7 @@ public abstract class FlexCommand<T extends FlexPlugin> extends AbstractCommand<
 
     @Override
     public String buildUsage(CommandContext context) {
-        String arguments = super.buildUsage(context);
+        String arguments = buildArgumentUsage();
 
         return "/" + (context != null ? context.getLabel() : getDescriptor().getLabels().get(0)) + (arguments.length() == 0 ? "" : " " + arguments);
     }

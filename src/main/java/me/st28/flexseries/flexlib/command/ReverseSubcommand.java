@@ -32,4 +32,16 @@ public abstract class ReverseSubcommand<T extends FlexPlugin> extends Subcommand
         super(parent, descriptor);
     }
 
+    @Override
+    public String buildUsage(CommandContext context) {
+        StringBuilder builder = new StringBuilder(buildArgumentUsage());
+
+        builder.insert(0, " ");
+        builder.insert(0, getDescriptor().getLabels().get(0));
+        builder.insert(0, " ");
+        builder.insert(0, getParent().buildUsage(context));
+
+        return builder.toString();
+    }
+
 }
