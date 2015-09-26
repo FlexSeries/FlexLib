@@ -89,7 +89,7 @@ public final class PlayerManager extends FlexModule<FlexLib> implements Listener
                         Entry<UUID, PlayerData> next = iterator.next();
 
                         if (Bukkit.getPlayer(next.getKey()) == null) {
-                            savePlayer(next.getKey());
+                            unloadPlayer(next.getKey());
                             iterator.remove();
                         }
                     }
