@@ -50,6 +50,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.io.File;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 public final class PlayerManager extends FlexModule<FlexLib> implements Listener {
 
@@ -84,14 +85,12 @@ public final class PlayerManager extends FlexModule<FlexLib> implements Listener
             autoUnloadTask = new BukkitRunnable() {
                 @Override
                 public void run() {
-                    Iterator<Entry<UUID, PlayerData>> iterator = loadedData.entrySet().iterator();
-                    while (iterator.hasNext()) {
-                        Entry<UUID, PlayerData> next = iterator.next();
+                    List<UUID> toRemove = loadedData.keySet().stream()
+                            .filter(uuid -> Bukkit.getPlayer(uuid) == null)
+                            .collect(Collectors.toList());
 
-                        if (Bukkit.getPlayer(next.getKey()) == null) {
-                            unloadPlayer(next.getKey());
-                            iterator.remove();
-                        }
+                    for (UUID uuid : toRemove) {
+                        unloadPlayer(uuid);
                     }
                 }
             };
