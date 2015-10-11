@@ -29,10 +29,14 @@ import me.st28.flexseries.flexlib.command.CommandContext;
 import me.st28.flexseries.flexlib.command.CommandDescriptor;
 import me.st28.flexseries.flexlib.command.FlexCommand;
 import me.st28.flexseries.flexlib.command.argument.FlexPluginArgument;
+import me.st28.flexseries.flexlib.command.argument.list.FlexModuleListArgument;
 import me.st28.flexseries.flexlib.message.MessageManager;
 import me.st28.flexseries.flexlib.message.ReplacementMap;
 import me.st28.flexseries.flexlib.permission.PermissionNodes;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
+import me.st28.flexseries.flexlib.plugin.module.FlexModule;
+
+import java.util.List;
 
 public final class CmdFlexReload extends FlexCommand<FlexLib> {
 
@@ -40,15 +44,29 @@ public final class CmdFlexReload extends FlexCommand<FlexLib> {
         super(plugin, new CommandDescriptor("flexreload").permission(PermissionNodes.RELOAD));
 
         addArgument(new FlexPluginArgument("plugin", true));
+        addArgument(new FlexModuleListArgument("modules", false));
     }
 
     @Override
     public void handleExecute(CommandContext context) {
         FlexPlugin plugin = context.getGlobalObject("plugin", FlexPlugin.class);
 
+        plugin.reloadConfig();
+
+        List<FlexModule> modules = context.getGlobalObject("modules", List.class);
+
+        for (FlexModule module : plugin.getModules()) {
+            if (modules != null && !modules.contains(module)) {
+                continue;
+            }
+
+            module.reloadConfig();
+        }
+
         plugin.reloadAll();
 
         MessageManager.getMessage(FlexLib.class, "lib_plugin.notices.plugin_reloaded", new ReplacementMap("{PLUGIN}", plugin.getName()).getMap()).sendTo(context.getSender());
+        // TODO: Show different message if specified modules are reloaded
     }
 
 }

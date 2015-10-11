@@ -16,6 +16,7 @@ general:
 lib_command:
   errors:
     invalid_input: '{mood=error}Invalid input {o=input}{INPUT}{/} for argument {o=input_sanitized}{ARGUMENT}{/}.'
+    invalid_input_list: '{mood=error}Invalid input {o=input}{INPUT}{/}.'
     uncaught_exception: '{mood=error}An error occurred while running this command ({MESSAGE}).'
     usage: '{o=usage}{USAGE}{/}'
 
@@ -33,6 +34,7 @@ lib_player_settings:
 lib_plugin:
   errors:
     plugin_not_flexplugin: '{mood=error}Plugin {o=input_sanitized}{PLUGIN}{/} is not a FlexPlugin.'
+    module_not_found: '{mood=error}Module {o=input}{MODULE}{/} not found in plugin {o=input_sanitized}{PLUGIN}{/}.'
   notices:
     plugin_reloaded: '{o=tag}{PLUGIN}{/}{mood=notice}Plugin configuration &creloaded {mood=.}from the disk.'
     plugin_saved: '{o=tag}{PLUGIN}{/}{mood=notice}Plugin data &asaved {mood=.}to the disk.'
