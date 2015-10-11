@@ -30,10 +30,13 @@ import me.st28.flexseries.flexlib.plugin.module.ModuleReference;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 public final class DataProviderDescriptor {
 
     private boolean isLocked = false;
+
+    private UnloadAlertPolicy unloadAlert = UnloadAlertPolicy.QUIT;
 
     private final Set<ModuleReference> hardDependencies = new HashSet<>();
     private final Set<ModuleReference> softDependencies = new HashSet<>();
@@ -47,6 +50,22 @@ public final class DataProviderDescriptor {
         if (isLocked) {
             throw new IllegalStateException("No longer accepting changes.");
         }
+    }
+
+    /**
+     * @see {@link UnloadAlertPolicy}.
+     */
+    public UnloadAlertPolicy unloadAlertPolicy() {
+        return unloadAlert;
+    }
+
+    /**
+     * @see {@link UnloadAlertPolicy}
+     * @return This instance, for chaining.
+     */
+    public DataProviderDescriptor unloadAlertPolicy(UnloadAlertPolicy policy) {
+        this.unloadAlert = policy;
+        return this;
     }
 
     /**
@@ -99,6 +118,38 @@ public final class DataProviderDescriptor {
         }
 
         return this;
+    }
+
+    // ------------------------------------------------------------------------------------------ //
+
+    /**
+     * Represents when a data provider should be alerted when to unload a player.
+     */
+    public enum UnloadAlertPolicy {
+
+        /**
+         * {@link PlayerDataProvider#unloadPlayer(PlayerLoader, PlayerData, UUID, String)} will be
+         * called for both {@link #AUTO} and {@link #QUIT}.
+         */
+        BOTH,
+
+        /**
+         * {@link PlayerDataProvider#unloadPlayer(PlayerLoader, PlayerData, UUID, String)} will be
+         * called when the auto unloader executes.
+         */
+        AUTO,
+
+        /**
+         * {@link PlayerDataProvider#unloadPlayer(PlayerLoader, PlayerData, UUID, String)} will be
+         * called when a player quits the server.
+         */
+        QUIT;
+
+        public boolean fuzzyEquals(UnloadAlertPolicy other) {
+            return this == BOTH || other == BOTH || this == other;
+
+        }
+
     }
 
 }

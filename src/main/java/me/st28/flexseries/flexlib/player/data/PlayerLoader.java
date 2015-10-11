@@ -27,6 +27,7 @@ package me.st28.flexseries.flexlib.player.data;
 import me.st28.flexseries.flexlib.log.LogHelper;
 import me.st28.flexseries.flexlib.player.PlayerManager;
 import me.st28.flexseries.flexlib.player.PlayerReference;
+import me.st28.flexseries.flexlib.player.data.DataProviderDescriptor.UnloadAlertPolicy;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 import me.st28.flexseries.flexlib.plugin.module.FlexModule;
 import me.st28.flexseries.flexlib.plugin.module.ModuleReference;
@@ -98,6 +99,10 @@ public final class PlayerLoader {
 
         checked.add(provider);
 
+        if (providers.get(provider) == ProviderLoadStatus.SUCCESS) {
+            return;
+        }
+
         providers.put(provider, ProviderLoadStatus.LOADING);
 
         final DataProviderDescriptor descriptor = descriptors.get(provider);
@@ -135,6 +140,16 @@ public final class PlayerLoader {
         }
     }
 
+    public int getLoadedProviderCount() {
+        int count = 0;
+        for (ProviderLoadStatus status : providers.values()) {
+            if (status == ProviderLoadStatus.SUCCESS) {
+                count++;
+            }
+        }
+        return count;
+    }
+
     public void indicateSuccess(PlayerDataProvider provider) {
         Validate.notNull(provider, "Provider cannot be null.");
         providers.put(provider, ProviderLoadStatus.SUCCESS);
@@ -161,14 +176,26 @@ public final class PlayerLoader {
         data.save();
     }
 
-    public void unload() {
-        for (Entry<PlayerDataProvider, ProviderLoadStatus> entry : providers.entrySet()) {
+    public void unload(UnloadAlertPolicy context) {
+        Map<PlayerDataProvider, DataProviderDescriptor> regProviders = FlexPlugin.getGlobalModule(PlayerManager.class).getDataProviders();
+
+        Iterator<Entry<PlayerDataProvider, ProviderLoadStatus>> iterator = providers.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Entry<PlayerDataProvider, ProviderLoadStatus> entry = iterator.next();
+
             if (entry.getValue() == ProviderLoadStatus.SUCCESS) {
+                if (context != null && !context.fuzzyEquals(regProviders.get(entry.getKey()).unloadAlertPolicy())) {
+                    continue;
+                }
+
                 try {
-                    entry.getKey().unloadPlayer(this, data, uuid, name);
+                    if (!entry.getKey().unloadPlayer(this, data, uuid, name)) {
+                        continue;
+                    }
                 } catch (Exception ex) {
                     LogHelper.severe(getPlayerManager(), "Provider '" + entry.getKey().getClass().getCanonicalName() + "' encountered an exception while unloading data for player '" + name + "' (" + uuid.toString() + ")", ex);
                 }
+                iterator.remove();
             }
         }
     }

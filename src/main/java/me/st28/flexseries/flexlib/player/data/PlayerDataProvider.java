@@ -43,7 +43,11 @@ public interface PlayerDataProvider {
 
     /**
      * Unloads a player's data.
+     *
+     * @return True if completely unloaded.
      */
-    default void unloadPlayer(PlayerLoader loader, PlayerData data, UUID uuid, String name) {}
+    default boolean unloadPlayer(PlayerLoader loader, PlayerData data, UUID uuid, String name) {
+        return true;
+    }
 
 }

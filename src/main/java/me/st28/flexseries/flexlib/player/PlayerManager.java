@@ -25,10 +25,12 @@
 package me.st28.flexseries.flexlib.player;
 
 import me.st28.flexseries.flexlib.FlexLib;
+import me.st28.flexseries.flexlib.log.LogHelper;
 import me.st28.flexseries.flexlib.message.reference.MessageReference;
 import me.st28.flexseries.flexlib.message.reference.PlainMessageReference;
 import me.st28.flexseries.flexlib.player.PlayerExtendedJoinEvent;
 import me.st28.flexseries.flexlib.player.data.DataProviderDescriptor;
+import me.st28.flexseries.flexlib.player.data.DataProviderDescriptor.UnloadAlertPolicy;
 import me.st28.flexseries.flexlib.player.data.PlayerData;
 import me.st28.flexseries.flexlib.player.data.PlayerDataProvider;
 import me.st28.flexseries.flexlib.player.data.PlayerLoader;
@@ -90,7 +92,7 @@ public final class PlayerManager extends FlexModule<FlexLib> implements Listener
                             .collect(Collectors.toList());
 
                     for (UUID uuid : toRemove) {
-                        unloadPlayer(uuid);
+                        unloadPlayer(uuid, UnloadAlertPolicy.AUTO);
                     }
                 }
             };
@@ -106,6 +108,13 @@ public final class PlayerManager extends FlexModule<FlexLib> implements Listener
     protected void handleSave(boolean async) {
         for (UUID uuid : loadedData.keySet()) {
             savePlayer(uuid);
+        }
+    }
+
+    @Override
+    protected void handleDisable() {
+        for (PlayerData data : loadedData.values()) {
+            data.getLoader().unload(null);
         }
     }
 
@@ -164,6 +173,8 @@ public final class PlayerManager extends FlexModule<FlexLib> implements Listener
 
     private void loadPlayer(UUID uuid) {
         if (isPlayerLoaded(uuid)) {
+            loadedData.get(uuid).getLoader().load();
+
             return;
         }
 
@@ -191,15 +202,23 @@ public final class PlayerManager extends FlexModule<FlexLib> implements Listener
         }
     }
 
-    private void unloadPlayer(UUID uuid) {
+    private void unloadPlayer(UUID uuid, UnloadAlertPolicy context) {
         final PlayerData data = loadedData.get(uuid);
 
-        if (data != null) {
-            data.getLoader().save();
-            data.getLoader().unload();
+        if (data == null) {
+            return;
         }
 
-        loadedData.remove(uuid);
+        try {
+            data.getLoader().save();
+            data.getLoader().unload(context);
+        } catch (Exception ex) {
+            LogHelper.severe(this, "An exception occurred while unloading player '" + data.getUuid().toString() + "'", ex);
+        }
+
+        if (data.getLoader().getLoadedProviderCount() == 0) {
+            loadedData.remove(uuid);
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -279,6 +298,8 @@ public final class PlayerManager extends FlexModule<FlexLib> implements Listener
         }
 
         savePlayer(player.getUniqueId());
+
+        unloadPlayer(player.getUniqueId(), UnloadAlertPolicy.QUIT);
     }
 
 }
