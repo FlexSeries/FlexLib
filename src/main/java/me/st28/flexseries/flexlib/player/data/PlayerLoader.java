@@ -25,16 +25,21 @@
 package me.st28.flexseries.flexlib.player.data;
 
 import me.st28.flexseries.flexlib.log.LogHelper;
+import me.st28.flexseries.flexlib.player.PlayerData;
 import me.st28.flexseries.flexlib.player.PlayerManager;
 import me.st28.flexseries.flexlib.player.PlayerReference;
-import me.st28.flexseries.flexlib.player.data.DataProviderDescriptor.UnloadAlertPolicy;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 import me.st28.flexseries.flexlib.plugin.module.FlexModule;
 import me.st28.flexseries.flexlib.plugin.module.ModuleReference;
 import org.apache.commons.lang.Validate;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.UUID;
 
 public final class PlayerLoader {
 
@@ -42,29 +47,25 @@ public final class PlayerLoader {
         return FlexPlugin.getGlobalModule(PlayerManager.class);
     }
 
-    private final UUID uuid;
-    private final String name;
+    private PlayerReference player;
     private final PlayerData data;
 
     private final Map<PlayerDataProvider, ProviderLoadStatus> providers = new HashMap<>();
 
-    public PlayerLoader(UUID uuid, PlayerData data) {
-        Validate.notNull(uuid, "UUID cannot be null.");
-        this.uuid = uuid;
-
-        this.name = new PlayerReference(uuid).getName();
-        Validate.notNull(name, "Name cannot be null.");
+    public PlayerLoader(PlayerReference player, PlayerData data) {
+        Validate.notNull(player, "Player cannot be null.");
+        this.player = player;
 
         this.data = data;
         Validate.notNull(data, "Data cannot be null.");
     }
 
     public UUID getUuid() {
-        return uuid;
+        return player.getUuid();
     }
 
     public String getName() {
-        return name;
+        return player.getName();
     }
 
     public PlayerData getData() {
@@ -132,7 +133,7 @@ public final class PlayerLoader {
         }
 
         try {
-            provider.loadPlayer(this, data, uuid, name);
+            provider.loadPlayer(this, data, player);
             indicateSuccess(provider);
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -153,22 +154,22 @@ public final class PlayerLoader {
     public void indicateSuccess(PlayerDataProvider provider) {
         Validate.notNull(provider, "Provider cannot be null.");
         providers.put(provider, ProviderLoadStatus.SUCCESS);
-        LogHelper.debug(getPlayerManager(), "Provider '" + provider.getClass().getCanonicalName() + "' successfully loaded data for player '" + name + "' (" + uuid.toString() + ")");
+        LogHelper.debug(getPlayerManager(), "Provider '" + provider.getClass().getCanonicalName() + "' successfully loaded data for player '" + getName() + "' (" + getUuid().toString() + ")");
     }
 
     public void indicateFailure(PlayerDataProvider provider, String reason) {
         Validate.notNull(provider, "Provider cannot be null.");
         providers.put(provider, ProviderLoadStatus.FAILURE);
-        LogHelper.severe(getPlayerManager(), "Provider '" + provider.getClass().getCanonicalName() + "' failed to load data for player '" + name + "' (" + uuid.toString() + "): " + reason);
+        LogHelper.severe(getPlayerManager(), "Provider '" + provider.getClass().getCanonicalName() + "' failed to load data for player '" + getName() + "' (" + getUuid().toString() + "): " + reason);
     }
 
     public void save() {
         for (Entry<PlayerDataProvider, ProviderLoadStatus> entry : providers.entrySet()) {
             if (entry.getValue() == ProviderLoadStatus.SUCCESS) {
                 try {
-                    entry.getKey().savePlayer(this, data, uuid, name);
+                    entry.getKey().savePlayer(this, data, player);
                 } catch (Exception ex) {
-                    LogHelper.severe(getPlayerManager(), "Provider '" + entry.getKey().getClass().getCanonicalName() + "' encountered an exception while saving data for player '" + name + "' (" + uuid.toString() + ")", ex);
+                    LogHelper.severe(getPlayerManager(), "Provider '" + entry.getKey().getClass().getCanonicalName() + "' encountered an exception while saving data for player '" + getName() + "' (" + getUuid().toString() + ")", ex);
                 }
             }
         }
@@ -176,24 +177,28 @@ public final class PlayerLoader {
         data.save();
     }
 
-    public void unload(UnloadAlertPolicy context) {
+    public void unload(boolean force) {
         Map<PlayerDataProvider, DataProviderDescriptor> regProviders = FlexPlugin.getGlobalModule(PlayerManager.class).getDataProviders();
 
         Iterator<Entry<PlayerDataProvider, ProviderLoadStatus>> iterator = providers.entrySet().iterator();
         while (iterator.hasNext()) {
             Entry<PlayerDataProvider, ProviderLoadStatus> entry = iterator.next();
 
-            if (entry.getValue() == ProviderLoadStatus.SUCCESS) {
-                if (context != null && !context.fuzzyEquals(regProviders.get(entry.getKey()).unloadAlertPolicy())) {
-                    continue;
-                }
+            if (!force && regProviders.get(entry.getKey()).persistent()) {
+                continue;
+            }
 
+            if (entry.getValue() == ProviderLoadStatus.SUCCESS) {
                 try {
-                    if (!entry.getKey().unloadPlayer(this, data, uuid, name)) {
+                    if (!entry.getKey().unloadPlayer(this, data, player, force)) {
+                        if (force) {
+                            LogHelper.warning(getPlayerManager(), "Provider '" + entry.getKey().getClass().getCanonicalName() + "' may not have unloaded data completely for player '" + getName() + "' (" + getUuid().toString() + ")");
+                        }
+
                         continue;
                     }
                 } catch (Exception ex) {
-                    LogHelper.severe(getPlayerManager(), "Provider '" + entry.getKey().getClass().getCanonicalName() + "' encountered an exception while unloading data for player '" + name + "' (" + uuid.toString() + ")", ex);
+                    LogHelper.severe(getPlayerManager(), "Provider '" + entry.getKey().getClass().getCanonicalName() + "' encountered an exception while unloading data for player '" + getName() + "' (" + getUuid().toString() + ")", ex);
                 }
                 iterator.remove();
             }

@@ -25,7 +25,6 @@
 package me.st28.flexseries.flexlib.player;
 
 import me.st28.flexseries.flexlib.message.reference.MessageReference;
-import me.st28.flexseries.flexlib.player.data.PlayerData;
 import org.apache.commons.lang.Validate;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;

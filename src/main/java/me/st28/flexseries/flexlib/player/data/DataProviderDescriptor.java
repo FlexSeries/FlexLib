@@ -24,6 +24,7 @@
  */
 package me.st28.flexseries.flexlib.player.data;
 
+import me.st28.flexseries.flexlib.player.PlayerData;
 import me.st28.flexseries.flexlib.plugin.module.FlexModule;
 import me.st28.flexseries.flexlib.plugin.module.ModuleReference;
 
@@ -36,9 +37,24 @@ public final class DataProviderDescriptor {
 
     private boolean isLocked = false;
 
-    private UnloadAlertPolicy unloadAlert = UnloadAlertPolicy.QUIT;
+    /**
+     * If true, this data provider only provides data for online players.
+     */
+    private boolean onlineOnly = true;
 
+    /**
+     * If true and {@link #onlineOnly} is false, this provider will never be unloaded unless forced.
+     */
+    private boolean persistent = false;
+
+    /**
+     * Other data providers that are required for this provider to load.
+     */
     private final Set<ModuleReference> hardDependencies = new HashSet<>();
+
+    /**
+     * Other data providers that are optional for this provider to load.
+     */
     private final Set<ModuleReference> softDependencies = new HashSet<>();
 
     public void lock() {
@@ -53,18 +69,34 @@ public final class DataProviderDescriptor {
     }
 
     /**
-     * @see {@link UnloadAlertPolicy}.
+     * @see #onlineOnly
      */
-    public UnloadAlertPolicy unloadAlertPolicy() {
-        return unloadAlert;
+    public boolean onlineOnly() {
+        return onlineOnly;
     }
 
     /**
-     * @see {@link UnloadAlertPolicy}
+     * @see #onlineOnly
      * @return This instance, for chaining.
      */
-    public DataProviderDescriptor unloadAlertPolicy(UnloadAlertPolicy policy) {
-        this.unloadAlert = policy;
+    public DataProviderDescriptor onlineOnly(boolean state) {
+        this.onlineOnly = state;
+        return this;
+    }
+
+    /**
+     * @see #persistent
+     */
+    public boolean persistent() {
+        return persistent;
+    }
+
+    /**
+     * @see #persistent
+     * @return This instance, for chaining.
+     */
+    public DataProviderDescriptor persistent(boolean state) {
+        this.persistent = state;
         return this;
     }
 
@@ -118,38 +150,6 @@ public final class DataProviderDescriptor {
         }
 
         return this;
-    }
-
-    // ------------------------------------------------------------------------------------------ //
-
-    /**
-     * Represents when a data provider should be alerted when to unload a player.
-     */
-    public enum UnloadAlertPolicy {
-
-        /**
-         * {@link PlayerDataProvider#unloadPlayer(PlayerLoader, PlayerData, UUID, String)} will be
-         * called for both {@link #AUTO} and {@link #QUIT}.
-         */
-        BOTH,
-
-        /**
-         * {@link PlayerDataProvider#unloadPlayer(PlayerLoader, PlayerData, UUID, String)} will be
-         * called when the auto unloader executes.
-         */
-        AUTO,
-
-        /**
-         * {@link PlayerDataProvider#unloadPlayer(PlayerLoader, PlayerData, UUID, String)} will be
-         * called when a player quits the server.
-         */
-        QUIT;
-
-        public boolean fuzzyEquals(UnloadAlertPolicy other) {
-            return this == BOTH || other == BOTH || this == other;
-
-        }
-
     }
 
 }
