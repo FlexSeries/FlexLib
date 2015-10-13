@@ -235,17 +235,21 @@ public abstract class FlexModule<T extends FlexPlugin> {
     public final void onSave(boolean async) {
         try {
             handleSave(async);
+            saveConfig();
         } catch (Exception ex) {
             LogHelper.severe(this, "An exception occurred while saving module '" + name + "'", ex);
         }
-
-        saveConfig();
     }
 
     public final void onDisable() {
         status = ModuleStatus.UNLOADING;
 
-        onSave(false);
+        try {
+            handleFinalSave();
+            saveConfig();
+        } catch (Exception ex) {
+            LogHelper.severe(this, "An exception occurred while saving module '" + name + "'", ex);
+        }
 
         try {
             handleDisable();
@@ -273,6 +277,14 @@ public abstract class FlexModule<T extends FlexPlugin> {
      * @param async If true, should save asynchronously (where applicable).
      */
     protected void handleSave(boolean async) {}
+
+    /**
+     * Handles custom module save tasks. This particular method, unlike {@link #handleSave(boolean)},
+     * is only called when the plugin is disabling.
+     */
+    protected void handleFinalSave() {
+        handleSave(false);
+    }
 
     /**
      * Handles custom module disable tasks. This will only be called once.<br />

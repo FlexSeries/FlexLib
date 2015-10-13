@@ -25,7 +25,7 @@
 package me.st28.flexseries.flexlib.player.settings;
 
 import me.st28.flexseries.flexlib.player.PlayerManager;
-import me.st28.flexseries.flexlib.player.data.PlayerData;
+import me.st28.flexseries.flexlib.player.PlayerData;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 import org.apache.commons.lang.Validate;
 

@@ -28,15 +28,13 @@ import me.st28.flexseries.flexlib.FlexLib;
 import me.st28.flexseries.flexlib.log.LogHelper;
 import me.st28.flexseries.flexlib.message.reference.MessageReference;
 import me.st28.flexseries.flexlib.message.reference.PlainMessageReference;
-import me.st28.flexseries.flexlib.player.PlayerExtendedJoinEvent;
 import me.st28.flexseries.flexlib.player.data.DataProviderDescriptor;
-import me.st28.flexseries.flexlib.player.data.DataProviderDescriptor.UnloadAlertPolicy;
-import me.st28.flexseries.flexlib.player.data.PlayerData;
 import me.st28.flexseries.flexlib.player.data.PlayerDataProvider;
 import me.st28.flexseries.flexlib.player.data.PlayerLoader;
 import me.st28.flexseries.flexlib.plugin.module.FlexModule;
 import me.st28.flexseries.flexlib.plugin.module.ModuleDescriptor;
 import me.st28.flexseries.flexlib.storage.flatfile.YamlFileManager;
+import me.st28.flexseries.flexlib.utils.TimeUtils;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
@@ -45,13 +43,19 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public final class PlayerManager extends FlexModule<FlexLib> implements Listener {
@@ -59,8 +63,16 @@ public final class PlayerManager extends FlexModule<FlexLib> implements Listener
     /* Configuration Options */
     private final List<String> loginMessageOrder = new ArrayList<>();
 
+    private int saveBatchSize;
+    private int saveBatchInterval;
+
     private boolean enableJoinMessageChange;
     private boolean enableQuitMessageChange;
+
+    private boolean dataSaveIps;
+
+    private int dataUnloadAge;
+    /* End Configuration Options */
 
     private BukkitRunnable autoUnloadTask;
 
@@ -75,29 +87,42 @@ public final class PlayerManager extends FlexModule<FlexLib> implements Listener
     protected void handleReload() {
         final ConfigurationSection config = getConfig();
 
+        // TODO: Abstract save batches for use in other modules
+        saveBatchSize = config.getInt("auto save.batch size", 20);
+        saveBatchInterval = config.getInt("auto save.batch interval", 2);
+
         enableJoinMessageChange = config.getBoolean("modify join message", true);
         enableQuitMessageChange = config.getBoolean("modify quit message", true);
 
-        int autoUnloadInterval = config.getInt("auto unload interval", 5);
+        dataSaveIps = config.getBoolean("player data.save ips", true);
+
+        int autoUnloadInterval = config.getInt("auto unload.interval", 5);
         if (autoUnloadTask != null) {
             autoUnloadTask.cancel();
         }
+
+        dataUnloadAge = config.getInt("auto unload.age", 300);
 
         if (autoUnloadInterval > 0) {
             autoUnloadTask = new BukkitRunnable() {
                 @Override
                 public void run() {
-                    List<UUID> toRemove = loadedData.keySet().stream()
-                            .filter(uuid -> Bukkit.getPlayer(uuid) == null)
+                    long curTime = System.currentTimeMillis();
+
+                    List<UUID> toRemove = loadedData.entrySet().stream()
+                            .filter(entry -> Bukkit.getPlayer(entry.getKey()) == null
+                                    && (curTime - entry.getValue().lastAccessed) / 1000 >= dataUnloadAge)
+                            .map(Entry::getKey)
                             .collect(Collectors.toList());
 
                     for (UUID uuid : toRemove) {
-                        unloadPlayer(uuid, UnloadAlertPolicy.AUTO);
+                        unloadPlayer(uuid, false);
                     }
                 }
             };
 
             autoUnloadTask.runTaskTimer(plugin, autoUnloadInterval * 1200L, autoUnloadInterval * 1200L);
+            LogHelper.info(this, "Running player auto unloader every " + TimeUtils.translateSeconds(autoUnloadInterval * 60) + ".");
         }
 
         loginMessageOrder.clear();
@@ -106,15 +131,46 @@ public final class PlayerManager extends FlexModule<FlexLib> implements Listener
 
     @Override
     protected void handleSave(boolean async) {
-        for (UUID uuid : loadedData.keySet()) {
-            savePlayer(uuid);
+        saveAllPlayers(true);
+    }
+
+    @Override
+    protected void handleFinalSave() {
+        saveAllPlayers(false);
+    }
+
+    private void saveAllPlayers(boolean batch) {
+        if (!batch) {
+            for (UUID uuid : loadedData.keySet()) {
+                savePlayer(uuid);
+            }
+            return;
         }
+
+        Queue<UUID> toSave = new PriorityQueue<>(loadedData.keySet());
+
+        BukkitRunnable runnable = new BukkitRunnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < saveBatchSize; i++) {
+                    UUID uuid = toSave.poll();
+                    if (uuid == null) {
+                        cancel();
+                        return;
+                    }
+
+                    savePlayer(uuid);
+                }
+            }
+        };
+
+        runnable.runTaskTimer(plugin, saveBatchInterval, saveBatchInterval);
     }
 
     @Override
     protected void handleDisable() {
         for (PlayerData data : loadedData.values()) {
-            data.getLoader().unload(null);
+            data.getLoader().unload(true);
         }
     }
 
@@ -180,12 +236,7 @@ public final class PlayerManager extends FlexModule<FlexLib> implements Listener
 
         PlayerData data = new PlayerData(uuid, new YamlFileManager(getDataFolder() + File.separator + uuid.toString() + ".yml"));
 
-        if (data.getFile().isEmpty()) {
-            data.getConfig().set("firstJoin", false);
-            data.setCustomData("firstJoin", true, true);
-        }
-
-        PlayerLoader loader = new PlayerLoader(uuid, data);
+        PlayerLoader loader = new PlayerLoader(new PlayerReference(uuid), data);
 
         data.setLoader(loader);
 
@@ -202,7 +253,7 @@ public final class PlayerManager extends FlexModule<FlexLib> implements Listener
         }
     }
 
-    private void unloadPlayer(UUID uuid, UnloadAlertPolicy context) {
+    private void unloadPlayer(UUID uuid, boolean force) {
         final PlayerData data = loadedData.get(uuid);
 
         if (data == null) {
@@ -211,7 +262,7 @@ public final class PlayerManager extends FlexModule<FlexLib> implements Listener
 
         try {
             data.getLoader().save();
-            data.getLoader().unload(context);
+            data.getLoader().unload(force);
         } catch (Exception ex) {
             LogHelper.severe(this, "An exception occurred while unloading player '" + data.getUuid().toString() + "'", ex);
         }
@@ -228,6 +279,22 @@ public final class PlayerManager extends FlexModule<FlexLib> implements Listener
 
         loadPlayer(player.getUniqueId());
         final PlayerData data = getPlayerData(player.getUniqueId());
+
+        if (data.firstJoin == null) {
+            data.firstJoin = System.currentTimeMillis();
+
+            data.setCustomData("firstJoin", true, true);
+        }
+
+        data.lastLogin = System.currentTimeMillis();
+
+        if (dataSaveIps) {
+            String curIp = player.getAddress().getAddress().getHostAddress();
+            data.lastIp = curIp;
+            if (!data.ips.contains(curIp)) {
+                data.ips.add(curIp);
+            }
+        }
 
         PlayerExtendedJoinEvent newEvent = new PlayerExtendedJoinEvent(player, data);
         if (enableJoinMessageChange && joinMessage != null) {
@@ -297,9 +364,11 @@ public final class PlayerManager extends FlexModule<FlexLib> implements Listener
             }
         }
 
+        getPlayerData(player.getUniqueId()).lastLogout = System.currentTimeMillis();
+
         savePlayer(player.getUniqueId());
 
-        unloadPlayer(player.getUniqueId(), UnloadAlertPolicy.QUIT);
+        unloadPlayer(player.getUniqueId(), false);
     }
 
 }

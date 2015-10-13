@@ -25,16 +25,11 @@
 package me.st28.flexseries.flexlib.player.uuidtracker;
 
 import me.st28.flexseries.flexlib.FlexLib;
-import me.st28.flexseries.flexlib.player.data.DataProviderDescriptor;
-import me.st28.flexseries.flexlib.player.data.PlayerData;
-import me.st28.flexseries.flexlib.player.data.PlayerDataProvider;
-import me.st28.flexseries.flexlib.player.data.PlayerLoader;
 import me.st28.flexseries.flexlib.player.uuidtracker.UuidTrackerStorageHandler.YamlStorageHandler;
 import me.st28.flexseries.flexlib.plugin.module.FlexModule;
 import me.st28.flexseries.flexlib.plugin.module.ModuleDescriptor;
 import me.st28.flexseries.flexlib.storage.flatfile.YamlFileManager;
 import org.apache.commons.lang.Validate;
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
