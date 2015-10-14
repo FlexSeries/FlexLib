@@ -132,6 +132,11 @@ public final class PlayerLoader {
             }
         }
 
+        if (descriptor.onlineOnly() && player.getPlayer() == null) {
+            providers.remove(provider);
+            return;
+        }
+
         try {
             provider.loadPlayer(this, data, player);
             indicateSuccess(provider);
