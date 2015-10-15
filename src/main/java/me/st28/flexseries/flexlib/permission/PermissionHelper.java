@@ -28,8 +28,12 @@ import me.st28.flexseries.flexlib.hook.HookManager;
 import me.st28.flexseries.flexlib.hook.defaults.VaultHook;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 import org.apache.commons.lang.Validate;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
+import org.bukkit.permissions.Permission;
+import org.bukkit.permissions.PermissionDefault;
+import org.bukkit.plugin.PluginManager;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -56,6 +60,8 @@ public final class PermissionHelper {
         if (config == null) {
             return;
         }
+
+        PermissionGroupEntry.clear();
 
         groupEntries.clear();
         inheritanceIndex.clear();
@@ -143,6 +149,17 @@ public final class PermissionHelper {
 
     static class PermissionGroupEntry extends GroupEntry {
 
+        static final Map<String, Permission> bukkitPermissions = new HashMap<>();
+
+        static void clear() {
+            PluginManager pm = Bukkit.getPluginManager();
+            for (Permission permission : bukkitPermissions.values()) {
+                pm.removePermission(permission);
+            }
+        }
+
+        // -------------------------------------------------------------------------------------- //
+
         String permission;
 
         PermissionGroupEntry(String permission) {
@@ -158,6 +175,16 @@ public final class PermissionHelper {
         boolean playerInherits(Player player) {
             // Inheriting groups will have the permission as well, no need to do anything different.
             return containsPlayer(player);
+        }
+
+        Permission getBukkitPermission() {
+            if (!bukkitPermissions.containsKey(permission)) {
+                Permission bPerm = new Permission(permission, PermissionDefault.FALSE);
+                Bukkit.getPluginManager().addPermission(bPerm);
+                bukkitPermissions.put(permission, bPerm);
+            }
+
+            return bukkitPermissions.get(permission);
         }
 
     }
