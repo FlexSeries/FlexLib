@@ -32,7 +32,12 @@ import org.apache.commons.lang.Validate;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public abstract class AbstractCommand<T extends FlexPlugin> {
 
@@ -351,8 +356,11 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
         if (newIndex >= 0 && newIndex < arguments.size() && newIndex < args.size()) {
             final List<String> suggestionsToAdd = arguments.get(newIndex).getSuggestions(context, args.get(newIndex));
 
+            int max = FlexCommandWrapper.getMaxArgSuggestions();
             if (suggestionsToAdd != null) {
-                returnList.addAll(suggestionsToAdd);
+                if (max == 0 || suggestionsToAdd.size() <= max) {
+                    returnList.addAll(suggestionsToAdd);
+                }
             }
         }
         return returnList;

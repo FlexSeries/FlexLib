@@ -30,12 +30,27 @@ import me.st28.flexseries.flexlib.message.MessageManager;
 import me.st28.flexseries.flexlib.message.ReplacementMap;
 import me.st28.flexseries.flexlib.message.reference.MessageReference;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
-import org.bukkit.command.*;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.PluginCommand;
+import org.bukkit.command.TabCompleter;
+import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class FlexCommandWrapper implements CommandExecutor, TabCompleter {
+
+    private static int maxArgSuggestions;
+
+    public static void reload(ConfigurationSection config) {
+        maxArgSuggestions = config.getInt("command library.max argument suggestions", 15);
+    }
+
+    public static int getMaxArgSuggestions() {
+        return maxArgSuggestions;
+    }
 
     public static void registerCommand(FlexCommand<? extends FlexPlugin> command) {
         final FlexPlugin plugin = command.getPlugin();
