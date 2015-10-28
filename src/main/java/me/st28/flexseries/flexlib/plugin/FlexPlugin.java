@@ -349,10 +349,14 @@ public class FlexPlugin extends JavaPlugin {
     }
 
     public final void saveAll(boolean async) {
+        saveAll(async, false);
+    }
+
+    public final void saveAll(boolean async, boolean finalSave) {
         for (FlexModule module : modules.values()) {
             if (module.getStatus().isEnabled()) {
                 try {
-                    module.onSave(async);
+                    module.onSave(async, finalSave);
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -374,7 +378,7 @@ public class FlexPlugin extends JavaPlugin {
     public final void onDisable() {
         status = PluginStatus.DISABLING;
 
-        saveAll(false);
+        saveAll(false, true);
 
         try {
             handleDisable();

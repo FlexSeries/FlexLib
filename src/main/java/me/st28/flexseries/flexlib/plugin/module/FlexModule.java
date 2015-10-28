@@ -232,9 +232,13 @@ public abstract class FlexModule<T extends FlexPlugin> {
         status = ModuleStatus.ENABLED;
     }
 
-    public final void onSave(boolean async) {
+    public final void onSave(boolean async, boolean finalSave) {
         try {
-            handleSave(async);
+            if (finalSave) {
+                handleFinalSave();
+            } else {
+                handleSave(async);
+            }
             saveConfig();
         } catch (Exception ex) {
             LogHelper.severe(this, "An exception occurred while saving module '" + name + "'", ex);
