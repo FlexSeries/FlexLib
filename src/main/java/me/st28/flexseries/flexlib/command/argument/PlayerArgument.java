@@ -171,7 +171,7 @@ public class PlayerArgument extends Argument {
 
             List<String> matchedNames = new ArrayList<>();
 
-            for (String curName : uuidTracker.getAllNames()) {
+            for (String curName : uuidTracker.getAllLatestNames()) {
                 if (input.equalsIgnoreCase(curName)) {
                     // Exact match
                     matchedNames.add(input);
@@ -246,6 +246,7 @@ public class PlayerArgument extends Argument {
         }
 
         PlayerUuidTracker uuidTracker = FlexPlugin.getGlobalModule(PlayerUuidTracker.class);
+        CommandSender sender = context.getSender();
 
         Set<String> returnList = new HashSet<>();
 
@@ -253,7 +254,10 @@ public class PlayerArgument extends Argument {
             returnList.addAll(uuidTracker.getAllNames());
         } else if (matchOnlineNames) {
             for (Player player : Bukkit.getOnlinePlayers()) {
-                returnList.addAll(uuidTracker.getAllNames(player.getUniqueId()));
+                if (!canSenderView(sender, player)) {
+                    continue;
+                }
+                returnList.add(player.getName());
             }
         }
 
