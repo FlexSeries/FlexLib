@@ -31,6 +31,9 @@ import java.util.List;
 
 public class StringArgument extends Argument {
 
+    /**
+     * If true, will create a string from the first argument to the end of the arguments.
+     */
     private boolean untilEnd;
 
     public StringArgument(String name, boolean isRequired) {
@@ -41,6 +44,11 @@ public class StringArgument extends Argument {
         super(name, isRequired);
 
         this.untilEnd = untilEnd;
+    }
+
+    public StringArgument untilEnd(boolean untilEnd) {
+        this.untilEnd = untilEnd;
+        return this;
     }
 
     @Override
