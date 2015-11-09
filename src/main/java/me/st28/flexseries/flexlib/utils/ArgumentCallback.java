@@ -29,25 +29,25 @@ import org.bukkit.Bukkit;
 /**
  * A future task to be run once something finishes executing.
  *
- * @param <T> The type of argument the callback requires for the {@link #callback(Object)} method.
+ * @param <T> The type of argument the callback requires for the {@link #run(Object)} method.
  */
 public abstract class ArgumentCallback<T> {
 
     /**
      * Runs the callback.
      */
-    public void call(final T argument) {
+    public final void call(final T argument) {
         if (isSynchronous() && !Bukkit.isPrimaryThread()) {
             // Callback is synchronous but we're not on the main thread.
             new TaskChain().add(new TaskChain.GenericTask() {
                 @Override
                 protected void run() {
-                    callback(argument);
+                    ArgumentCallback.this.run(argument);
                 }
             }).execute();
         } else {
             // Call from same thread
-            callback(argument);
+            run(argument);
         }
     }
 
@@ -76,6 +76,6 @@ public abstract class ArgumentCallback<T> {
      *
      * @param argument An argument from the executor that the callback requires.
      */
-    public abstract void callback(T argument);
+    protected abstract void run(T argument);
 
 }
