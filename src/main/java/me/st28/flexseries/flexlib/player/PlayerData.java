@@ -46,6 +46,8 @@ import java.util.UUID;
 
 public final class PlayerData {
 
+    private boolean isLoaded = false;
+
     long lastAccessed;
 
     private final UUID uuid;
@@ -59,7 +61,7 @@ public final class PlayerData {
     Long lastLogout = null;
 
     String lastIp;
-    final List<String> ips = new ArrayList<>();
+    final Set<String> ips = new HashSet<>();
 
     /**
      * These are saved/loaded automatically. Should be configuration serializable.
@@ -97,6 +99,12 @@ public final class PlayerData {
     }
 
     public void load() {
+        if (isLoaded) {
+            return;
+        }
+
+        isLoaded = true;
+
         ConfigurationSection config = getConfig();
 
         if (config.isSet("firstJoin")) {
@@ -146,7 +154,7 @@ public final class PlayerData {
         config.set("lastLogin", lastLogin);
         config.set("lastLogout", lastLogout);
         config.set("ip.last", lastIp);
-        config.set("ip.previous", ips);
+        config.set("ip.previous", new ArrayList<>(ips));
 
         // Save custom data
         ConfigurationSection customSec = config.getConfigurationSection("custom");
@@ -225,9 +233,9 @@ public final class PlayerData {
         }
     }
 
-    public List<String> getIps() {
+    public Set<String> getIps() {
         updateLastAccessed();
-        return Collections.unmodifiableList(ips);
+        return Collections.unmodifiableSet(ips);
     }
 
     public <T> T getCustomData(String key, Class<T> type) {
