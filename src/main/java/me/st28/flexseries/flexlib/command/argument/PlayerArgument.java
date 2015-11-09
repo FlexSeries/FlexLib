@@ -39,7 +39,15 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * An {@link Argument} that creates a {@link PlayerReference} based on user input.
@@ -161,43 +169,54 @@ public class PlayerArgument extends Argument {
     public Object parseInput(CommandContext context, String input) {
         PlayerUuidTracker uuidTracker = FlexPlugin.getGlobalModule(PlayerUuidTracker.class);
 
-        UUID found;
+        Map<String, UUID> lookup;
+        if (onlineOnly) {
+            // Only lookup online users
+            lookup = Bukkit.getOnlinePlayers().stream().collect(Collectors.toMap(p -> p.getName().toLowerCase(), Player::getUniqueId));
+        } else {
+            // Lookup both online and offline users
+            lookup = uuidTracker.getAllLatestNameUuids().entrySet().stream().collect(Collectors.toMap(e -> e.getKey().toLowerCase(), Entry::getValue));
+        }
 
         // 1) Try exact name
-        found = uuidTracker.getLatestUuid(input);
+        UUID found = lookup.get(input.toLowerCase());
 
         if (found == null) {
             // 2) Try matching name
 
             List<String> matchedNames = new ArrayList<>();
-
-            for (String curName : uuidTracker.getAllLatestNames()) {
+            for (String curName : lookup.keySet()) {
                 if (input.equalsIgnoreCase(curName)) {
                     // Exact match
                     matchedNames.add(input);
                     break;
                 }
 
-                if (curName.toLowerCase().contains(input.toLowerCase())) {
+                if (curName.toLowerCase().startsWith(input.toLowerCase())) {
                     // Partial match
                     matchedNames.add(curName);
                 }
             }
 
             if (matchedNames.size() == 1) {
+                // Only one name was matched
                 found = uuidTracker.getLatestUuid(matchedNames.get(0));
             } else if (matchedNames.size() > 1) {
+                // Multiple names were matched, show error
                 throw new CommandInterruptedException(InterruptReason.ARGUMENT_SOFT_ERROR, MessageManager.getMessage(FlexLib.class, "general.errors.player_matched_multiple", new ReplacementMap("{NAME}", input).getMap()));
             }
         }
 
         CommandSender sender = context.getSender();
         if (found != null && notSender && sender instanceof Player && ((Player) sender).getUniqueId().equals(found)) {
+            // UUID was found, but sender is the target
             throw new CommandInterruptedException(InterruptReason.ARGUMENT_SOFT_ERROR, MessageManager.getMessage(FlexLib.class, "general.errors.player_cannot_be_self"));
         } else if (found != null && ((onlineOnly && Bukkit.getPlayer(found) == null) || (hideVanished && !canSenderView(sender, Bukkit.getPlayer(found))))) {
+            // UUID was found, but target is offline (or appears to be offline to sender)
             String cleanName = uuidTracker.getLatestName(found);
             throw new CommandInterruptedException(InterruptReason.ARGUMENT_SOFT_ERROR, MessageManager.getMessage(FlexLib.class, "general.errors.player_matched_offline", new ReplacementMap("{NAME}", cleanName).getMap()));
         } else if (found == null) {
+            // UUID wasn't found
             if (onlineOnly) {
                 throw new CommandInterruptedException(InterruptReason.ARGUMENT_SOFT_ERROR, MessageManager.getMessage(FlexLib.class, "general.errors.player_matched_none", new ReplacementMap("{NAME}", input).getMap()));
             } else {

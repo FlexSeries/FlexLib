@@ -189,6 +189,13 @@ public final class PlayerUuidTracker extends FlexModule<FlexLib> implements List
         return new HashSet<>(uuidsToNames.values());
     }
 
+    /**
+     * @return All of the latest names and their UUIDs.
+     */
+    public Map<String, UUID> getAllLatestNameUuids() {
+        return Collections.unmodifiableMap(namesToUuids);
+    }
+
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerJoin(PlayerJoinEvent e) {
         updatePlayer(e.getPlayer());
