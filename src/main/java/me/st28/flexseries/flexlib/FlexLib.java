@@ -105,6 +105,7 @@ public final class FlexLib extends FlexPlugin {
         });
 
         PermissionHelper.reload(getConfig().getConfigurationSection("permission helper"));
+        FlexCommandWrapper.reload(getConfig());
     }
 
     @Override
@@ -113,6 +114,7 @@ public final class FlexLib extends FlexPlugin {
 
         if (getStatus() == PluginStatus.ENABLED) {
             PermissionHelper.reload(config.getConfigurationSection("permission helper"));
+            FlexCommandWrapper.reload(config);
         }
     }
 
