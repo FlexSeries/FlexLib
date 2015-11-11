@@ -72,10 +72,11 @@ public final class PlayerUuidTracker extends FlexModule<FlexLib> implements List
         // TODO: Implement MySQL support and add async saving for YAML
         switch (storageType) {
             case "YAML":
-                storageHandler = new YamlStorageHandler(new YamlFileManager(plugin.getDataFolder() + File.separator + "playerUuids.yml"));
+                storageHandler = new YamlStorageHandler(this);
                 break;
 
             case "MYSQL":
+                storageHandler = new MySqlStorageHandler(this);
                 throw new UnsupportedOperationException("MySQL support is not currently implemented.");
 
             default:

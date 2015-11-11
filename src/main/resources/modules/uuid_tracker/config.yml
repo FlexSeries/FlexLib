@@ -1,2 +1,11 @@
 storage:
   type: 'YAML' # YAML, MYSQL
+  MySQL:
+    host: 'localhost'
+    port: 3306
+    database: 'minecraft'
+    username: 'username'
+    password: 'password'
+    prefix: 'ft_'
+  YAML:
+    file: 'tickets.yml'
