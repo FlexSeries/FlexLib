@@ -25,21 +25,26 @@
 package me.st28.flexseries.flexlib.player.uuidtracker;
 
 import me.st28.flexseries.flexlib.FlexLib;
-import me.st28.flexseries.flexlib.player.uuidtracker.UuidTrackerStorageHandler.YamlStorageHandler;
 import me.st28.flexseries.flexlib.plugin.module.FlexModule;
 import me.st28.flexseries.flexlib.plugin.module.ModuleDescriptor;
-import me.st28.flexseries.flexlib.storage.flatfile.YamlFileManager;
 import org.apache.commons.lang.Validate;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 
-import java.io.File;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Provides a name to UUID and vice versa lookup for players <i>that have joined the server before.</i>
@@ -49,7 +54,7 @@ public final class PlayerUuidTracker extends FlexModule<FlexLib> implements List
 
     private UuidTrackerStorageHandler storageHandler;
 
-    private final Map<UUID, UuidEntry> rawData = new HashMap<>();
+    private final Map<UUID, UuidEntry> rawData = new ConcurrentHashMap<>();
 
     private final Map<UUID, String> uuidsToNames = new HashMap<>();
     private final Map<String, UUID> namesToUuids = new HashMap<>();
@@ -72,17 +77,20 @@ public final class PlayerUuidTracker extends FlexModule<FlexLib> implements List
         // TODO: Implement MySQL support and add async saving for YAML
         switch (storageType) {
             case "YAML":
-                storageHandler = new YamlStorageHandler(new YamlFileManager(plugin.getDataFolder() + File.separator + "playerUuids.yml"));
+                storageHandler = new YamlStorageHandler(this);
                 break;
 
             case "MYSQL":
+                storageHandler = new MySqlStorageHandler(this);
                 throw new UnsupportedOperationException("MySQL support is not currently implemented.");
 
             default:
                 throw new IllegalArgumentException("Invalid storage type: '" + storageType + "'");
         }
 
-        for (UuidEntry entry : storageHandler.load(this)) {
+        storageHandler.enable();
+
+        for (UuidEntry entry : storageHandler.loadAll()) {
             rawData.put(entry.uuid, entry);
         }
 
@@ -113,7 +121,7 @@ public final class PlayerUuidTracker extends FlexModule<FlexLib> implements List
 
     @Override
     protected void handleSave(boolean async) {
-        storageHandler.save(this, new HashSet<>(rawData.values()));
+        storageHandler.save(async, new HashSet<>(rawData.values()));
     }
 
     private void updatePlayer(Player player) {
@@ -129,8 +137,13 @@ public final class PlayerUuidTracker extends FlexModule<FlexLib> implements List
         entry.currentName = name;
         entry.names.put(name, System.currentTimeMillis());
 
+        // Update only name + time
+        UuidEntry toUpdate = new UuidEntry(uuid);
+        toUpdate.names.put(name, System.currentTimeMillis());
+        storageHandler.queueUpdate(toUpdate);
+
         uuidsToNames.put(uuid, name);
-        namesToUuids.put(name.toLowerCase(), uuid);;
+        namesToUuids.put(name.toLowerCase(), uuid);
     }
 
     /**
@@ -195,6 +208,20 @@ public final class PlayerUuidTracker extends FlexModule<FlexLib> implements List
      */
     public Map<String, UUID> getAllLatestNameUuids() {
         return Collections.unmodifiableMap(namesToUuids);
+    }
+
+    @EventHandler
+    public void onAsyncPlayerPreLogin(AsyncPlayerPreLoginEvent e) {
+        UUID uuid = e.getUniqueId();
+
+        if (uuid == null || e.getName() == null) {
+            return;
+        }
+
+        UuidEntry entry = storageHandler.loadSingle(uuid);
+        if (entry != null) {
+            rawData.put(uuid, entry);
+        }
     }
 
     @EventHandler(priority = EventPriority.LOWEST)

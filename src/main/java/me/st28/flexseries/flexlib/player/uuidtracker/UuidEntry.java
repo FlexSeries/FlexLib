@@ -28,6 +28,7 @@ import org.apache.commons.lang.Validate;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 class UuidEntry {
@@ -40,6 +41,29 @@ class UuidEntry {
         Validate.notNull(uuid, "UUID cannot be null.");
 
         this.uuid = uuid;
+    }
+
+    UuidEntry(UuidEntry entry) {
+        this.uuid = entry.uuid;
+        this.names.putAll(entry.names);
+        this.currentName = entry.currentName;
+    }
+
+    void determineCurrentName() {
+        Entry<String, Long> latest = null;
+
+        for (Entry<String, Long> entry : names.entrySet()) {
+            if (latest == null) {
+                latest = entry;
+                continue;
+            }
+
+            if (entry.getValue() > latest.getValue()) {
+                latest = entry;
+            }
+        }
+
+        currentName = latest.getKey();
     }
 
 }

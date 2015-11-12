@@ -24,81 +24,56 @@
  */
 package me.st28.flexseries.flexlib.player.uuidtracker;
 
-import me.st28.flexseries.flexlib.log.LogHelper;
-import me.st28.flexseries.flexlib.storage.flatfile.YamlFileManager;
-import org.apache.commons.lang.Validate;
-import org.bukkit.configuration.ConfigurationSection;
+import me.st28.flexseries.flexlib.utils.ArgumentCallback;
+import me.st28.flexseries.flexlib.utils.TaskChain;
+import me.st28.flexseries.flexlib.utils.TaskChain.AsyncGenericTask;
 
-import java.util.HashSet;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
 abstract class UuidTrackerStorageHandler {
 
-    abstract Set<UuidEntry> load(PlayerUuidTracker tracker);
+    final PlayerUuidTracker manager;
+    final String name;
 
-    abstract void save(PlayerUuidTracker tracker, Set<UuidEntry> entries);
-
-    // ------------------------------------------------------------------------------------------ //
-
-    static class YamlStorageHandler extends UuidTrackerStorageHandler {
-
-        private YamlFileManager file;
-
-        public YamlStorageHandler(YamlFileManager file) {
-            Validate.notNull(file, "File cannot be null.");
-
-            this.file = file;
-        }
-
-        @Override
-        Set<UuidEntry> load(PlayerUuidTracker tracker) {
-            final Set<UuidEntry> returnSet = new HashSet<>();
-
-            final ConfigurationSection config = file.getConfig();
-
-            for (String rawUuid : config.getKeys(false)) {
-                UUID uuid;
-                try {
-                    uuid = UUID.fromString(rawUuid);
-                } catch (Exception ex) {
-                    LogHelper.warning(tracker, "Skipping invalid UUID '" + rawUuid + "'");
-                    continue;
-                }
-
-                UuidEntry entry = new UuidEntry(uuid);
-
-                entry.currentName = config.getString(rawUuid + ".current");
-
-                ConfigurationSection nameSec = config.getConfigurationSection(rawUuid + ".names");
-                for (String name : nameSec.getKeys(false)) {
-                    entry.names.put(name, nameSec.getLong(name));
-                }
-
-                returnSet.add(entry);
-            }
-
-            return returnSet;
-        }
-
-        @Override
-        void save(PlayerUuidTracker tracker, Set<UuidEntry> entries) {
-            final ConfigurationSection config = file.getConfig();
-
-            for (UuidEntry entry : entries) {
-                config.set(entry.uuid.toString() + ".current", entry.currentName);
-
-                final ConfigurationSection section = config.createSection(entry.uuid.toString() + ".names");
-
-                for (Entry<String, Long> nameEntry : entry.names.entrySet()) {
-                    section.set(nameEntry.getKey(), nameEntry.getValue());
-                }
-            }
-
-            file.save();
-        }
-
+    UuidTrackerStorageHandler(PlayerUuidTracker manager, String name) {
+        this.manager = manager;
+        this.name = name;
     }
+
+    void enable() {}
+
+    /**
+     * Loads all entries.
+     */
+    abstract Set<UuidEntry> loadAll();
+
+    /**
+     * Loads a single entry.
+     */
+    abstract UuidEntry loadSingle(UUID uuid);
+
+    /**
+     * Loads a single entry asynchronously.
+     */
+    void loadSingleAsync(UUID uuid, ArgumentCallback<UuidEntry> callback) {
+        new TaskChain().add(new AsyncGenericTask() {
+            @Override
+            protected void run() {
+                callback.call(loadSingle(uuid));
+            }
+        }).execute();
+    }
+
+    /**
+     * Queues an update for an entry.
+     * @param entry Should not be a complete UuidEntry but should rather contain only the new info.
+     */
+    abstract void queueUpdate(UuidEntry entry);
+
+    /**
+     * Saves the given entries.
+     */
+    abstract void save(boolean async, Set<UuidEntry> entries);
 
 }
