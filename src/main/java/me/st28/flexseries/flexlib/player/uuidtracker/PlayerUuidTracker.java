@@ -88,6 +88,8 @@ public final class PlayerUuidTracker extends FlexModule<FlexLib> implements List
                 throw new IllegalArgumentException("Invalid storage type: '" + storageType + "'");
         }
 
+        storageHandler.enable();
+
         for (UuidEntry entry : storageHandler.loadAll()) {
             rawData.put(entry.uuid, entry);
         }
