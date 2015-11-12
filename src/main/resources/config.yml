@@ -9,4 +9,4 @@ permission helper:
   - administrator
 
 command library:
-  max argument suggestions: 15
+  max argument suggestions: 50

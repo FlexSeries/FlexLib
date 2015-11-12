@@ -45,7 +45,7 @@ public class FlexCommandWrapper implements CommandExecutor, TabCompleter {
     private static int maxArgSuggestions;
 
     public static void reload(ConfigurationSection config) {
-        maxArgSuggestions = config.getInt("command library.max argument suggestions", 15);
+        maxArgSuggestions = config.getInt("command library.max argument suggestions", 50);
     }
 
     public static int getMaxArgSuggestions() {
