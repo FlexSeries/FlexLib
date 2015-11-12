@@ -74,7 +74,6 @@ public final class PlayerUuidTracker extends FlexModule<FlexLib> implements List
     protected void handleEnable() {
         FileConfiguration config = getConfig();
         String storageType = config.getString("storage.type", "YAML").toUpperCase();
-        // TODO: Implement MySQL support and add async saving for YAML
         switch (storageType) {
             case "YAML":
                 storageHandler = new YamlStorageHandler(this);
@@ -82,7 +81,7 @@ public final class PlayerUuidTracker extends FlexModule<FlexLib> implements List
 
             case "MYSQL":
                 storageHandler = new MySqlStorageHandler(this);
-                throw new UnsupportedOperationException("MySQL support is not currently implemented.");
+                break;
 
             default:
                 throw new IllegalArgumentException("Invalid storage type: '" + storageType + "'");
