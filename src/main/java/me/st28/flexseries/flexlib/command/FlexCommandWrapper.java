@@ -119,6 +119,10 @@ public class FlexCommandWrapper implements CommandExecutor, TabCompleter {
         List<String> returnList = new ArrayList<>();
 
         for (String suggestion : suggestions) {
+            if (maxArgSuggestions != 0 && returnList.size() >= maxArgSuggestions) {
+                break;
+            }
+
             if (suggestion.toLowerCase().startsWith(argument)) {
                 returnList.add(suggestion);
             }
