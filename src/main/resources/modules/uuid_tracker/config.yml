@@ -7,5 +7,8 @@ storage:
     username: 'username'
     password: 'password'
     prefix: 'ft_'
+    consumer:
+      run time: 1000
+      run interval: 40
   YAML:
     file: 'tickets.yml'

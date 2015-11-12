@@ -43,6 +43,12 @@ class UuidEntry {
         this.uuid = uuid;
     }
 
+    UuidEntry(UuidEntry entry) {
+        this.uuid = entry.uuid;
+        this.names.putAll(entry.names);
+        this.currentName = entry.currentName;
+    }
+
     void determineCurrentName() {
         Entry<String, Long> latest = null;
 

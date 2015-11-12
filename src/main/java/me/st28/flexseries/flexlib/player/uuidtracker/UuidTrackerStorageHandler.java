@@ -25,6 +25,8 @@
 package me.st28.flexseries.flexlib.player.uuidtracker;
 
 import me.st28.flexseries.flexlib.utils.ArgumentCallback;
+import me.st28.flexseries.flexlib.utils.TaskChain;
+import me.st28.flexseries.flexlib.utils.TaskChain.AsyncGenericTask;
 
 import java.util.Set;
 import java.util.UUID;
@@ -41,10 +43,37 @@ abstract class UuidTrackerStorageHandler {
 
     void enable() {}
 
-    abstract void loadAll(ArgumentCallback<Set<UuidEntry>> callback);
+    /**
+     * Loads all entries.
+     */
+    abstract Set<UuidEntry> loadAll();
 
-    abstract void loadSingle(UUID uuid, ArgumentCallback<UuidEntry> callback);
+    /**
+     * Loads a single entry.
+     */
+    abstract UuidEntry loadSingle(UUID uuid);
 
+    /**
+     * Loads a single entry asynchronously.
+     */
+    void loadSingleAsync(UUID uuid, ArgumentCallback<UuidEntry> callback) {
+        new TaskChain().add(new AsyncGenericTask() {
+            @Override
+            protected void run() {
+                callback.call(loadSingle(uuid));
+            }
+        }).execute();
+    }
+
+    /**
+     * Queues an update for an entry.
+     * @param entry Should not be a complete UuidEntry but should rather contain only the new info.
+     */
+    abstract void queueUpdate(UuidEntry entry);
+
+    /**
+     * Saves the given entries.
+     */
     abstract void save(boolean async, Set<UuidEntry> entries);
 
 }
