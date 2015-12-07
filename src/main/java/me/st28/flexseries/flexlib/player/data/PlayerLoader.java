@@ -199,8 +199,6 @@ public final class PlayerLoader {
                         if (force) {
                             LogHelper.warning(getPlayerManager(), "Provider '" + entry.getKey().getClass().getCanonicalName() + "' may not have unloaded data completely for player '" + getName() + "' (" + getUuid().toString() + ")");
                         }
-
-                        continue;
                     }
                 } catch (Exception ex) {
                     LogHelper.severe(getPlayerManager(), "Provider '" + entry.getKey().getClass().getCanonicalName() + "' encountered an exception while unloading data for player '" + getName() + "' (" + getUuid().toString() + ")", ex);
