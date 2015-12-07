@@ -1,5 +1,6 @@
 formats:
   moods:
+    alert: '&e'
     error: '&c'
     notice: '&9'
 
