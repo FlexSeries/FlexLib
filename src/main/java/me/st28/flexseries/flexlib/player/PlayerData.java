@@ -179,16 +179,6 @@ public final class PlayerData {
         return file.getConfig();
     }
 
-    public ConfigurationSection getConfigSection(Class<? extends PlayerDataProvider> provider) {
-        ConfigurationSection section = file.getConfig().getConfigurationSection(provider.getCanonicalName());
-
-        if (section == null) {
-            section = file.getConfig().createSection(provider.getCanonicalName());
-        }
-
-        return section;
-    }
-
     public Timestamp getFirstJoin() {
         updateLastAccessed();
         return firstJoin == null ? null : new Timestamp(firstJoin);
@@ -236,6 +226,18 @@ public final class PlayerData {
     public Set<String> getIps() {
         updateLastAccessed();
         return Collections.unmodifiableSet(ips);
+    }
+
+    public ConfigurationSection getCustomSection(Class<? extends FlexPlugin> plugin) {
+        updateLastAccessed();
+
+        ConfigurationSection section = file.getConfig().getConfigurationSection(plugin.getCanonicalName());
+
+        if (section == null) {
+            section = file.getConfig().createSection(plugin.getCanonicalName());
+        }
+
+        return section;
     }
 
     public <T> T getCustomData(String key, Class<T> type) {
