@@ -52,6 +52,10 @@ public class MySqlPoolManager {
         load(module.getConfig().getConfigurationSection("storage.MySQL"));
     }
 
+    public void disable() {
+        pool.shutdown();
+    }
+
     /**
      * Loads from a specific configuration section.
      */
