@@ -223,10 +223,10 @@ public final class PlayerData {
     public ConfigurationSection getCustomSection(Class<? extends FlexPlugin> plugin) {
         updateLastAccessed();
 
-        ConfigurationSection section = file.getConfig().getConfigurationSection(plugin.getCanonicalName());
+        ConfigurationSection section = file.getConfig().getConfigurationSection("custom." + plugin.getCanonicalName());
 
         if (section == null) {
-            section = file.getConfig().createSection(plugin.getCanonicalName());
+            section = file.getConfig().createSection("custom." + plugin.getCanonicalName());
         }
 
         return section;
