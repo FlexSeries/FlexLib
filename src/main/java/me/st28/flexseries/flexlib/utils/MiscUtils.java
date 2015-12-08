@@ -24,6 +24,8 @@
  */
 package me.st28.flexseries.flexlib.utils;
 
+import org.bukkit.Bukkit;
+
 /**
  * Miscellaneous utility methods.
  */
@@ -48,6 +50,20 @@ public final class MiscUtils {
             if (i % amtPerPage == 1) pageCount++;
         }
         return pageCount;
+    }
+
+    /**
+     * Verifies that this method is being called by an appropriate thread.
+     *
+     * @param isPrimary True to validate that this method is being called on the primary thread.<br />
+     *                  False to validate that it is not being called on the primary thread.
+     */
+    public static void validateBukkitThread(boolean isPrimary) {
+        if (isPrimary && !Bukkit.isPrimaryThread()) {
+            throw new IllegalStateException("This method can only be called by the primary thread.");
+        } else if (Bukkit.isPrimaryThread()) {
+            throw new IllegalStateException("This method cannot be called by the primary thread.");
+        }
     }
 
 }
