@@ -159,7 +159,7 @@
                         <configuration>
                             <encoding>${project.build.sourceEncoding}</encoding>
 
-                            <header>LICENSE.txt</header>
+                            <header>LICENSE-NOTICE.txt</header>
 
                             <mapping>
                                 <java>JAVADOC_STYLE</java>
