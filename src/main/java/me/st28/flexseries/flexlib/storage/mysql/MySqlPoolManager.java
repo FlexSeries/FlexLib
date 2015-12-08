@@ -53,7 +53,11 @@ public class MySqlPoolManager {
     }
 
     public void disable() {
-        pool.shutdown();
+        try {
+            pool.shutdown();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
     /**
