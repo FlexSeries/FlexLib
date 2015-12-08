@@ -29,7 +29,9 @@ import me.st28.flexseries.flexlib.backend.commands.CmdFlexReload;
 import me.st28.flexseries.flexlib.backend.commands.CmdFlexSave;
 import me.st28.flexseries.flexlib.command.FlexCommandWrapper;
 import me.st28.flexseries.flexlib.gui.GuiManager;
+import me.st28.flexseries.flexlib.hook.HookDisabledException;
 import me.st28.flexseries.flexlib.hook.HookManager;
+import me.st28.flexseries.flexlib.log.LogHelper;
 import me.st28.flexseries.flexlib.message.MessageManager;
 import me.st28.flexseries.flexlib.message.MessageMasterManager;
 import me.st28.flexseries.flexlib.message.list.ListManager;
@@ -104,7 +106,7 @@ public final class FlexLib extends FlexPlugin {
             }
         });
 
-        PermissionHelper.reload(getConfig().getConfigurationSection("permission helper"));
+        reloadPermissionHelper();
         FlexCommandWrapper.reload(getConfig());
     }
 
@@ -113,8 +115,18 @@ public final class FlexLib extends FlexPlugin {
         serverName = config.getString("server name", "Minecraft Server");
 
         if (getStatus() == PluginStatus.ENABLED) {
-            PermissionHelper.reload(config.getConfigurationSection("permission helper"));
+            reloadPermissionHelper();
             FlexCommandWrapper.reload(config);
+        }
+    }
+
+    private void reloadPermissionHelper() {
+        try {
+            PermissionHelper.reload(getConfig().getConfigurationSection("permission helper"));
+        } catch (HookDisabledException ex) {
+            LogHelper.warning(this, "Permission helper disabled - Vault is not installed.");
+        } catch (Exception ex) {
+            LogHelper.severe(this, "An exception occurred while loading the permission helper", ex);
         }
     }
 
