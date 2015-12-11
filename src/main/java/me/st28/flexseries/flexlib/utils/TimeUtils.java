@@ -18,14 +18,19 @@ package me.st28.flexseries.flexlib.utils;
 
 import org.apache.commons.lang.Validate;
 
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
+
 public final class TimeUtils {
 
     private TimeUtils() {}
 
+    @Deprecated
     public static String translateSeconds(int seconds) {
         return translateSeconds(seconds, TimeUtils.TimeFormat.LONG);
     }
 
+    @Deprecated
     public static String translateSeconds(int seconds, TimeUtils.TimeFormat format) {
         Validate.notNull(format);
         if (seconds < 0) {
@@ -112,6 +117,102 @@ public final class TimeUtils {
         }
     }
 
+    private final static Pattern PATTERN_REPEATING_DELIM = Pattern.compile("(?:\\{-}){2,}");
+
+    public static String formatSeconds(int seconds) {
+        return formatSeconds(seconds, " ", DefaultTimeFormat.LONG, null, false);
+    }
+
+    public static String formatSeconds(int seconds, String delim, String format, TimeUnit maxUnit, boolean hideZero) {
+        Validate.isTrue(seconds >= 0, "Seconds must be >= 0");
+
+        int minutes = -1;
+        int hours = -1;
+        int days = -1;
+
+        if (maxUnit != TimeUnit.SECONDS) {
+            minutes = seconds / 60;
+            seconds -= minutes * 60;
+
+            if (maxUnit != TimeUnit.MINUTES) {
+                hours = minutes / 60;
+                minutes -= hours * 60;
+
+                if (maxUnit != TimeUnit.HOURS) {
+                    days = hours / 24;
+                    hours -= days * 24;
+                }
+            }
+        }
+
+        if (days == -1 || (hideZero && days == 0)) {
+            format = format.replace("{d}", "");
+            format = format.replace("{dn}", "");
+            format = format.replace("{ds}", "");
+        } else {
+            format = format.replace("{d}", days + " day" + (days == 1 ? "" : "s"));
+            format = format.replace("{dn}", days < 10 ? ("0" + days) : Integer.toString(days));
+            format = format.replace("{ds}", days + "d");
+        }
+
+        if (hours == -1 || (hideZero && hours == 0)) {
+            format = format.replace("{h}", "");
+            format = format.replace("{hn}", "");
+            format = format.replace("{hs}", "");
+        } else {
+            format = format.replace("{h}", hours + " hour" + (hours == 1 ? "" : "s"));
+            format = format.replace("{hn}", hours < 10 ? ("0" + hours) : Integer.toString(hours));
+            format = format.replace("{hs}", hours + "h");
+        }
+
+        if (minutes == -1 || (hideZero && minutes == 0)) {
+            format = format.replace("{m}", "");
+            format = format.replace("{mn}", "");
+            format = format.replace("{ms}", "");
+        } else {
+            format = format.replace("{m}", minutes + " minute" + (minutes == 1 ? "" : "s"));
+            format = format.replace("{mn}", minutes < 10 ? ("0" + minutes) : Integer.toString(minutes));
+            format = format.replace("{ms}", minutes + "m");
+        }
+
+        if (hideZero && seconds == 0) {
+            format = format.replace("{s}", "");
+            format = format.replace("{sn}", "");
+            format = format.replace("{ss}", "");
+        } else {
+            format = format.replace("{s}", seconds + " second" + (seconds == 1 ? "" : "s"));
+            format = format.replace("{sn}", seconds < 10 ? ("0" + seconds) : Integer.toString(seconds));
+            format = format.replace("{ss}", seconds + "s");
+        }
+
+        format = PATTERN_REPEATING_DELIM.matcher(format).replaceAll("");
+        format = format.replace("{-}", delim);
+
+        return format;
+    }
+
+    public static class DefaultTimeFormat {
+
+        private DefaultTimeFormat() {}
+
+        /**
+         * 5 days 20 hours 35 minutes 55 seconds
+         */
+        public final static String LONG = "{d}{-}{h}{-}{m}{-}{s}";
+
+        /**
+          * 05:20:35:55
+          */
+        public final static String SHORT = "{dn}{-}{hn}{-}{mn}{-}{sn}";
+
+        /**
+         * 5d 20h 35m 55s
+         */
+        public final static String SHORT_ABBR = "{ds}{-}{hs}{-}{ms}{-}{ss}";
+
+    }
+
+    @Deprecated
     public enum TimeFormat {
 
         LONG, // 5 days 20 hours 35 minutes 55 seconds
