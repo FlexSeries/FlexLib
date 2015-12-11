@@ -16,6 +16,8 @@
  */
 package me.st28.flexseries.flexlib.utils;
 
+import me.st28.flexseries.flexlib.utils.TaskChain.AsyncGenericTask;
+import me.st28.flexseries.flexlib.utils.TaskChain.GenericTask;
 import org.bukkit.Bukkit;
 
 /**
@@ -31,14 +33,22 @@ public abstract class ArgumentCallback<T> {
     public final void call(final T argument) {
         if (isSynchronous() && !Bukkit.isPrimaryThread()) {
             // Callback is synchronous but we're not on the main thread.
-            new TaskChain().add(new TaskChain.GenericTask() {
+            new TaskChain().add(new GenericTask() {
+                @Override
+                protected void run() {
+                    ArgumentCallback.this.run(argument);
+                }
+            }).execute();
+        } else if (Bukkit.isPrimaryThread()) {
+            // Callback is asynchronous but we're on the main thread
+            new TaskChain().add(new AsyncGenericTask() {
                 @Override
                 protected void run() {
                     ArgumentCallback.this.run(argument);
                 }
             }).execute();
         } else {
-            // Call from same thread
+            // Call directly, already async
             run(argument);
         }
     }
