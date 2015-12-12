@@ -18,8 +18,15 @@ package me.st28.flexseries.flexlib.command;
 
 import me.st28.flexseries.flexlib.command.CommandInterruptedException.InterruptReason;
 import me.st28.flexseries.flexlib.command.argument.Argument;
+import me.st28.flexseries.flexlib.command.argument.AsyncArgument;
 import me.st28.flexseries.flexlib.permission.PermissionNode;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
+import me.st28.flexseries.flexlib.utils.CommandSenderRef;
+import me.st28.flexseries.flexlib.utils.TaskChain;
+import me.st28.flexseries.flexlib.utils.TaskChain.AsyncGenericTask;
+import me.st28.flexseries.flexlib.utils.TaskChain.GenericTask;
+import me.st28.flexseries.flexlib.utils.TaskChain.LastTask;
+import me.st28.flexseries.flexlib.utils.task.SyncCommandSenderTask;
 import org.apache.commons.lang.Validate;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -30,6 +37,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 public abstract class AbstractCommand<T extends FlexPlugin> {
 
@@ -237,7 +245,15 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
             throw new CommandInterruptedException(InterruptReason.INVALID_USAGE);
         }
 
+        Map<Argument, Integer> asyncArgs = new HashMap<>();
+
         for (Argument argument : this.arguments) {
+            if (argument instanceof AsyncArgument) {
+                asyncArgs.put(argument, curIndex);
+                curIndex++;
+                continue;
+            }
+
             try {
                 argument.execute(context, curIndex);
             } catch (CommandInterruptedException ex) {
@@ -255,6 +271,58 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
             }
             curIndex++;
         }
+
+        if (asyncArgs.isEmpty()) {
+            completeExecute(context, curIndex);
+            return;
+        }
+
+        final CommandSenderRef senderRef = new CommandSenderRef(sender);
+        final int finalCurIndex = curIndex;
+        new TaskChain().add(new AsyncGenericTask() {
+            @Override
+            protected void run() {
+                for (Entry<Argument, Integer> entry : asyncArgs.entrySet()) {
+                    Argument argument = entry.getKey();
+                    Integer curIndex = entry.getValue();
+
+                    try {
+                        argument.execute(context, curIndex);
+                    } catch (CommandInterruptedException ex) {
+                        if (ex.getReason() == InterruptReason.ARGUMENT_SOFT_ERROR) {
+                            if (!argument.isRequired() && curIndex - argumentOffset != AbstractCommand.this.arguments.size() - 1) {
+                                context.addGlobalObject(argument.getName(), argument.getDefaultValue(context));
+                                context.indicateDefaultValue(argument.getName());
+                                continue;
+                            } else {
+                                new SyncCommandSenderTask(senderRef, new LastTask<CommandSender>() {
+                                    @Override
+                                    protected void run(CommandSender arg) {
+                                        ex.getExitMessage().sendTo(arg);
+                                    }
+                                });
+                                return;
+                            }
+                        }
+                        throw ex;
+                    }
+                }
+            }
+        }).add(new GenericTask() {
+            @Override
+            protected void run() {
+                completeExecute(context, finalCurIndex);
+            }
+        }).execute();
+    }
+
+    public final void completeExecute(CommandContext context, int curIndex) {
+        if (context.getSender() == null) {
+            // Sender is a player who is no longer online
+            return;
+        }
+
+        final List<String> args = context.getArgs();
 
         if (curIndex < args.size()) {
             Subcommand<T> preSubcommand = subcommands.get(args.get(curIndex));

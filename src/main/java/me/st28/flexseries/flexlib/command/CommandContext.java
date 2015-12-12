@@ -16,16 +16,23 @@
  */
 package me.st28.flexseries.flexlib.command;
 
+import me.st28.flexseries.flexlib.utils.CommandSenderRef;
 import org.apache.commons.lang.Validate;
 import org.bukkit.command.CommandSender;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class CommandContext {
 
     private FlexCommand command;
 
-    private CommandSender sender;
+    private CommandSenderRef sender;
 
     private String label;
 
@@ -41,7 +48,7 @@ public class CommandContext {
         Validate.notNull(label, "Label cannot be null.");
 
         this.command = command;
-        this.sender = sender;
+        this.sender = new CommandSenderRef(sender);
         this.label = label;
         Collections.addAll(this.args, args);
     }
@@ -51,7 +58,7 @@ public class CommandContext {
     }
 
     public CommandSender getSender() {
-        return sender;
+        return sender.getCommandSender();
     }
 
     public String getLabel() {
