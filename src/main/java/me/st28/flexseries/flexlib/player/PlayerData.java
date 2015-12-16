@@ -220,13 +220,13 @@ public final class PlayerData {
         return Collections.unmodifiableSet(ips);
     }
 
-    public ConfigurationSection getCustomSection(Class<? extends FlexPlugin> plugin) {
+    public ConfigurationSection getDirectSection(Class<? extends FlexPlugin> plugin) {
         updateLastAccessed();
 
-        ConfigurationSection section = file.getConfig().getConfigurationSection("custom." + plugin.getCanonicalName());
+        ConfigurationSection section = file.getConfig().getConfigurationSection("directCustom." + plugin.getCanonicalName());
 
         if (section == null) {
-            section = file.getConfig().createSection("custom." + plugin.getCanonicalName());
+            section = file.getConfig().createSection("directCustom." + plugin.getCanonicalName());
         }
 
         return section;
