@@ -19,6 +19,7 @@ package me.st28.flexseries.flexlib.utils;
 import org.apache.commons.lang.Validate;
 
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class TimeUtils {
@@ -115,6 +116,41 @@ public final class TimeUtils {
 
             return returnString.toString();
         }
+    }
+
+    private final static Pattern PATTERN_TIME_GROUP = Pattern.compile("([0-9.]+)([smhd])");
+
+    /**
+     * Converts raw input into seconds (ex. 1.5h -> 5400 ; 5d2h -> 439200)
+     * @return The converted seconds.<br />
+     *         -1 if the input string is invalid.
+     */
+    public static int interpretSeconds(String input) {
+        input = input.toLowerCase();
+        Matcher matcher = PATTERN_TIME_GROUP.matcher(input);
+        int total = 0;
+
+        while (matcher.find()) {
+            double time = Double.parseDouble(matcher.group(1));
+
+            switch (matcher.group(2)) {
+                case "d":
+                    time *= 24D;
+                    // fall through
+                case "h":
+                    time *= 60D;
+                    // fall through
+                case "m":
+                    time *= 60D;
+                    // fall through
+                case "s":
+                    break;
+            }
+
+            total += time;
+        }
+
+        return total;
     }
 
     private final static Pattern PATTERN_REPEATING_DELIM = Pattern.compile("(?:\\{-}){2,}");
