@@ -162,6 +162,14 @@ public final class TimeUtils {
         return formatSeconds(seconds, " ", DefaultTimeFormat.LONG, null, false);
     }
 
+    public static String formatSeconds(int seconds, boolean hideZero) {
+        return formatSeconds(seconds, " ", DefaultTimeFormat.LONG, null, hideZero);
+    }
+
+    public static String formatSeconds(int seconds, String format, boolean hideZero) {
+        return formatSeconds(seconds, " ", format, null, hideZero);
+    }
+
     public static String formatSeconds(int seconds, String delim, String format, TimeUnit maxUnit, boolean hideZero) {
         Validate.isTrue(seconds >= 0, "Seconds must be >= 0");
 
