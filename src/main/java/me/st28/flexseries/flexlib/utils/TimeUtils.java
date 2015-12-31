@@ -156,7 +156,7 @@ public final class TimeUtils {
         return total;
     }
 
-    private final static Pattern PATTERN_REPEATING_DELIM = Pattern.compile("(?:\\{-}){2,}");
+    private final static Pattern PATTERN_CLEAN_FORMAT = Pattern.compile("(?:(?:\\{-}){2,})|(?:^\\{-})|(?:\\{-}$)");
 
     public static String formatSeconds(int seconds) {
         return formatSeconds(seconds, " ", DefaultTimeFormat.LONG, null, false);
@@ -222,7 +222,7 @@ public final class TimeUtils {
             format = format.replace("{ms}", minutes + "m");
         }
 
-        if (hideZero && seconds == 0) {
+        if (hideZero && seconds == 0 && minutes != 0 || hours != 0) {
             format = format.replace("{s}", "");
             format = format.replace("{sn}", "");
             format = format.replace("{ss}", "");
@@ -232,8 +232,7 @@ public final class TimeUtils {
             format = format.replace("{ss}", seconds + "s");
         }
 
-        format = PATTERN_REPEATING_DELIM.matcher(format).replaceAll("");
-        format = format.replace("{-}", delim);
+        format = PATTERN_CLEAN_FORMAT.matcher(format).replaceAll("").replace("{-}", delim);
 
         return format;
     }
