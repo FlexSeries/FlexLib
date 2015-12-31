@@ -118,7 +118,7 @@ public final class TimeUtils {
         }
     }
 
-    private final static Pattern PATTERN_TIME_GROUP = Pattern.compile("([0-9.]+)([smhd])");
+    private final static Pattern PATTERN_TIME_GROUP = Pattern.compile("([0-9.]+)([smhdw])");
 
     /**
      * Converts raw input into seconds (ex. 1.5h -> 5400 ; 5d2h -> 439200)
@@ -134,6 +134,9 @@ public final class TimeUtils {
             double time = Double.parseDouble(matcher.group(1));
 
             switch (matcher.group(2)) {
+                case "w":
+                    time *= 7D;
+                    // fall through
                 case "d":
                     time *= 24D;
                     // fall through
