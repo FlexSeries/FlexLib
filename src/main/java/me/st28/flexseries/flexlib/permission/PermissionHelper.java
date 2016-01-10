@@ -109,6 +109,13 @@ public final class PermissionHelper {
         return entry.containsPlayer(player) || (checkInheritance && entry.playerInherits(player));
     }
 
+    /**
+     * @return A list of registered groups ordered from least to most important.
+     */
+    public static List<String> getGroupOrder() {
+        return new ArrayList<>(groupEntries.keySet());
+    }
+
     public static String getTopGroup(Player player, List<String> groups, String defaultGroup) {
         List<String> reversed = new ArrayList<>(groupEntries.keySet());
         Collections.reverse(reversed);
