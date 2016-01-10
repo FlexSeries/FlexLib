@@ -21,6 +21,7 @@ import org.bukkit.ChatColor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * Utilities for Bukkit's ChatColor class.
@@ -42,6 +43,13 @@ public final class ChatColorUtils {
             returnList.add(ChatColor.translateAlternateColorCodes(altColorChar, string));
         }
         return returnList.toArray(new String[returnList.size()]);
+    }
+
+    /**
+     * Basically ChatColor.stripColor with a specified character.
+     */
+    public static String stripColorCode(String string, char codeChar) {
+        return ChatColor.stripColor(ChatColor.translateAlternateColorCodes(codeChar, string));
     }
 
     /**
