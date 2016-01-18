@@ -69,6 +69,8 @@ public class MySqlPoolManager {
         String password = config.getString("password", "password");
         tablePrefix = config.getString("prefix", "ft_");
 
+        dbConfig.setPoolName(module.getPlugin().getName() + "-" + module.getName());
+
         dbConfig.setConnectionTimeout(config.getLong("hikari.connectionTimeoutMs", 30000));
         dbConfig.setMaximumPoolSize(config.getInt("hikari.maximumPoolSize", 10));
         dbConfig.setLeakDetectionThreshold(config.getLong("hikari.leakDetectionThreshold", 0));
