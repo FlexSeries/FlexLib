@@ -295,12 +295,13 @@ public abstract class AbstractCommand<T extends FlexPlugin> {
                                 context.indicateDefaultValue(argument.getName());
                                 continue;
                             } else {
+                                abort();
                                 new SyncCommandSenderTask(senderRef, new LastTask<CommandSender>() {
                                     @Override
                                     protected void run(CommandSender arg) {
                                         ex.getExitMessage().sendTo(arg);
                                     }
-                                });
+                                }).execute();
                                 return;
                             }
                         }
