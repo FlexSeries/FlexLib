@@ -19,6 +19,7 @@ package me.st28.flexseries.flexlib.storage.mysql;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.pool.HikariPool;
 import me.st28.flexseries.flexlib.log.LogHelper;
+import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 import me.st28.flexseries.flexlib.plugin.module.FlexModule;
 import org.apache.commons.lang.Validate;
 import org.bukkit.configuration.ConfigurationSection;
@@ -28,28 +29,64 @@ import org.bukkit.configuration.ConfigurationSection;
  */
 public class MySqlPoolManager {
 
-    private FlexModule module;
+    private PoolOwner owner;
 
     private HikariPool pool;
     private String tablePrefix;
 
     public MySqlPoolManager(FlexModule module) {
-        this.module = module;
+        owner = new PoolOwner() {
+            @Override
+            String getPoolName() {
+                return module.getPlugin().getName() + "-" + module.getName();
+            }
+
+            @Override
+            ConfigurationSection getConfig() {
+                return module.getConfig();
+            }
+
+            @Override
+            void logInfo(String message) {
+                LogHelper.info(module, message);
+            }
+
+            @Override
+            void logSevere(String message, Exception ex) {
+                LogHelper.severe(module, message, ex);
+            }
+        };
+    }
+
+    public MySqlPoolManager(FlexPlugin plugin) {
+        owner = new PoolOwner() {
+            @Override
+            String getPoolName() {
+                return plugin.getName();
+            }
+
+            @Override
+            ConfigurationSection getConfig() {
+                return plugin.getConfig();
+            }
+
+            @Override
+            void logInfo(String message) {
+                LogHelper.info(plugin, message);
+            }
+
+            @Override
+            void logSevere(String message, Exception ex) {
+                LogHelper.severe(plugin, message, ex);
+            }
+        };
     }
 
     /**
      * Loads configuration from the default section (storage.MySQL)
      */
     public void load() {
-        load(module.getConfig().getConfigurationSection("storage.MySQL"));
-    }
-
-    public void disable() {
-        try {
-            pool.shutdown();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        load(owner.getConfig().getConfigurationSection("storage.MySQL"));
     }
 
     /**
@@ -58,7 +95,7 @@ public class MySqlPoolManager {
     public void load(ConfigurationSection config) {
         Validate.notNull(config, "Config cannot be null.");
 
-        LogHelper.info(module, "Initializing MySQL connection pool...");
+        owner.logInfo("Initializing MySQL connection pool...");
 
         HikariConfig dbConfig = new HikariConfig();
 
@@ -69,7 +106,7 @@ public class MySqlPoolManager {
         String password = config.getString("password", "password");
         tablePrefix = config.getString("prefix", "ft_");
 
-        dbConfig.setPoolName(module.getPlugin().getName() + "-" + module.getName());
+        dbConfig.setPoolName(owner.getPoolName());
 
         dbConfig.setConnectionTimeout(config.getLong("hikari.connectionTimeoutMs", 30000));
         dbConfig.setMaximumPoolSize(config.getInt("hikari.maximumPoolSize", 10));
@@ -79,16 +116,24 @@ public class MySqlPoolManager {
         dbConfig.setUsername(username);
         dbConfig.setPassword(password);
 
-        LogHelper.info(module, "Attempting to connect to " + host + ":" + port + "/" + database);
+        owner.logInfo("Attempting to connect to " + host + ":" + port + "/" + database);
 
         try {
             pool = new HikariPool(dbConfig);
         } catch (Exception ex) {
-            LogHelper.severe(module, "An exception occurred while loading the MySQL connection pool.", ex);
+            owner.logSevere("An exception occurred while loading the MySQL connection pool.", ex);
             return;
         }
 
-        LogHelper.info(module, "Successfully connected to MySQL database.");
+        owner.logInfo("Successfully connected to MySQL database.");
+    }
+
+    public void disable() {
+        try {
+            pool.shutdown();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
     public HikariPool getPool() {
@@ -98,6 +143,20 @@ public class MySqlPoolManager {
     public String getTableName(String table) {
         Validate.notNull(table, "Table cannot be null.");
         return tablePrefix + table;
+    }
+
+    // ------------------------------------------------------------------------------------------ //
+
+    private static abstract class PoolOwner {
+
+        abstract String getPoolName();
+
+        abstract ConfigurationSection getConfig();
+
+        abstract void logInfo(String message);
+
+        abstract void logSevere(String message, Exception ex);
+
     }
 
 }
