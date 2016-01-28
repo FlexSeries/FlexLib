@@ -116,9 +116,10 @@ public final class PlayerUuidTracker extends FlexModule<FlexLib> implements List
     }
 
     private void updatePlayer(Player player) {
-        final UUID uuid = player.getUniqueId();
-        final String name = player.getName();
+        updatePlayer(player.getUniqueId(), player.getName());
+    }
 
+    private void updatePlayer(UUID uuid, String name) {
         if (!rawData.containsKey(uuid)) {
             rawData.put(uuid, new UuidEntry(uuid));
         }
@@ -201,7 +202,7 @@ public final class PlayerUuidTracker extends FlexModule<FlexLib> implements List
         return Collections.unmodifiableMap(namesToUuids);
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onAsyncPlayerPreLogin(AsyncPlayerPreLoginEvent e) {
         UUID uuid = e.getUniqueId();
 
@@ -213,6 +214,8 @@ public final class PlayerUuidTracker extends FlexModule<FlexLib> implements List
         if (entry != null) {
             rawData.put(uuid, entry);
         }
+
+        updatePlayer(uuid, e.getName());
     }
 
     @EventHandler(priority = EventPriority.LOWEST)

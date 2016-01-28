@@ -16,8 +16,8 @@
  */
 package me.st28.flexseries.flexlib.player.settings;
 
-import me.st28.flexseries.flexlib.player.PlayerManager;
 import me.st28.flexseries.flexlib.player.PlayerData;
+import me.st28.flexseries.flexlib.player.PlayerManager;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 import org.apache.commons.lang.Validate;
 
@@ -58,7 +58,7 @@ public abstract class Setting {
 
     public void setValueDirect(UUID player, Object value) {
         Validate.notNull(player, "Player cannot be null.");
-        PlayerData data = FlexPlugin.getGlobalModule(PlayerManager.class).getPlayerData(player, true);
+        PlayerData data = FlexPlugin.getGlobalModule(PlayerManager.class).getPlayerData(player);
 
         data.setCustomData("setting." + group + "." + name, value, isTransient);
     }
@@ -71,7 +71,7 @@ public abstract class Setting {
         Validate.notNull(player, "Player cannot be null.");
         Validate.notNull(type, "Type cannot be null.");
 
-        PlayerData data = FlexPlugin.getGlobalModule(PlayerManager.class).getPlayerData(player, true);
+        PlayerData data = FlexPlugin.getGlobalModule(PlayerManager.class).getPlayerData(player);
 
         return data.getCustomData("setting." + group + "." + name, type, defaultValue);
     }

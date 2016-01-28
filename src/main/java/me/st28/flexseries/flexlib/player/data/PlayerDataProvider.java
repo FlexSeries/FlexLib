@@ -19,31 +19,52 @@ package me.st28.flexseries.flexlib.player.data;
 import me.st28.flexseries.flexlib.player.PlayerData;
 import me.st28.flexseries.flexlib.player.PlayerReference;
 
-import java.util.UUID;
-
 /**
  * Represents something that loads and/or saves player data.
  */
 public interface PlayerDataProvider {
 
     /**
-     * Loads a player's data. If {@link DataProviderDescriptor#onlineOnly} for this module is false,
-     * should also handle offline players.
+     * Called when a player begins to join the server via AsyncPlayerPreLoginEvent.
+     * This method will be called asynchronously.
+     *
+     * @param loader The {@link PlayerLoader} instance for the player.
+     * @param data The {@link PlayerData} instance for the player.
+     * @param player A {@link PlayerReference} representation of the player.
+     *               Avoid {@link PlayerReference#getPlayer()} as this method is called synchronously.
      */
     default void loadPlayer(PlayerLoader loader, PlayerData data, PlayerReference player) {}
 
     /**
+     * Called after a player joins the server fully via PlayerLoginEvent.
+     * This method will be called synchronously.
+     *
+     * @param loader The {@link PlayerLoader} instance for the player.
+     * @param data The {@link PlayerData} instance for the player.
+     * @param player A {@link PlayerReference} representation of the player.
+     */
+    default void handlePlayerJoin(PlayerLoader loader, PlayerData data, PlayerReference player) {}
+
+    /**
      * Saves a player's data. If {@link DataProviderDescriptor#onlineOnly} for this module is false,
      * should also handle offline players.
+     *
+     * @param loader The {@link PlayerLoader} instance for the player.
+     * @param data The {@link PlayerData} instance for the player.
+     * @param player A {@link PlayerReference} representation of the player.
+     *               {@link PlayerReference#getPlayer()} will be null if the player is offline.
      */
     default void savePlayer(PlayerLoader loader, PlayerData data, PlayerReference player) {}
 
     /**
      * Unloads a player's data.
+     * This method will be called asynchronously in most cases.
      *
+     * @param loader The {@link PlayerLoader} instance for the player.
+     * @param data The {@link PlayerData} instance for the player.
+     * @param player A {@link PlayerReference} representation of the player.
      * @param force This will usually only be true when the server is shutting down, indicating that
      *              the data should be unloaded and this method should return true.
-     * @return True if completely unloaded.
      */
     default boolean unloadPlayer(PlayerLoader loader, PlayerData data, PlayerReference player, boolean force) {
         return true;

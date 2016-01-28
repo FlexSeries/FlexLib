@@ -16,14 +16,12 @@
  */
 package me.st28.flexseries.flexlib.player.data;
 
-import me.st28.flexseries.flexlib.player.PlayerData;
 import me.st28.flexseries.flexlib.plugin.module.FlexModule;
 import me.st28.flexseries.flexlib.plugin.module.ModuleReference;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
 public final class DataProviderDescriptor {
 
@@ -72,6 +70,8 @@ public final class DataProviderDescriptor {
      * @return This instance, for chaining.
      */
     public DataProviderDescriptor onlineOnly(boolean state) {
+        checkLock();
+
         this.onlineOnly = state;
         return this;
     }
@@ -88,6 +88,8 @@ public final class DataProviderDescriptor {
      * @return This instance, for chaining.
      */
     public DataProviderDescriptor persistent(boolean state) {
+        checkLock();
+
         this.persistent = state;
         return this;
     }

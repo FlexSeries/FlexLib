@@ -16,7 +16,6 @@
  */
 package me.st28.flexseries.flexlib.player;
 
-import me.st28.flexseries.flexlib.player.data.PlayerDataProvider;
 import me.st28.flexseries.flexlib.player.data.PlayerLoader;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 import me.st28.flexseries.flexlib.storage.flatfile.YamlFileManager;
@@ -24,23 +23,25 @@ import org.apache.commons.lang.Validate;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 
-import java.net.Inet4Address;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * Tracks data that is stored in a single file for the player. Useful to prevent each plugin from
+ * having a unique file per player.
+ */
 public final class PlayerData {
 
     private boolean isLoaded = false;
 
-    long lastAccessed;
+    long lastAccessed = -1L;
 
     private final UUID uuid;
 

@@ -65,17 +65,22 @@ public final class PlayerLoader {
     }
 
     public void load() {
+        LogHelper.debug(getPlayerManager(), "Initializing PlayerLoader for '" + player.getName() + "' (" + player.getUuid().toString() + ")");
+
         // First, add providers that haven't already been added.
 
         final Map<PlayerDataProvider, DataProviderDescriptor> dataProviders = FlexPlugin.getGlobalModule(PlayerManager.class).getDataProviders();
 
         for (Entry<PlayerDataProvider, DataProviderDescriptor> entry : dataProviders.entrySet()) {
             if (!providers.containsKey(entry.getKey())) {
+                LogHelper.debug(getPlayerManager(), "Queuing data provider '" + entry.getKey().getClass().getCanonicalName() + "'");
                 providers.put(entry.getKey(), ProviderLoadStatus.PENDING);
             }
         }
 
         // Second, start loading providers
+        LogHelper.debug(getPlayerManager(), "Loading player '" + player.getName() + "' (" + player.getUuid().toString() + ")");
+
         Set<PlayerDataProvider> checked = new HashSet<>();
 
         for (Entry<PlayerDataProvider, DataProviderDescriptor> entry : dataProviders.entrySet()) {
@@ -83,6 +88,12 @@ public final class PlayerLoader {
         }
 
         data.load();
+
+        if (loadedSuccessfully()) {
+            LogHelper.debug(getPlayerManager(), "Player '" + player.getName() + "' (" + player.getUuid().toString() + ") loaded successfully.");
+        } else {
+            LogHelper.debug(getPlayerManager(), "Player '" + player.getName() + "' (" + player.getUuid().toString() + ") encountered problems while loading.");
+        }
     }
 
     private void loadProvider(Set<PlayerDataProvider> checked, PlayerDataProvider provider, Map<PlayerDataProvider, DataProviderDescriptor> descriptors) {
@@ -93,9 +104,11 @@ public final class PlayerLoader {
         checked.add(provider);
 
         if (providers.get(provider) == ProviderLoadStatus.SUCCESS) {
+            LogHelper.debug(getPlayerManager(), "Provider '" + provider.getClass().getCanonicalName() + "' already loaded, skipping");
             return;
         }
 
+        LogHelper.debug(getPlayerManager(), "Loading provider '" + provider.getClass().getCanonicalName() + "'");
         providers.put(provider, ProviderLoadStatus.LOADING);
 
         final DataProviderDescriptor descriptor = descriptors.get(provider);
@@ -138,6 +151,21 @@ public final class PlayerLoader {
         }
     }
 
+    public void notifyJoin() {
+        for (Entry<PlayerDataProvider, ProviderLoadStatus> entry : providers.entrySet()) {
+            if (entry.getValue() == ProviderLoadStatus.SUCCESS) {
+                try {
+                    entry.getKey().handlePlayerJoin(this, data, player);
+                } catch (Exception ex) {
+                    LogHelper.severe(getPlayerManager(),
+                            "An exception occurred while data provider '"
+                                    + entry.getKey().getClass().getCanonicalName()
+                                    + "' was handling player join", ex);
+                }
+            }
+        }
+    }
+
     public int getLoadedProviderCount() {
         int count = 0;
         for (ProviderLoadStatus status : providers.values()) {
@@ -146,6 +174,13 @@ public final class PlayerLoader {
             }
         }
         return count;
+    }
+
+    /**
+     * @return True if the loader loaded the player's data successfully.
+     */
+    public boolean loadedSuccessfully() {
+        return getLoadedProviderCount() == providers.size();
     }
 
     public void indicateSuccess(PlayerDataProvider provider) {

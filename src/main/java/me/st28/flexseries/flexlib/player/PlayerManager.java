@@ -26,6 +26,7 @@ import me.st28.flexseries.flexlib.player.data.PlayerLoader;
 import me.st28.flexseries.flexlib.plugin.module.FlexModule;
 import me.st28.flexseries.flexlib.plugin.module.ModuleDescriptor;
 import me.st28.flexseries.flexlib.storage.flatfile.YamlFileManager;
+import me.st28.flexseries.flexlib.utils.ArgumentCallback;
 import me.st28.flexseries.flexlib.utils.TimeUtils;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
@@ -34,7 +35,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -48,6 +51,7 @@ import java.util.Map.Entry;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public final class PlayerManager extends FlexModule<FlexLib> implements Listener {
@@ -69,7 +73,7 @@ public final class PlayerManager extends FlexModule<FlexLib> implements Listener
     private BukkitRunnable autoUnloadTask;
 
     private final Map<PlayerDataProvider, DataProviderDescriptor> dataProviders = new HashMap<>();
-    private final Map<UUID, PlayerData> loadedData = new HashMap<>();
+    private final Map<UUID, PlayerData> playerData = new ConcurrentHashMap<>();
 
     public PlayerManager(FlexLib plugin) {
         super(plugin, "players", "Provides a unified player data storage system", new ModuleDescriptor().setGlobal(true).setSmartLoad(false));
@@ -101,7 +105,7 @@ public final class PlayerManager extends FlexModule<FlexLib> implements Listener
                 public void run() {
                     long curTime = System.currentTimeMillis();
 
-                    List<UUID> toRemove = loadedData.entrySet().stream()
+                    List<UUID> toRemove = playerData.entrySet().stream()
                             .filter(entry -> Bukkit.getPlayer(entry.getKey()) == null
                                     && (curTime - entry.getValue().lastAccessed) / 1000 >= dataUnloadAge)
                             .map(Entry::getKey)
@@ -133,13 +137,13 @@ public final class PlayerManager extends FlexModule<FlexLib> implements Listener
 
     private void saveAllPlayers(boolean batch) {
         if (!batch) {
-            for (UUID uuid : loadedData.keySet()) {
+            for (UUID uuid : playerData.keySet()) {
                 savePlayer(uuid);
             }
             return;
         }
 
-        Queue<UUID> toSave = new PriorityQueue<>(loadedData.keySet());
+        Queue<UUID> toSave = new PriorityQueue<>(playerData.keySet());
 
         BukkitRunnable runnable = new BukkitRunnable() {
             @Override
@@ -161,7 +165,7 @@ public final class PlayerManager extends FlexModule<FlexLib> implements Listener
 
     @Override
     protected void handleDisable() {
-        for (PlayerData data : loadedData.values()) {
+        for (PlayerData data : playerData.values()) {
             data.getLoader().unload(true);
         }
     }
@@ -193,36 +197,46 @@ public final class PlayerManager extends FlexModule<FlexLib> implements Listener
      *         False if the player is not loaded.
      */
     public boolean isPlayerLoaded(UUID uuid) {
-        return loadedData.containsKey(uuid);
+        return playerData.containsKey(uuid);
     }
 
     /**
-     * Retrieves a player's data (and loads it if it's not already loaded).
-     * @see #getPlayerData(UUID, boolean)
+     * @return The {@link PlayerData} instance for the specified player UUID.
+     *         Null if the player's data isn't loaded.
      */
     public PlayerData getPlayerData(UUID uuid) {
-        return getPlayerData(uuid, true);
+        Validate.notNull(uuid, "UUID cannot be null.");
+        return playerData.get(uuid);
     }
 
     /**
-     * @param forceLoad If true, will load the player's data if it is not already loaded.
-     * @return A specified player's {@link PlayerData}.<br />
-     *         Null if the player is not loaded and <code>forceLoad</code> is <code>false</code>.
+     * Retrieves a player's data. If their data isn't loaded, it will be loaded.
+     * Due to player data loading being asynchronous, this method uses a callback to return the
+     * player's data.
      */
-    public PlayerData getPlayerData(UUID uuid, boolean forceLoad) {
+    public void getOrLoadPlayerData(UUID uuid, ArgumentCallback<PlayerData> callback) {
         Validate.notNull(uuid, "UUID cannot be null.");
-        if (!isPlayerLoaded(uuid) && forceLoad) {
-            // Load player
-            loadPlayer(uuid);
-        }
+        Validate.notNull(callback, "Callback cannot be null.");
 
-        return loadedData.get(uuid);
+        if (!isPlayerLoaded(uuid)) {
+            loadPlayer(uuid, new PlayerReference(uuid).getName());
+        }
+        callback.call(playerData.get(uuid));
     }
 
-    private void loadPlayer(UUID uuid) {
-        if (isPlayerLoaded(uuid)) {
-            loadedData.get(uuid).getLoader().load();
+    private void savePlayer(UUID uuid) {
+        final PlayerData data = playerData.get(uuid);
 
+        if (data != null) {
+            data.getLoader().save();
+        }
+    }
+
+    private void loadPlayer(UUID uuid, String name) {
+        LogHelper.debug(this, "Starting loading process for player '" + name + "' (" + uuid.toString() + ")");
+
+        if (isPlayerLoaded(uuid)) {
+            LogHelper.debug(this, "Player '" + name + "' (" + uuid.toString() + ") is already loaded. Stopping load.");
             return;
         }
 
@@ -231,22 +245,13 @@ public final class PlayerManager extends FlexModule<FlexLib> implements Listener
         PlayerLoader loader = new PlayerLoader(new PlayerReference(uuid), data);
 
         data.setLoader(loader);
+        playerData.put(uuid, data);
 
         loader.load();
-
-        loadedData.put(uuid, data);
-    }
-
-    private void savePlayer(UUID uuid) {
-        final PlayerData data = loadedData.get(uuid);
-
-        if (data != null) {
-            data.getLoader().save();
-        }
     }
 
     private void unloadPlayer(UUID uuid, boolean force) {
-        final PlayerData data = loadedData.get(uuid);
+        final PlayerData data = playerData.get(uuid);
 
         if (data == null) {
             return;
@@ -260,8 +265,44 @@ public final class PlayerManager extends FlexModule<FlexLib> implements Listener
         }
 
         if (data.getLoader().getLoadedProviderCount() == 0) {
-            loadedData.remove(uuid);
+            playerData.remove(uuid);
         }
+    }
+
+    @EventHandler(priority = EventPriority.LOW)
+    public void onAsyncPlayerPreLogin_low(AsyncPlayerPreLoginEvent e) {
+        UUID uuid = e.getUniqueId();
+        if (uuid == null || isPlayerLoaded(uuid)) {
+            return;
+        }
+
+        loadPlayer(uuid, e.getName());
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onAsyncPlayerPreLogin_highest(AsyncPlayerPreLoginEvent e) {
+        UUID uuid = e.getUniqueId();
+        if (uuid == null) {
+            return;
+        }
+
+        PlayerData data = this.playerData.get(uuid);
+        if (!data.getLoader().loadedSuccessfully()) {
+            e.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, "Your data failed to load. Please try again or contact an admin.");
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onPlayerLogin(PlayerLoginEvent e) {
+        UUID uuid = e.getPlayer().getUniqueId();
+
+        PlayerLoader loader;
+        if (!playerData.containsKey(uuid) || !(loader = playerData.get(uuid).getLoader()).loadedSuccessfully()) {
+            e.disallow(PlayerLoginEvent.Result.KICK_OTHER, "Your data failed to load. Please try again or contact an admin.");
+            return;
+        }
+
+        loader.notifyJoin();
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -269,7 +310,6 @@ public final class PlayerManager extends FlexModule<FlexLib> implements Listener
         final Player player = e.getPlayer();
         final String joinMessage = e.getJoinMessage();
 
-        loadPlayer(player.getUniqueId());
         final PlayerData data = getPlayerData(player.getUniqueId());
 
         if (data.firstJoin == null) {
