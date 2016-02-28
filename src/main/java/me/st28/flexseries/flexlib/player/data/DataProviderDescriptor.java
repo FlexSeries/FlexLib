@@ -38,6 +38,12 @@ public final class DataProviderDescriptor {
     private boolean persistent = false;
 
     /**
+     * If true, the player will be denied access if this provider fails to load their data.
+     * Otherwise, the player will still be able to join.
+     */
+    private boolean mustLoad = true;
+
+    /**
      * Other data providers that are required for this provider to load.
      */
     private final Set<ModuleReference> hardDependencies = new HashSet<>();
@@ -91,6 +97,24 @@ public final class DataProviderDescriptor {
         checkLock();
 
         this.persistent = state;
+        return this;
+    }
+
+    /**
+     * @see #mustLoad
+     */
+    public boolean mustLoad() {
+        return mustLoad;
+    }
+
+    /**
+     * @see #mustLoad
+     * @return This instance, for chaining.
+     */
+    public DataProviderDescriptor mustLoad(boolean mustLoad) {
+        checkLock();
+
+        this.mustLoad = mustLoad;
         return this;
     }
 

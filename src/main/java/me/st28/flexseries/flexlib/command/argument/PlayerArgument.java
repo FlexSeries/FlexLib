@@ -72,6 +72,11 @@ public class PlayerArgument extends Argument {
     private boolean matchOfflineNames = true;
 
     /**
+     * If true, will allow UUIDs to be used for player arguments.
+     */
+    private boolean allowUuid = true;
+
+    /**
      * If true, will prevent the sender from being the target.
      */
     private boolean notSender = false;
@@ -140,6 +145,15 @@ public class PlayerArgument extends Argument {
     }
 
     /**
+     * @see #allowUuid
+     * @return This instance, for chaining.
+     */
+    public PlayerArgument allowUuid(boolean allowUuid) {
+        this.allowUuid = allowUuid;
+        return this;
+    }
+
+    /**
      * @see #notSender
      * @return This instance, for chaining.
      */
@@ -170,8 +184,21 @@ public class PlayerArgument extends Argument {
             lookup = uuidTracker.getAllLatestNameUuids().entrySet().stream().collect(Collectors.toMap(e -> e.getKey().toLowerCase(), Entry::getValue));
         }
 
-        // 1) Try exact name
-        UUID found = lookup.get(input.toLowerCase());
+        UUID found = null;
+
+        // 1) Try UUID (if allowed)
+        if (allowUuid) {
+            try {
+                found = UUID.fromString(input);
+            } catch (IllegalArgumentException ex) {
+                found = null;
+            }
+        }
+
+        // 1.5) Try exact name
+        if (found == null) {
+            found = lookup.get(input.toLowerCase());
+        }
 
         if (found == null) {
             // 2) Try matching name

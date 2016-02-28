@@ -137,10 +137,10 @@ public final class PlayerLoader {
             }
         }
 
-        if (descriptor.onlineOnly() && player.getPlayer() == null) {
+        /*if (descriptor.onlineOnly() && player.getPlayer() == null) {
             providers.remove(provider);
             return;
-        }
+        }*/
 
         try {
             provider.loadPlayer(this, data, player);
@@ -180,7 +180,14 @@ public final class PlayerLoader {
      * @return True if the loader loaded the player's data successfully.
      */
     public boolean loadedSuccessfully() {
-        return getLoadedProviderCount() == providers.size();
+        Map<PlayerDataProvider, DataProviderDescriptor> regProviders = FlexPlugin.getGlobalModule(PlayerManager.class).getDataProviders();
+
+        for (Entry<PlayerDataProvider, ProviderLoadStatus> entry : providers.entrySet()) {
+            if (entry.getValue() != ProviderLoadStatus.SUCCESS && regProviders.get(entry.getKey()).mustLoad()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public void indicateSuccess(PlayerDataProvider provider) {

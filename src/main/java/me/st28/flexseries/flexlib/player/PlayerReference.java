@@ -75,7 +75,7 @@ public class PlayerReference {
     }
 
     private void validate() {
-        if (uuid == null || name == null) {
+        if (uuid == null) {
             throw new UnknownPlayerException(uuid, name);
         }
     }
@@ -91,7 +91,7 @@ public class PlayerReference {
      * @return The latest name of the player.
      */
     public String getName() {
-        return name;
+        return name == null ? uuid.toString() : name;
     }
 
     /**

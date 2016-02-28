@@ -95,7 +95,7 @@ public final class PlayerUuidTracker extends FlexModule<FlexLib> implements List
                 if (existingUuid != null && !existingUuid.equals(uuid)) {
                     UuidEntry existingData = rawData.get(existingUuid);
 
-                    if (existingData != null) {
+                    if (existingData != null && existingData.names.containsKey(name)) {
                         if (nameEntry.getValue() < existingData.names.get(name)) {
                             // This name is old, ignore it.
                             continue;

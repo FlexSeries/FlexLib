@@ -14,28 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package me.st28.flexseries.flexlib.permission;
+package me.st28.flexseries.flexlib.backend.commands;
 
-public enum PermissionNodes implements PermissionNode {
+import me.st28.flexseries.flexlib.FlexLib;
+import me.st28.flexseries.flexlib.backend.commands.player.SCmdPlayer;
+import me.st28.flexseries.flexlib.command.CommandDescriptor;
+import me.st28.flexseries.flexlib.command.DummyCommand;
+import me.st28.flexseries.flexlib.permission.PermissionNodes;
 
-    ADMIN,
+/**
+ * Base utility command for the FlexLib library.
+ */
+public final class CmdFlexAdmin extends DummyCommand<FlexLib> {
 
-    BYPASS_VANISH,
+    public CmdFlexAdmin(FlexLib plugin) {
+        super(plugin, new CommandDescriptor("flexadmin").permission(PermissionNodes.ADMIN));
 
-    MODULES,
-
-    RELOAD,
-    SAVE;
-
-    private String node;
-
-    PermissionNodes() {
-        node = "flexlib." + toString().toLowerCase().replace("_", ".");
-    }
-
-    @Override
-    public String getNode() {
-        return node;
+        registerSubcommand(new SCmdPlayer(this));
     }
 
 }

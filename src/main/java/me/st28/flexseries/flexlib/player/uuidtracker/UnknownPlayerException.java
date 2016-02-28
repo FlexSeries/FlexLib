@@ -34,10 +34,6 @@ public class UnknownPlayerException extends RuntimeException {
             return "No UUID entry for name '" + name + "' found.";
         }
 
-        if (name == null) {
-            return "No name entry for UUID '" + uuid.toString() + "' found.";
-        }
-
         return "No UUID or name was provided.";
     }
 

@@ -7,6 +7,9 @@ authors: [${project.authors}]
 website: ${project.url}
 main: ${project.mainClass}
 commands:
+  flexadmin:
+    description: 'Utility command primarily for debugging purposes'
+    aliases: []
   flexmodules:
     description: 'View the modules of a loaded FlexPlugin'
     aliases: []
