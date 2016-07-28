@@ -18,6 +18,7 @@ package me.st28.flexseries.flexlib.logging;
 
 import me.st28.flexseries.flexlib.plugin.FlexModule;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.logging.Level;
@@ -43,7 +44,7 @@ public final class LogHelper {
 
         prefix.append("]");
 
-        plugin.getLogger().log(level, prefix.toString() + " " + message, exception);
+        Bukkit.getLogger().log(level, prefix.toString() + " " + message, exception);
     }
 
     private static void logFromClass(Class clazz, String suffix, Level level, String message, Exception exception) {
