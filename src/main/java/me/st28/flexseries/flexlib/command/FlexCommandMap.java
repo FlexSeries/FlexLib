@@ -74,7 +74,20 @@ public class FlexCommandMap {
             }
         }
 
-        pending.sort((o1, o2) -> Integer.compare(StringUtils.getCharCount(o1.meta.parent(), ' '), StringUtils.getCharCount(o2.meta.parent(), ' ')));
+        pending.sort((o1, o2) -> {
+            final String p1 = o1.meta.parent();
+            final String p2 = o2.meta.parent();
+
+            if (p1.isEmpty() && p2.isEmpty()) {
+                return 0;
+            } else if (p1.isEmpty() && !p2.isEmpty()) {
+                return -1;
+            } else if (!p1.isEmpty() && p2.isEmpty()) {
+                return 1;
+            }
+
+            return Integer.compare(p1.split(" ").length, p2.split(" ").length);
+        });
 
         final Map<String, FlexCommand> topCommands = new HashMap<>();
 
