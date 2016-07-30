@@ -17,14 +17,13 @@
 package me.st28.flexseries.flexlib.command;
 
 import me.st28.flexseries.flexlib.FlexLib;
+import me.st28.flexseries.flexlib.command.DefaultArgumentResolvers.BooleanResolver;
 import me.st28.flexseries.flexlib.command.DefaultArgumentResolvers.DoubleResolver;
 import me.st28.flexseries.flexlib.command.DefaultArgumentResolvers.FloatResolver;
 import me.st28.flexseries.flexlib.command.DefaultArgumentResolvers.IntegerResolver;
 import me.st28.flexseries.flexlib.command.DefaultArgumentResolvers.LongResolver;
-import me.st28.flexseries.flexlib.command.DefaultArgumentResolvers.NumberResolver;
 import me.st28.flexseries.flexlib.command.DefaultArgumentResolvers.PlayerResolver;
 import me.st28.flexseries.flexlib.command.DefaultArgumentResolvers.StringResolver;
-import me.st28.flexseries.flexlib.command.argument.ArgumentConfig;
 import me.st28.flexseries.flexlib.command.argument.ArgumentResolver;
 import me.st28.flexseries.flexlib.plugin.FlexModule;
 
@@ -36,6 +35,7 @@ public final class CommandModule extends FlexModule<FlexLib> {
 
     @Override
     protected void handleEnable() {
+        ArgumentResolver.register(null, "boolean", new BooleanResolver());
         ArgumentResolver.register(null, "integer", new IntegerResolver());
         ArgumentResolver.register(null, "long", new LongResolver());
         ArgumentResolver.register(null, "float", new FloatResolver());

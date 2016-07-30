@@ -1,4 +1,5 @@
 error:
+  input_not_boolean: '&cInput must be true or false.'
   input_not_decimal: '&cInput must be a number.'
   input_not_integer: '&cInput must be an integer.'
   input_too_small_decimal: '&cInput must be {1} or greater.'

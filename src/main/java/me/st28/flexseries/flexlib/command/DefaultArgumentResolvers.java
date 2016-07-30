@@ -24,10 +24,13 @@ import me.st28.flexseries.flexlib.logging.LogHelper;
 import me.st28.flexseries.flexlib.messages.Message;
 import me.st28.flexseries.flexlib.player.PlayerReference;
 import me.st28.flexseries.flexlib.player.lookup.UnknownPlayerException;
+import me.st28.flexseries.flexlib.utils.BooleanUtils;
 import me.st28.flexseries.flexlib.utils.UuidUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -149,6 +152,34 @@ final class DefaultArgumentResolvers {
         @Override
         protected int compare(Double o1, Double o2) {
             return Double.compare(o1, o2);
+        }
+
+    }
+
+    static class BooleanResolver extends ArgumentResolver<Boolean> {
+
+        private final List<String> tabOptions;
+
+        BooleanResolver() {
+            super(false);
+            List<String> temp = new ArrayList<>();
+            Collections.addAll(temp, BooleanUtils.getTrueValues());
+            Collections.addAll(temp, BooleanUtils.getFalseValues());
+            tabOptions = Collections.unmodifiableList(temp);
+        }
+
+        @Override
+        public Boolean resolve(CommandContext context, ArgumentConfig config, String input) {
+            try {
+                return BooleanUtils.fromString(input);
+            } catch (IllegalArgumentException ex) {
+                throw new ArgumentResolveException(Message.getGlobal("error.input_not_boolean"));
+            }
+        }
+
+        @Override
+        public List<String> getTabOptions(CommandContext context, ArgumentConfig config, String input) {
+            return new ArrayList<>(tabOptions);
         }
 
     }
