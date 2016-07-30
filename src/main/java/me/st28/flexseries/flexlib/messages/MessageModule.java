@@ -16,11 +16,18 @@
  */
 package me.st28.flexseries.flexlib.messages;
 
+import me.st28.flexseries.flexlib.logging.LogHelper;
 import me.st28.flexseries.flexlib.plugin.FlexModule;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
+import me.st28.flexseries.flexlib.storage.flatfile.YamlFileManager;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 
+import java.io.File;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 public class MessageModule<T extends FlexPlugin> extends FlexModule<T> {
@@ -33,10 +40,32 @@ public class MessageModule<T extends FlexPlugin> extends FlexModule<T> {
         super(plugin, "messages", "Manages a plugin's messages");
     }
 
+    @Override
+    protected void handleReload(boolean isFirstReload) {
+        if (isFirstReload) {
+            return;
+        }
+
+        messages.clear();
+
+        YamlFileManager messageFile = new YamlFileManager(getPlugin().getDataFolder() + File.separator + "messages.yml");
+        if (messageFile.isEmpty()) {
+            getPlugin().saveResource("messages.yml", true);
+            messageFile.reload();
+        }
+
+        for (Entry<String, Object> entry : messageFile.getConfig().getValues(true).entrySet()) {
+            if (entry.getValue() instanceof String) {
+                messages.put(entry.getKey(), (String) entry.getValue());
+            }
+        }
+        LogHelper.info(this, "Loaded " + messages.size() + " messages");
+    }
+
     public Message getMessage(String name, Object... replacements) {
         String message;
         if (messages.containsKey(name)) {
-            message = PATTERN_VARIABLE.matcher(messages.get(name)).replaceAll("%\\$$1s");
+            message = PATTERN_VARIABLE.matcher(messages.get(name)).replaceAll("%$1\\$s");
         } else {
             message = name;
         }

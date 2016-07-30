@@ -25,9 +25,9 @@ public class ArgumentResolveException extends RuntimeException {
 
     private Message errorMessage;
 
-    public ArgumentResolveException(String message) {
+    public ArgumentResolveException(String message, Object... replacements) {
         super(message);
-        errorMessage = new Message(message);
+        errorMessage = Message.getGlobal(message, replacements);
     }
 
     public ArgumentResolveException(Message message) {

@@ -16,7 +16,6 @@
  */
 package me.st28.flexseries.flexlib.command;
 
-import me.st28.flexseries.flexlib.FlexLib;
 import me.st28.flexseries.flexlib.command.argument.ArgumentConfig;
 import me.st28.flexseries.flexlib.command.argument.ArgumentResolveException;
 import me.st28.flexseries.flexlib.command.argument.ArgumentResolver;
@@ -173,7 +172,7 @@ final class DefaultArgumentResolvers {
             try {
                 return BooleanUtils.fromString(input);
             } catch (IllegalArgumentException ex) {
-                throw new ArgumentResolveException(Message.getGlobal("error.input_not_boolean"));
+                throw new ArgumentResolveException("error.input_not_boolean");
             }
         }
 
@@ -199,11 +198,11 @@ final class DefaultArgumentResolvers {
             final boolean isRange = minLength < 0 && maxLength < 0;
 
             if (isRange && (tooShort || tooLong)) {
-                throw new ArgumentResolveException(Message.get(FlexLib.class, "error.string_outside_range", minLength, maxLength));
+                throw new ArgumentResolveException("error.string_outside_range", minLength, maxLength);
             } else if (tooLong) {
-                throw new ArgumentResolveException(Message.getGlobal("error.string_too_long", maxLength));
+                throw new ArgumentResolveException("error.string_too_long", maxLength);
             } else if (tooShort) {
-                throw new ArgumentResolveException(Message.get(FlexLib.class, "error.string_too_short", minLength));
+                throw new ArgumentResolveException("error.string_too_short", minLength);
             }
 
             return input;
@@ -257,7 +256,7 @@ final class DefaultArgumentResolvers {
                 try {
                     ref = new PlayerReference(input);
                 } catch (UnknownPlayerException ex) {
-                    throw new ArgumentResolveException("error.unknown_player");
+                    throw new ArgumentResolveException("error.player_not_found", input);
                 }
             }
 
