@@ -16,6 +16,8 @@
  */
 package me.st28.flexseries.flexlib.plugin;
 
+import me.st28.flexseries.flexlib.FlexLib;
+import me.st28.flexseries.flexlib.command.FlexCommandMap;
 import me.st28.flexseries.flexlib.event.plugin.PluginReloadedEvent;
 import me.st28.flexseries.flexlib.logging.LogHelper;
 import org.apache.commons.lang.Validate;
@@ -29,16 +31,39 @@ import java.util.Map;
 
 public abstract class FlexPlugin extends JavaPlugin {
 
+    /**
+     * Convenience method for retrieving modules from FlexLib.
+     *
+     * @return The specified global module.
+     *         Null if the module is not registered under FlexLib.
+     */
+    public static <T extends FlexModule> T getGlobalModule(Class<T> module) {
+        return FlexPlugin.getPluginModule(FlexLib.class, module);
+    }
+
+    /**
+     * @return The specified module from the specified FlexPlugin implementation.
+     *         Null if the module is not registered under the specified plugin.
+     */
+    public static <T extends FlexModule> T getPluginModule(Class<? extends FlexPlugin> plugin, Class<T> module) {
+        return JavaPlugin.getPlugin(plugin).getModule(module);
+    }
+
+    // ------------------------------------------------------------------------------------------ //
+
     private PluginStatus status = PluginStatus.PENDING;
 
     private boolean hasConfig = false;
-
     private boolean isDebugEnabled = false;
+
+    private final FlexCommandMap commandMap = new FlexCommandMap(this);
 
     private final Map<Class<? extends FlexModule>, FlexModule> modules = new HashMap<>();
 
     @Override
     public final void onLoad() {
+        status = PluginStatus.LOADING;
+
         handleLoad();
     }
 
@@ -192,6 +217,15 @@ public abstract class FlexPlugin extends JavaPlugin {
         LogHelper.info(this, "Registered module '" + module.getName() +
                 "' (" + module.getClass().getCanonicalName() + ")");
         return true;
+    }
+
+    protected final FlexCommandMap getCommandMap() {
+        return commandMap;
+    }
+
+    public final <T extends FlexModule> T getModule(Class<T> clazz) {
+        Validate.notNull(clazz, "Class cannot be null");
+        return (T) modules.get(clazz);
     }
 
     // ------------------------------------------------------------------------------------------ //

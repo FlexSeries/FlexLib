@@ -25,6 +25,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 
 import java.io.File;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.regex.Pattern;
 
@@ -90,7 +91,7 @@ public abstract class FlexModule<T extends FlexPlugin> {
      *         Null if this module doesn't have a configuration file.
      */
     public final FileConfiguration getConfig() {
-        return configFile == null ? null : configFile.getConfig();
+        return configFile.getConfig();
     }
 
     /**
@@ -98,24 +99,19 @@ public abstract class FlexModule<T extends FlexPlugin> {
      * Fails silently if this module doesn't have a configuration file.
      */
     public final void reloadConfig() {
-        if (configFile == null) {
-            return;
+        if (configFile != null) {
+            configFile.reload();
         }
-
-        configFile.reload();
-        FileConfiguration config = configFile.getConfig();
-
-        config.addDefaults(YamlConfiguration.loadConfiguration(
-                new InputStreamReader(plugin.getResource("modules/" + name + "/config.yml"))));
-        config.options().copyDefaults(false);
-        configFile.save();
-        configFile.reload();
     }
 
     public final void saveConfig() {
         if (configFile != null) {
             configFile.save();
         }
+    }
+
+    public InputStream getResource(String name) {
+        return plugin.getResource("modules/" + this.name + "/" + name);
     }
 
     /**
@@ -141,16 +137,24 @@ public abstract class FlexModule<T extends FlexPlugin> {
 
         dataFolder = new File(plugin.getDataFolder() + File.separator + name);
 
-        if (plugin.getResource("modules/" + name + "/config.yml") != null) {
-            configFile = new YamlFileManager(plugin.getDataFolder() + File.separator + "config-" + name + ".yml");
-        } else {
-            configFile = null;
+        // TODO: Don't save config if it contains no content
+        configFile = new YamlFileManager(plugin.getDataFolder() + File.separator + "config-" + name + ".yml");
+        if (configFile.isEmpty()) {
+            FileConfiguration config = configFile.getConfig();
+
+            InputStream def = plugin.getResource("modules/" + name + "/config.yml");
+            if (def != null) {
+                config.addDefaults(YamlConfiguration.loadConfiguration(new InputStreamReader(def)));
+                config.options().copyDefaults(true);
+                saveConfig();
+            }
         }
 
         try {
             reloadConfig();
             handleReload(true);
             handleEnable();
+            handleReload(false);
         } catch (Exception ex) {
             status = ModuleStatus.DISABLED_ERROR;
             throw new RuntimeException("An exception occurred while enabling module '" + name + "'", ex);

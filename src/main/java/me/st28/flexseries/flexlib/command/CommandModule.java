@@ -14,29 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package me.st28.flexseries.flexlib;
+package me.st28.flexseries.flexlib.command;
 
-import me.st28.flexseries.flexlib.command.CommandModule;
-import me.st28.flexseries.flexlib.commands.CommandLibTest;
-import me.st28.flexseries.flexlib.commands.TestCommand;
-import me.st28.flexseries.flexlib.player.lookup.PlayerLookupModule;
-import me.st28.flexseries.flexlib.plugin.FlexPlugin;
+import me.st28.flexseries.flexlib.FlexLib;
+import me.st28.flexseries.flexlib.command.DefaultArgumentResolvers.PlayerResolver;
+import me.st28.flexseries.flexlib.command.argument.ArgumentResolver;
+import me.st28.flexseries.flexlib.plugin.FlexModule;
 
-public class FlexLib extends FlexPlugin {
+public final class CommandModule extends FlexModule<FlexLib> {
 
-    @Override
-    protected void handleLoad() {
-        registerModule(new CommandModule(this));
-        registerModule(new PlayerLookupModule(this));
+    public CommandModule(FlexLib plugin) {
+        super(plugin, "commands", "Manages the FlexLib command framework");
     }
 
     @Override
     protected void handleEnable() {
-        setDebugEnabled(true);
-
-        getServer().getPluginCommand("flexlib").setExecutor(new TestCommand());
-
-        getCommandMap().register(new CommandLibTest());
+        ArgumentResolver.register(null, "player", new PlayerResolver());
     }
 
 }
