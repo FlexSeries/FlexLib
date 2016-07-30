@@ -41,7 +41,7 @@ public class Message {
         this.replacements = replacements;
     }
 
-    public void send(CommandSender sender, Object... replacements) {
+    public void sendTo(CommandSender sender, Object... replacements) {
         final int replacementCount = this.replacements.length + replacements.length;
 
         if (replacementCount == 0) {

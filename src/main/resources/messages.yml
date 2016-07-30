@@ -3,3 +3,6 @@ error:
   player_not_found: '&cUnable to find player ''{1}''.'
   player_not_online: '&cPlayer {1} is not online.'
   player_cannot_be_sender: '&cYou cannot be the target of this command.'
+  string_too_short: '&cInput must be {1} characters or more.'
+  string_too_long: '&cInput must be {1} characters or less.'
+  string_outside_range: '&cInput must be {1}-{2} characters in length.'

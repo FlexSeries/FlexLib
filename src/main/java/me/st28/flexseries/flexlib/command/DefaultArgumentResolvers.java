@@ -16,10 +16,12 @@
  */
 package me.st28.flexseries.flexlib.command;
 
+import me.st28.flexseries.flexlib.FlexLib;
 import me.st28.flexseries.flexlib.command.argument.ArgumentResolveException;
 import me.st28.flexseries.flexlib.command.argument.ArgumentResolver;
 import me.st28.flexseries.flexlib.command.argument.ArgumentConfig;
 import me.st28.flexseries.flexlib.logging.LogHelper;
+import me.st28.flexseries.flexlib.messages.Message;
 import me.st28.flexseries.flexlib.player.PlayerReference;
 import me.st28.flexseries.flexlib.player.lookup.UnknownPlayerException;
 import me.st28.flexseries.flexlib.utils.ArgumentCallback;
@@ -36,9 +38,41 @@ import java.util.concurrent.Future;
 
 final class DefaultArgumentResolvers {
 
+    static class StringResolver extends ArgumentResolver<String> {
+
+        StringResolver() {
+            super(false);
+        }
+
+        @Override
+        public String resolve(CommandContext context, ArgumentConfig config, String input) {
+            int minLength = config.getInteger("min", -1);
+            int maxLength = config.getInteger("max", -1);
+
+            boolean tooShort = minLength > 0 && input.length() < minLength;
+            boolean tooLong = maxLength > 0 && input.length() < maxLength;
+
+            if (tooLong && tooShort) {
+                throw new ArgumentResolveException(Message.get(FlexLib.class, "error.string_outside_range", minLength, maxLength));
+            } else if (tooLong) {
+                throw new ArgumentResolveException(Message.get(FlexLib.class, "error.string_too_long", maxLength));
+            } else if (tooShort) {
+                throw new ArgumentResolveException(Message.get(FlexLib.class, "error.string_too_short", minLength));
+            }
+
+            return input;
+        }
+
+        @Override
+        public List<String> getTabOptions(CommandContext context, ArgumentConfig config, String input) {
+            return null;
+        }
+
+    }
+
     static class PlayerResolver extends ArgumentResolver<PlayerReference> {
 
-        public PlayerResolver() {
+        PlayerResolver() {
             super(true);
         }
 

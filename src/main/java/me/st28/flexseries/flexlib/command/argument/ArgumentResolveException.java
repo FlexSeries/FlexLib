@@ -16,13 +16,22 @@
  */
 package me.st28.flexseries.flexlib.command.argument;
 
+import me.st28.flexseries.flexlib.messages.Message;
+
 /**
  * Thrown when an argument fails to be resolved.
  */
 public class ArgumentResolveException extends RuntimeException {
 
+    private Message errorMessage;
+
     public ArgumentResolveException(String message) {
         super(message);
+        errorMessage = new Message(message);
+    }
+
+    public ArgumentResolveException(Message message) {
+        this.errorMessage = message;
     }
 
     public ArgumentResolveException(Throwable cause) {
@@ -31,6 +40,10 @@ public class ArgumentResolveException extends RuntimeException {
 
     public ArgumentResolveException(String message, Throwable cause) {
         super(message, cause);
+    }
+
+    public Message getErrorMessage() {
+        return errorMessage;
     }
 
 }

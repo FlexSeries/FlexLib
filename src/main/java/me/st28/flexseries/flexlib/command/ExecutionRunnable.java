@@ -91,7 +91,7 @@ class ExecutionRunnable implements Runnable {
                 try {
                     asyncResolved = resolver.resolveAsync(context, config, args[index]);
                 } catch (ArgumentResolveException ex) {
-                    sendMessage(ex.getMessage());
+                    sendMessage(ex.getErrorMessage());
                     return;
                 }
 
@@ -120,6 +120,15 @@ class ExecutionRunnable implements Runnable {
             CommandSender sender = context.getSender();
             if (sender != null) {
                 sender.sendMessage(message);
+            }
+        });
+    }
+
+    private void sendMessage(Message message) {
+        SchedulerUtils.runSynchronously(command.plugin, () -> {
+            CommandSender sender = context.getSender();
+            if (sender != null) {
+                message.sendTo(sender);
             }
         });
     }

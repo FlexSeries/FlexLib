@@ -18,6 +18,7 @@ package me.st28.flexseries.flexlib.command;
 
 import me.st28.flexseries.flexlib.FlexLib;
 import me.st28.flexseries.flexlib.command.DefaultArgumentResolvers.PlayerResolver;
+import me.st28.flexseries.flexlib.command.DefaultArgumentResolvers.StringResolver;
 import me.st28.flexseries.flexlib.command.argument.ArgumentResolver;
 import me.st28.flexseries.flexlib.plugin.FlexModule;
 
@@ -30,6 +31,7 @@ public final class CommandModule extends FlexModule<FlexLib> {
     @Override
     protected void handleEnable() {
         ArgumentResolver.register(null, "player", new PlayerResolver());
+        ArgumentResolver.register(null, "string", new StringResolver());
     }
 
 }
