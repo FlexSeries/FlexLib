@@ -1,0 +1,5 @@
+error:
+  internal_error: '&cAn internal error occurred. Please contact a staff member to let them know.'
+  player_not_found: '&cUnable to find player ''{1}''.'
+  player_not_online: '&cPlayer {1} is not online.'
+  player_cannot_be_sender: '&cYou cannot be the target of this command.'

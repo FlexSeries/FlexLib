@@ -1,0 +1,37 @@
+tables:
+  ENTRY: 'entry'
+  VERSION: 'version'
+
+# updates: -> Section for schema updates
+
+ENTRY:
+  create_table: >-
+    CREATE TABLE IF NOT EXISTS {TABLE_ENTRY} (
+    uuid BLOB NOT NULL UNIQUE,
+    name TEXT NOT NULL UNIQUE,
+    realName TEXT NOT NULL UNIQUE
+    );
+
+  delete_name: >-
+    DELETE FROM {TABLE_ENTRY} WHERE name = ?;
+
+  delete_uuid: >-
+    DELETE FROM {TABLE_ENTRY} WHERE uuid = X'{UUID}';
+
+  insert_entry: >-
+    INSERT INTO {TABLE_ENTRY} (uuid, name, realName) VALUES (X'{UUID}', ?, ?);
+
+  select_uuid: >-
+    SELECT HEX(uuid) realName FROM {TABLE_ENTRY} WHERE uuid = X'{UUID}';
+
+  select_name: >-
+    SELECT HEX(uuid), realName FROM {TABLE_ENTRY} WHERE name = ?;
+
+VERSION:
+  create_table: >-
+    CREATE TABLE IF NOT EXISTS {TABLE_VERSION} (
+    updateName TEXT NOT NULL
+    );
+
+  select: >-
+    SELECT updateName FROM {TABLE_VERSION};
