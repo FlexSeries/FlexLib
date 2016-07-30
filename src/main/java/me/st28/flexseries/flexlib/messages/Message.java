@@ -17,6 +17,7 @@
 package me.st28.flexseries.flexlib.messages;
 
 import com.stealthyone.mcb.mcml.MCMLBuilder;
+import me.st28.flexseries.flexlib.FlexLib;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 import org.bukkit.command.CommandSender;
 
@@ -29,6 +30,10 @@ public class Message {
     public static Message get(Class<? extends FlexPlugin> plugin, String name, Object... replacements) {
         final MessageModule module = FlexPlugin.getPluginModule(plugin, MessageModule.class);
         return module == null ? new Message(name, replacements) : module.getMessage(name, replacements);
+    }
+
+    public static Message getGlobal(String name, Object... replacements) {
+        return get(FlexLib.class, name, replacements);
     }
 
     // ------------------------------------------------------------------------------------------ //

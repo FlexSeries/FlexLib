@@ -17,26 +17,141 @@
 package me.st28.flexseries.flexlib.command;
 
 import me.st28.flexseries.flexlib.FlexLib;
+import me.st28.flexseries.flexlib.command.argument.ArgumentConfig;
 import me.st28.flexseries.flexlib.command.argument.ArgumentResolveException;
 import me.st28.flexseries.flexlib.command.argument.ArgumentResolver;
-import me.st28.flexseries.flexlib.command.argument.ArgumentConfig;
 import me.st28.flexseries.flexlib.logging.LogHelper;
 import me.st28.flexseries.flexlib.messages.Message;
 import me.st28.flexseries.flexlib.player.PlayerReference;
 import me.st28.flexseries.flexlib.player.lookup.UnknownPlayerException;
-import me.st28.flexseries.flexlib.utils.ArgumentCallback;
 import me.st28.flexseries.flexlib.utils.UuidUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 final class DefaultArgumentResolvers {
+
+    static abstract class NumberResolver<T extends Number> extends ArgumentResolver<T> {
+
+        private final String displayName;
+
+        NumberResolver(String displayName) {
+            super(false);
+            this.displayName = displayName;
+        }
+
+        @Override
+        public T resolve(CommandContext context, ArgumentConfig config, String input) {
+            T resolved;
+            try {
+                resolved = handleResolve(context, config, input);
+            } catch (NumberFormatException ex) {
+                throw new ArgumentResolveException(getMessage("error.input_not"));
+            }
+
+            final boolean tooSmall = config.isSet("min") && compare(resolved, (T) config.get("min")) < 0;
+            final boolean tooLarge = config.isSet("max") && compare(resolved, (T) config.get("max")) > 0;
+            final boolean isRange = config.isSet("min") && config.isSet("max");
+
+            if (isRange && (tooSmall || tooLarge)) {
+                throw new ArgumentResolveException(getMessage("error.input_outside_range", config.get("min"), config.get("max")));
+            } else if (tooLarge) {
+                throw new ArgumentResolveException(getMessage("error.input_too_large", config.get("max")));
+            } else if (tooSmall) {
+                throw new ArgumentResolveException(getMessage("error.input_too_small", config.get("min")));
+            }
+
+            return resolved;
+        }
+
+        private Message getMessage(String message, Object... replacements) {
+            return Message.getGlobal(message + "_" + displayName, replacements);
+        }
+
+        protected abstract T handleResolve(CommandContext context, ArgumentConfig config, String input);
+
+        protected abstract int compare(T o1, T o2);
+
+        @Override
+        public List<String> getTabOptions(CommandContext context, ArgumentConfig config, String input) {
+            return null;
+        }
+
+    }
+
+    static class IntegerResolver extends NumberResolver<Integer> {
+
+        IntegerResolver() {
+            super("integer");
+        }
+
+        @Override
+        protected Integer handleResolve(CommandContext context, ArgumentConfig config, String input) {
+            return Integer.valueOf(input);
+        }
+
+        @Override
+        protected int compare(Integer o1, Integer o2) {
+            return Integer.compare(o1, o2);
+        }
+
+    }
+
+    static class LongResolver extends NumberResolver<Long> {
+
+        LongResolver() {
+            super("integer");
+        }
+
+        @Override
+        protected Long handleResolve(CommandContext context, ArgumentConfig config, String input) {
+            return Long.parseLong(input);
+        }
+
+        @Override
+        protected int compare(Long o1, Long o2) {
+            return Long.compare(o1, o2);
+        }
+
+    }
+
+    static class FloatResolver extends NumberResolver<Float> {
+
+        FloatResolver() {
+            super("decimal");
+        }
+
+        @Override
+        protected Float handleResolve(CommandContext context, ArgumentConfig config, String input) {
+            return Float.parseFloat(input);
+        }
+
+        @Override
+        protected int compare(Float o1, Float o2) {
+            return Float.compare(o1, o2);
+        }
+
+    }
+
+    static class DoubleResolver extends NumberResolver<Double> {
+
+        DoubleResolver() {
+            super("decimal");
+        }
+
+        @Override
+        protected Double handleResolve(CommandContext context, ArgumentConfig config, String input) {
+            return Double.parseDouble(input);
+        }
+
+        @Override
+        protected int compare(Double o1, Double o2) {
+            return Double.compare(o1, o2);
+        }
+
+    }
 
     static class StringResolver extends ArgumentResolver<String> {
 
@@ -46,16 +161,16 @@ final class DefaultArgumentResolvers {
 
         @Override
         public String resolve(CommandContext context, ArgumentConfig config, String input) {
-            int minLength = config.getInteger("min", -1);
-            int maxLength = config.getInteger("max", -1);
+            final int minLength = config.getInteger("min", -1);
+            final int maxLength = config.getInteger("max", -1);
+            final boolean tooShort = minLength > 0 && input.length() < minLength;
+            final boolean tooLong = maxLength > 0 && input.length() > maxLength;
+            final boolean isRange = minLength < 0 && maxLength < 0;
 
-            boolean tooShort = minLength > 0 && input.length() < minLength;
-            boolean tooLong = maxLength > 0 && input.length() > maxLength;
-
-            if (tooLong && tooShort) {
+            if (isRange && (tooShort || tooLong)) {
                 throw new ArgumentResolveException(Message.get(FlexLib.class, "error.string_outside_range", minLength, maxLength));
             } else if (tooLong) {
-                throw new ArgumentResolveException(Message.get(FlexLib.class, "error.string_too_long", maxLength));
+                throw new ArgumentResolveException(Message.getGlobal("error.string_too_long", maxLength));
             } else if (tooShort) {
                 throw new ArgumentResolveException(Message.get(FlexLib.class, "error.string_too_short", minLength));
             }

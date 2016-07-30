@@ -1,4 +1,12 @@
 error:
+  input_not_decimal: '&cInput must be a number.'
+  input_not_integer: '&cInput must be an integer.'
+  input_too_small_decimal: '&cInput must be {1} or greater.'
+  input_too_small_integer: '&cInput must be {1} or greater.'
+  input_too_large_decimal: '&cInput must be {1} or less.'
+  input_too_large_integer: '&cInput must be {1} or less.'
+  input_outside_range_decimal: '&cInput must be {1} to {2}.'
+  input_outside_range_integer: '&cInput must be {1} to {2}.'
   internal_error: '&cAn internal error occurred. Please contact a staff member to let them know.'
   player_not_found: '&cUnable to find player ''{1}''.'
   player_not_online: '&cPlayer {1} is not online.'

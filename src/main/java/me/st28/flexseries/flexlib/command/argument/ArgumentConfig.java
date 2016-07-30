@@ -152,6 +152,18 @@ public class ArgumentConfig {
         return settings.containsKey(name);
     }
 
+    public Object get(String name) {
+        return get(name, Object.class);
+    }
+
+    public Object get(String name, Object defaultValue) {
+        return get(name, Object.class, defaultValue);
+    }
+
+    public <T> T get(String name, Class<T> type) {
+        return get(name, type, null);
+    }
+
     public <T> T get(String name, Class<T> type, T defaultValue) {
         return !isSet(name) ? defaultValue : (T) settings.get(name);
     }
