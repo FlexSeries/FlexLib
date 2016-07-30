@@ -21,6 +21,7 @@ import org.apache.commons.lang.Validate;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,15 +30,17 @@ import java.util.Map;
  */
 public final class CommandContext {
 
-    private final FlexCommand command;
+    private final BasicCommand command;
     private final CommandSender sender;
     private final PlayerReference player;
     private final String label;
     private final String[] rawArgs;
+    private final String[] curArgs;
+    private final int offset;
 
     private final Map<String, Object> arguments = new HashMap<>();
 
-    public CommandContext(FlexCommand command, CommandSender sender, String label, String[] args) {
+    public CommandContext(BasicCommand command, CommandSender sender, String label, String[] args, int offset) {
         this.command = command;
         if (sender instanceof Player) {
             this.sender = null;
@@ -48,9 +51,11 @@ public final class CommandContext {
         }
         this.label = label;
         this.rawArgs = args;
+        this.curArgs = args.length == 0 ? new String[0] : Arrays.asList(rawArgs).subList(offset, rawArgs.length).toArray(new String[rawArgs.length - offset]);
+        this.offset = offset;
     }
 
-    public final FlexCommand getCommand() {
+    public final BasicCommand getCommand() {
         return command;
     }
 
@@ -70,6 +75,14 @@ public final class CommandContext {
 
     public final String[] getRawArgs() {
         return rawArgs;
+    }
+
+    public final String[] getCurArgs() {
+        return curArgs;
+    }
+
+    public final int getOffset() {
+        return offset;
     }
 
     public final Object getArgument(String name) {

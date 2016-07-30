@@ -38,4 +38,15 @@ public class CommandLibTest {
         context.getSender().sendMessage("Hello from " + context.getArgument("target", PlayerReference.class).getName());
     }
 
+    @CommandHandler(
+            value = "test",
+            parent = "hello2",
+            args = {
+                "str string always -min=3 -max=20"
+            }
+    )
+    public void hello2_test(CommandContext context) {
+        context.getSender().sendMessage(context.getArgument("str", String.class));
+    }
+
 }

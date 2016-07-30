@@ -60,7 +60,7 @@ public class ArgumentConfig {
         this.index = index;
 
         Matcher matcher = PATTERN_INFO.matcher(raw);
-        if (!matcher.matches()) {
+        if (!matcher.find()) {
             throw new IllegalArgumentException("Invalid argument syntax '" + raw + "'");
         }
 
@@ -98,14 +98,18 @@ public class ArgumentConfig {
             }
 
             // Integer
-            try {
-                value = Integer.valueOf(rawValue);
-            } catch (NumberFormatException ex) { }
+            if (value == null) {
+                try {
+                    value = Integer.valueOf(rawValue);
+                } catch (NumberFormatException ex) { }
+            }
 
             // Floating point
-            try {
-                value = Double.valueOf(rawValue);
-            } catch (NumberFormatException ex) { }
+            if (value == null) {
+                try {
+                    value = Double.valueOf(rawValue);
+                } catch (NumberFormatException ex) { }
+            }
 
             // String
             if (value == null) {

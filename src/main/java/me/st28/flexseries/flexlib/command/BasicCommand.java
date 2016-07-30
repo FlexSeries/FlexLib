@@ -17,46 +17,45 @@
 package me.st28.flexseries.flexlib.command;
 
 import me.st28.flexseries.flexlib.command.argument.ArgumentConfig;
-import me.st28.flexseries.flexlib.command.argument.ArgumentResolver;
 import me.st28.flexseries.flexlib.logging.LogHelper;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 import org.bukkit.ChatColor;
-import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
-public final class FlexCommand extends BasicCommand {
+public class BasicCommand {
 
-    final Command bukkitCommand;
+    final FlexPlugin plugin;
 
-    FlexCommand(FlexPlugin plugin, CommandHandler meta, Object handler, Method method) {
-        super(plugin, meta, handler, method);
+    final Executor executor;
 
-        bukkitCommand = new Command(meta.value()[0], meta.description(), "(usage message)", Arrays.asList(meta.value()).subList(0, meta.value().length)) {
-            @Override
-            public boolean execute(CommandSender sender, String label, String[] args) {
-                FlexCommand.this.execute(sender, label, args, 0);
-                return true;
+    final String permission;
+    final boolean isPlayerOnly;
+
+    final ArgumentConfig[] argumentConfig;
+
+    BasicCommand parent;
+    final Map<String, BasicCommand> subcommands = new HashMap<>();
+
+    BasicCommand(FlexPlugin plugin, CommandHandler meta, Object handler, Method method) {
+        this.plugin = plugin;
+        permission = meta.permission();
+        isPlayerOnly = meta.playerOnly();
+        argumentConfig = ArgumentConfig.parse(meta.args());
+
+        // Setup command executor
+        executor = (context) -> {
+            try {
+                method.invoke(handler, context);
+            } catch (IllegalAccessException | InvocationTargetException ex) {
+                context.getSender().sendMessage(ChatColor.RED + "An internal exception occurred while running this command.");
+                LogHelper.severe(plugin, "An exception occurred while running command", ex);
             }
         };
-
-        if (meta.value().length > 1) {
-            bukkitCommand.setAliases(Arrays.asList(meta.value()).subList(1, meta.value().length));
-        }
-
-        // Set default usage message
-        StringBuilder sb = new StringBuilder();
-        sb.append("/").append(meta.value()[0]);
-        for (ArgumentConfig cur : argumentConfig) {
-            sb.append(" ").append(cur.getUsage(null));
-        }
-        bukkitCommand.setUsage(sb.toString());
     }
 
     public FlexPlugin getPlugin() {
@@ -66,6 +65,11 @@ public final class FlexCommand extends BasicCommand {
     public String getUsage(CommandContext context) {
         StringBuilder sb = new StringBuilder();
         sb.append("/").append(context.getLabel());
+
+        for (int i = 0; i < context.getOffset(); i++) {
+            sb.append(" ").append(context.getRawArgs()[i]);
+        }
+
         for (ArgumentConfig cur : argumentConfig) {
             sb.append(" ").append(cur.getUsage(context));
         }
@@ -80,6 +84,15 @@ public final class FlexCommand extends BasicCommand {
             }
         }
         return count;
+    }
+
+    public void execute(CommandSender sender, String label, String[] args, int offset) {
+        if (args.length > offset && subcommands.containsKey(args[offset].toLowerCase())) {
+            subcommands.get(args[offset].toLowerCase()).execute(sender, label, args, offset + 1);
+            return;
+        }
+
+        new ExecutionRunnable(new CommandContext(this, sender, label, args, offset)).run();
     }
 
     // ---------------------------------------------------------------------------------- //

@@ -27,14 +27,12 @@ import org.bukkit.entity.Player;
 
 class ExecutionRunnable implements Runnable {
 
-    private final FlexCommand command;
+    private final BasicCommand command;
     private final CommandContext context;
-    private final String[] args;
 
-    ExecutionRunnable(FlexCommand command, CommandContext context, String[] args) {
-        this.command = command;
+    ExecutionRunnable(CommandContext context) {
+        this.command = context.getCommand();
         this.context = context;
-        this.args = args;
     }
 
     @Override
@@ -61,7 +59,7 @@ class ExecutionRunnable implements Runnable {
         }
 
         // Otherwise, handle arguments
-        if (args.length < command.getRequiredArgs(context)) {
+        if (context.getCurArgs().length < command.getRequiredArgs(context)) {
             sender.sendMessage(ChatColor.DARK_RED + "USAGE: " + ChatColor.RED + command.getUsage(context));
             return;
         }
@@ -73,15 +71,15 @@ class ExecutionRunnable implements Runnable {
         final ArgumentConfig config = command.argumentConfig[index];
         final ArgumentResolver resolver = ArgumentResolver.getResolver(config.getType());
         if (resolver == null) {
-            sendMessage(ChatColor.RED + "Failed to execute command: Unknown argument type '" + config.getType() + "'");
+            sendMessage(Message.get(null, "error.command_unknown_argument"));
             return;
         }
 
         Object resolved;
         try {
-            resolved = resolver.resolve(context, config, args[index]);
+            resolved = resolver.resolve(context, config, context.getCurArgs()[index]);
         } catch (ArgumentResolveException ex) {
-            sendMessage(ex.getMessage());
+            sendMessage(ex.getErrorMessage());
             return;
         }
 
@@ -89,7 +87,7 @@ class ExecutionRunnable implements Runnable {
             SchedulerUtils.runAsap(command.plugin, () -> {
                 Object asyncResolved;
                 try {
-                    asyncResolved = resolver.resolveAsync(context, config, args[index]);
+                    asyncResolved = resolver.resolveAsync(context, config, context.getCurArgs()[index]);
                 } catch (ArgumentResolveException ex) {
                     sendMessage(ex.getErrorMessage());
                     return;
@@ -106,22 +104,13 @@ class ExecutionRunnable implements Runnable {
     private void handleArgument0(ArgumentConfig config, Object value, int index) {
         context.setArgument(config.getName(), value);
 
-        if (index == args.length - 1) {
+        if (index == context.getCurArgs().length - 1) {
             // Done, run command
             executeCommand();
         } else {
             // Parse next argument
             handleArgument(index + 1);
         }
-    }
-
-    private void sendMessage(String message) {
-        SchedulerUtils.runSynchronously(command.plugin, () -> {
-            CommandSender sender = context.getSender();
-            if (sender != null) {
-                sender.sendMessage(message);
-            }
-        });
     }
 
     private void sendMessage(Message message) {

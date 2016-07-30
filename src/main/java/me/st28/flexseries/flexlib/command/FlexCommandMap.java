@@ -18,12 +18,18 @@ package me.st28.flexseries.flexlib.command;
 
 import me.st28.flexseries.flexlib.logging.LogHelper;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
+import me.st28.flexseries.flexlib.utils.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.plugin.PluginManager;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class FlexCommandMap {
 
@@ -42,7 +48,7 @@ public class FlexCommandMap {
                 bukkit_registerMethod = bukkit_commandMap.getClass().getDeclaredMethod("register", String.class, Command.class);
             }
 
-            bukkit_registerMethod.invoke(bukkit_commandMap, plugin.getName(), command);
+            bukkit_registerMethod.invoke(bukkit_commandMap, plugin.getName(), command.bukkitCommand);
         } catch (Exception ex) {
             LogHelper.severe(plugin, "An exception occurred while registering command with Bukkit", ex);
         }
@@ -56,16 +62,64 @@ public class FlexCommandMap {
 
     public void register(Object handler) {
         final Method[] methods = handler.getClass().getDeclaredMethods();
-        int count = 0;
+        final List<PendingCommand> pending = new ArrayList<>();
 
         for (final Method method : methods) {
             if (method.isAnnotationPresent(CommandHandler.class)) {
-                registerBukkitCommand(plugin, new FlexCommand(plugin, method.getDeclaredAnnotation(CommandHandler.class), handler, method));
-                count++;
+                PendingCommand cur = new PendingCommand();
+                cur.meta = method.getDeclaredAnnotation(CommandHandler.class);
+                cur.method = method;
+
+                pending.add(cur);
             }
         }
 
-        LogHelper.debug(plugin, "Registered " + count + " command(s) in '" + handler.getClass().getCanonicalName() + "'");
+        pending.sort((o1, o2) -> Integer.compare(StringUtils.getCharCount(o1.meta.parent(), ' '), StringUtils.getCharCount(o2.meta.parent(), ' ')));
+
+        final Map<String, FlexCommand> topCommands = new HashMap<>();
+
+        PENDING_LOOP:
+        for (PendingCommand cur : pending) {
+            if (cur.meta.parent().isEmpty()) {
+                FlexCommand command = new FlexCommand(plugin, cur.meta, handler, cur.method);
+                topCommands.put(cur.meta.value()[0], command);
+                registerBukkitCommand(plugin, command);
+                continue;
+            }
+
+            BasicCommand command = new BasicCommand(plugin, cur.meta, handler, cur.method);
+
+            String[] parents = cur.meta.parent().split(" ");
+
+            BasicCommand curParent = null;
+            for (int i = 0; i < parents.length; i++) {
+                if (i == 0) {
+                    curParent = topCommands.get(parents[i]);
+                } else {
+                    curParent = curParent.subcommands.get(parents[i].toLowerCase());
+                }
+
+                if (curParent == null) {
+                    LogHelper.warning(plugin, "Invalid parent command '" + parents[i] + "'");
+                    continue PENDING_LOOP;
+                }
+            }
+
+            if (curParent != null) {
+                for (String label : cur.meta.value()) {
+                    curParent.subcommands.put(label, command);
+                }
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------ //
+
+    private static final class PendingCommand {
+
+        CommandHandler meta;
+        Method method;
+
     }
 
 }

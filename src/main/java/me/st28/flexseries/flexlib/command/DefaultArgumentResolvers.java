@@ -50,7 +50,7 @@ final class DefaultArgumentResolvers {
             int maxLength = config.getInteger("max", -1);
 
             boolean tooShort = minLength > 0 && input.length() < minLength;
-            boolean tooLong = maxLength > 0 && input.length() < maxLength;
+            boolean tooLong = maxLength > 0 && input.length() > maxLength;
 
             if (tooLong && tooShort) {
                 throw new ArgumentResolveException(Message.get(FlexLib.class, "error.string_outside_range", minLength, maxLength));

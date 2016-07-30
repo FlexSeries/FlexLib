@@ -31,6 +31,11 @@ public @interface CommandHandler {
     String[] value();
 
     /**
+     * @return The parent command. If set, this command will be treated as a subcommand.
+     */
+    String parent() default "";
+
+    /**
      * @return The description of the command.
      */
     String description() default "";
