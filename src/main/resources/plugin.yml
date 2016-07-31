@@ -6,6 +6,3 @@ softdepend: []
 authors: [${project.authors}]
 website: ${project.url}
 main: ${project.mainClass}
-commands:
-  flexlib:
-    aliases: []

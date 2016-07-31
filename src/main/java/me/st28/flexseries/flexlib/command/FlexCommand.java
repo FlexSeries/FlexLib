@@ -17,46 +17,21 @@
 package me.st28.flexseries.flexlib.command;
 
 import me.st28.flexseries.flexlib.command.argument.ArgumentConfig;
-import me.st28.flexseries.flexlib.command.argument.ArgumentResolver;
-import me.st28.flexseries.flexlib.logging.LogHelper;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public final class FlexCommand extends BasicCommand {
 
-    final Command bukkitCommand;
+    Command bukkitCommand;
 
-    FlexCommand(FlexPlugin plugin, CommandHandler meta, Object handler, Method method) {
-        super(plugin, meta, handler, method);
-
-        bukkitCommand = new Command(meta.value()[0], meta.description(), "(usage message)", Arrays.asList(meta.value()).subList(0, meta.value().length)) {
-            @Override
-            public boolean execute(CommandSender sender, String label, String[] args) {
-                FlexCommand.this.execute(sender, label, args, 0);
-                return true;
-            }
-        };
-
-        if (meta.value().length > 1) {
-            bukkitCommand.setAliases(Arrays.asList(meta.value()).subList(1, meta.value().length));
-        }
-
-        // Set default usage message
-        StringBuilder sb = new StringBuilder();
-        sb.append("/").append(meta.value()[0]);
-        for (ArgumentConfig cur : argumentConfig) {
-            sb.append(" ").append(cur.getUsage(null));
-        }
-        bukkitCommand.setUsage(sb.toString());
+    FlexCommand(FlexPlugin plugin, String label) {
+        super(plugin, label);
+        setMeta(null, null, null);
     }
 
     public FlexPlugin getPlugin() {
@@ -80,6 +55,35 @@ public final class FlexCommand extends BasicCommand {
             }
         }
         return count;
+    }
+
+    @Override
+    void setMeta(CommandHandler meta, Object handler, Method method) {
+        super.setMeta(meta, handler, method);
+
+        if (bukkitCommand == null) {
+            bukkitCommand = new Command(label, "(description)", "(usage)", aliases) {
+                @Override
+                public boolean execute(CommandSender sender, String label, String[] args) {
+                    FlexCommand.this.execute(sender, label, args, 0);
+                    return true;
+                }
+            };
+        }
+
+        bukkitCommand.setDescription(description == null ? "(no description set)" : description);
+        bukkitCommand.setAliases(aliases);
+
+        // Default usage message
+        if (argumentConfig != null) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("/").append(label);
+            for (ArgumentConfig cur : argumentConfig) {
+                sb.append(" ").append(cur.getUsage(null));
+            }
+
+            bukkitCommand.setUsage(sb.toString());
+        }
     }
 
     // ---------------------------------------------------------------------------------- //

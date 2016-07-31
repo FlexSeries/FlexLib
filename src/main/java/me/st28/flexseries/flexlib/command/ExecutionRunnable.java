@@ -25,6 +25,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+// TODO: Why is this a runnable?
 class ExecutionRunnable implements Runnable {
 
     private final BasicCommand command;

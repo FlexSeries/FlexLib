@@ -73,6 +73,13 @@ public final class CommandContext {
         return label;
     }
 
+    /**
+     * @return The current command level's label.
+     */
+    public final String getCurrentLabel() {
+        return rawArgs[offset - 1];
+    }
+
     public final String[] getRawArgs() {
         return rawArgs;
     }

@@ -18,22 +18,22 @@ package me.st28.flexseries.flexlib.command;
 
 import me.st28.flexseries.flexlib.logging.LogHelper;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
-import me.st28.flexseries.flexlib.utils.StringUtils;
+import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
+import org.bukkit.command.CommandMap;
 import org.bukkit.plugin.PluginManager;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 public class FlexCommandMap {
 
-    private static Object bukkit_commandMap;
+    private static CommandMap bukkit_commandMap;
     private static Method bukkit_registerMethod;
 
     private static void registerBukkitCommand(FlexPlugin plugin, FlexCommand command) {
@@ -44,7 +44,7 @@ public class FlexCommandMap {
                 Field commandMap = pluginManager.getClass().getDeclaredField("commandMap");
                 commandMap.setAccessible(true);
 
-                bukkit_commandMap = commandMap.get(pluginManager);
+                bukkit_commandMap = (CommandMap) commandMap.get(pluginManager);
                 bukkit_registerMethod = bukkit_commandMap.getClass().getDeclaredMethod("register", String.class, Command.class);
             }
 
@@ -57,82 +57,58 @@ public class FlexCommandMap {
     private final FlexPlugin plugin;
 
     public FlexCommandMap(FlexPlugin plugin) {
+        Validate.notNull(plugin, "Plugin cannot be null");
         this.plugin = plugin;
     }
 
+    /**
+     * Registers a class instance containing methods annotating with {@link CommandHandler}.
+     */
     public void register(Object handler) {
-        final Method[] methods = handler.getClass().getDeclaredMethods();
-        final List<PendingCommand> pending = new ArrayList<>();
-
-        for (final Method method : methods) {
-            if (method.isAnnotationPresent(CommandHandler.class)) {
-                PendingCommand cur = new PendingCommand();
-                cur.meta = method.getDeclaredAnnotation(CommandHandler.class);
-                cur.method = method;
-
-                pending.add(cur);
-            }
-        }
-
-        pending.sort((o1, o2) -> {
-            final String p1 = o1.meta.parent();
-            final String p2 = o2.meta.parent();
-
-            if (p1.isEmpty() && p2.isEmpty()) {
-                return 0;
-            } else if (p1.isEmpty() && !p2.isEmpty()) {
-                return -1;
-            } else if (!p1.isEmpty() && p2.isEmpty()) {
-                return 1;
-            }
-
-            return Integer.compare(p1.split(" ").length, p2.split(" ").length);
-        });
-
-        final Map<String, FlexCommand> topCommands = new HashMap<>();
-
-        PENDING_LOOP:
-        for (PendingCommand cur : pending) {
-            if (cur.meta.parent().isEmpty()) {
-                FlexCommand command = new FlexCommand(plugin, cur.meta, handler, cur.method);
-                topCommands.put(cur.meta.value()[0], command);
-                registerBukkitCommand(plugin, command);
+        final CommandModule commandModule = FlexPlugin.getGlobalModule(CommandModule.class);
+        for (final Method method : handler.getClass().getDeclaredMethods()) {
+            if (!method.isAnnotationPresent(CommandHandler.class)) {
+                // Ignore methods without the annotation
                 continue;
             }
 
-            BasicCommand command = new BasicCommand(plugin, cur.meta, handler, cur.method);
+            final CommandHandler meta = method.getDeclaredAnnotation(CommandHandler.class);
+            final String[] commandPath = meta.value()[0].split(" ");
 
-            String[] parents = cur.meta.parent().split(" ");
-
-            BasicCommand curParent = null;
-            for (int i = 0; i < parents.length; i++) {
-                if (i == 0) {
-                    curParent = topCommands.get(parents[i]);
-                } else {
-                    curParent = curParent.subcommands.get(parents[i].toLowerCase());
-                }
-
-                if (curParent == null) {
-                    LogHelper.warning(plugin, "Invalid parent command '" + parents[i] + "'");
-                    continue PENDING_LOOP;
-                }
+            // 1) Get base command (or create + register if doesn't exist)
+            FlexCommand base = (FlexCommand) commandModule.getCommand(plugin.getClass(), commandPath[0]);
+            if (base == null) {
+                // Base doesn't exist, create and register it with the command module.
+                base = new FlexCommand(plugin, commandPath[0]);
+                commandModule.registerCommand(plugin.getClass(), base);
+                registerBukkitCommand(plugin, base);
             }
 
-            if (curParent != null) {
-                for (String label : cur.meta.value()) {
-                    curParent.subcommands.put(label, command);
+            // 2) Iterate through labels until subcommand is found (creating along the way)
+            BasicCommand subcmd = base;
+            for (int i = 1; i < commandPath.length; ++i) {
+                final String curLabel = commandPath[i].toLowerCase();
+
+                BasicCommand temp = subcmd.subcommands.get(curLabel);
+                if (temp == null) {
+                    // Subcommand doesn't exist, create and register under the parent
+                    temp = new BasicCommand(plugin, curLabel);
+                    subcmd.registerSubcommand(temp);
                 }
+                subcmd = temp;
+            }
+
+            // 3) Update final command's executor and meta
+            subcmd.setMeta(meta, handler, method);
+
+            // Set default
+            if (meta.defaultSubcommand()) {
+                if (subcmd.parent.defaultSubcommand != null) {
+                    LogHelper.warning(plugin, "Multiple default subcommands are defined for command '" + subcmd.parent.label + "'");
+                }
+                subcmd.parent.defaultSubcommand = subcmd.label;
             }
         }
-    }
-
-    // ------------------------------------------------------------------------------------------ //
-
-    private static final class PendingCommand {
-
-        CommandHandler meta;
-        Method method;
-
     }
 
 }

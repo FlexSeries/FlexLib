@@ -22,7 +22,7 @@ import me.st28.flexseries.flexlib.player.PlayerReference;
 
 public class CommandLibTest {
 
-    @CommandHandler(value = "hello", description = "Basic test command")
+    /*@CommandHandler(value = "hello", description = "Basic test command")
     public void hello(CommandContext context) {
         context.getSender().sendMessage("Hello World!");
     }
@@ -39,14 +39,35 @@ public class CommandLibTest {
     }
 
     @CommandHandler(
-            value = "test",
-            parent = "hello2",
+            value = "hello2 test",
             args = {
                 "str string always -min=3 -max=20"
             }
     )
     public void hello2_test(CommandContext context) {
         context.getSender().sendMessage(context.getArgument("str", String.class));
+    }*/
+
+    @CommandHandler(
+            value = "hello3 test"
+    )
+    public void hello3_test(CommandContext context) {
+        context.getSender().sendMessage("Hello3 test");
+    }
+
+    @CommandHandler(
+            value = { "hello3 test2", "test3" }
+    )
+    public void hello3_test2(CommandContext context) {
+        context.getSender().sendMessage("Hello3 " + context.getCurrentLabel());
+    }
+
+    @CommandHandler(
+            value = "hello3 def",
+            defaultSubcommand = true
+    )
+    public void hello3_def(CommandContext context) {
+        context.getSender().sendMessage("default command");
     }
 
 }

@@ -26,8 +26,15 @@ import me.st28.flexseries.flexlib.command.DefaultArgumentResolvers.PlayerResolve
 import me.st28.flexseries.flexlib.command.DefaultArgumentResolvers.StringResolver;
 import me.st28.flexseries.flexlib.command.argument.ArgumentResolver;
 import me.st28.flexseries.flexlib.plugin.FlexModule;
+import me.st28.flexseries.flexlib.plugin.FlexPlugin;
+import org.apache.commons.lang.Validate;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public final class CommandModule extends FlexModule<FlexLib> {
+
+    final Map<Class<? extends FlexPlugin>, Map<String, FlexCommand>> commands = new HashMap<>();
 
     public CommandModule(FlexLib plugin) {
         super(plugin, "commands", "Manages the FlexLib command framework");
@@ -42,6 +49,34 @@ public final class CommandModule extends FlexModule<FlexLib> {
         ArgumentResolver.register(null, "double", new DoubleResolver());
         ArgumentResolver.register(null, "player", new PlayerResolver());
         ArgumentResolver.register(null, "string", new StringResolver());
+    }
+
+    public BasicCommand getCommand(Class<? extends FlexPlugin> plugin, String command) {
+        Validate.notNull(plugin, "Plugin cannot be null");
+        Validate.notNull(command, "Command cannot be null");
+
+        if (!commands.containsKey(plugin)) {
+            return null;
+        }
+
+        final String[] path = command.split(" ");
+
+        BasicCommand found = commands.get(plugin).get(path[0].toLowerCase());
+        for (int i = 1; i < path.length; ++i) {
+            found = found.subcommands.get(path[i].toLowerCase());
+            if (found == null) {
+                break;
+            }
+        }
+        return found;
+    }
+
+    void registerCommand(Class<? extends FlexPlugin> plugin, FlexCommand command) {
+        if (!commands.containsKey(plugin)) {
+            commands.put(plugin, new HashMap<>());
+        }
+
+        commands.get(plugin).put(command.label.toLowerCase(), command);
     }
 
 }

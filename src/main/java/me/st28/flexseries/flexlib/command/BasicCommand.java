@@ -18,42 +18,81 @@ package me.st28.flexseries.flexlib.command;
 
 import me.st28.flexseries.flexlib.command.argument.ArgumentConfig;
 import me.st28.flexseries.flexlib.logging.LogHelper;
+import me.st28.flexseries.flexlib.messages.Message;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class BasicCommand {
 
     final FlexPlugin plugin;
+    final String label;
+    final List<String> aliases = new ArrayList<>();
+    String description;
+    String permission;
+    boolean isPlayerOnly;
 
-    final Executor executor;
-
-    final String permission;
-    final boolean isPlayerOnly;
-
-    final ArgumentConfig[] argumentConfig;
+    Executor executor;
+    ArgumentConfig[] argumentConfig;
 
     BasicCommand parent;
+    String defaultSubcommand;
     final Map<String, BasicCommand> subcommands = new HashMap<>();
 
-    BasicCommand(FlexPlugin plugin, CommandHandler meta, Object handler, Method method) {
+    /**
+     * Constructs an empty basic command as an empty command container.
+     */
+    BasicCommand(FlexPlugin plugin, String label) {
         this.plugin = plugin;
-        permission = meta.permission();
-        isPlayerOnly = meta.playerOnly();
-        argumentConfig = ArgumentConfig.parse(meta.args());
+        this.label = label.toLowerCase();
+    }
 
-        // Setup command executor
+    /**
+     * Sets the command's aliases and registers them with the parent command.
+     */
+    void setAliases(List<String> aliases) {
+        this.aliases.addAll(aliases);
+        if (parent != null) {
+            parent.registerSubcommand(this);
+        }
+    }
+
+    void registerSubcommand(BasicCommand command) {
+        command.parent = this;
+        subcommands.put(command.label.toLowerCase(), command);
+        for (String alias : command.aliases) {
+            subcommands.put(alias.toLowerCase(), command);
+        }
+    }
+
+    void setMeta(CommandHandler meta, Object handler, Method method) {
+        if (meta != null) {
+            permission = meta.permission();
+            isPlayerOnly = meta.playerOnly();
+            argumentConfig = ArgumentConfig.parse(meta.args());
+            setAliases(Arrays.asList(meta.value()).subList(1, meta.value().length));
+        }
+
+        if (method == null || handler == null) {
+            executor = null;
+            return;
+        }
+
         executor = (context) -> {
             try {
                 method.invoke(handler, context);
             } catch (IllegalAccessException | InvocationTargetException ex) {
-                context.getSender().sendMessage(ChatColor.RED + "An internal exception occurred while running this command.");
-                LogHelper.severe(plugin, "An exception occurred while running command", ex);
+                Message.getGlobal("error.internal_error").sendTo(context.getSender());
+                LogHelper.severe(plugin, "An exception occurred while running command " + Arrays.toString(context.getCurArgs()).replace("[", "").replace("]", ""), ex);
             }
         };
     }
@@ -89,6 +128,22 @@ public class BasicCommand {
     public void execute(CommandSender sender, String label, String[] args, int offset) {
         if (args.length > offset && subcommands.containsKey(args[offset].toLowerCase())) {
             subcommands.get(args[offset].toLowerCase()).execute(sender, label, args, offset + 1);
+            return;
+        }
+
+        if (executor == null) {
+            // Try default subcommand
+            if (defaultSubcommand != null) {
+                BasicCommand subcmd = subcommands.get(defaultSubcommand);
+
+                if (subcmd != null) {
+                    subcmd.execute(sender, label, args, offset);
+                    return;
+                }
+            }
+
+            // Unknown command
+            Message.getGlobal("error.unknown_subcommand").sendTo(sender, args.length > offset ? args[offset] : defaultSubcommand);
             return;
         }
 

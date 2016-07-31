@@ -27,13 +27,14 @@ public @interface CommandHandler {
 
     /**
      * @return The label(s) for the command. If multiple are specified, the first one is used as the primary label.
+     *         If separated by spaces, indicate subcommand levels.
      */
     String[] value();
 
     /**
-     * @return The parent command. If set, this command will be treated as a subcommand.
+     * @return True if this handler is the default subcommand for the parent.
      */
-    String parent() default "";
+    boolean defaultSubcommand() default false;
 
     /**
      * @return The description of the command.
