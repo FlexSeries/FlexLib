@@ -21,8 +21,10 @@ import org.apache.commons.lang.Validate;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -33,14 +35,14 @@ public final class CommandContext {
     private final BasicCommand command;
     private final CommandSender sender;
     private final PlayerReference player;
-    private final String label;
+    private final List<String> labels = new ArrayList<>();
     private final String[] rawArgs;
     private final String[] curArgs;
-    private final int offset;
+    private final int level;
 
     private final Map<String, Object> arguments = new HashMap<>();
 
-    public CommandContext(BasicCommand command, CommandSender sender, String label, String[] args, int offset) {
+    public CommandContext(BasicCommand command, CommandSender sender, String label, String[] args, int level) {
         this.command = command;
         if (sender instanceof Player) {
             this.sender = null;
@@ -49,10 +51,10 @@ public final class CommandContext {
             this.sender = sender;
             player = null;
         }
-        this.label = label;
+        labels.add(label);
         this.rawArgs = args;
-        this.curArgs = args.length == 0 ? new String[0] : Arrays.asList(rawArgs).subList(offset, rawArgs.length).toArray(new String[rawArgs.length - offset]);
-        this.offset = offset;
+        this.curArgs = args.length == 0 ? new String[0] : Arrays.asList(rawArgs).subList(level, rawArgs.length).toArray(new String[rawArgs.length - level]);
+        this.level = level;
     }
 
     public final BasicCommand getCommand() {
@@ -70,14 +72,14 @@ public final class CommandContext {
      * @return The label that the sender used to execute the command.
      */
     public final String getLabel() {
-        return label;
+        return labels.get(0);
     }
 
     /**
      * @return The current command level's label.
      */
     public final String getCurrentLabel() {
-        return rawArgs[offset - 1];
+        return labels.get(level);
     }
 
     public final String[] getRawArgs() {
@@ -88,8 +90,8 @@ public final class CommandContext {
         return curArgs;
     }
 
-    public final int getOffset() {
-        return offset;
+    public final int getLevel() {
+        return level;
     }
 
     public final Object getArgument(String name) {

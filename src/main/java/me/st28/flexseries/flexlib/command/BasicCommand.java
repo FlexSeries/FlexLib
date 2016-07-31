@@ -20,14 +20,12 @@ import me.st28.flexseries.flexlib.command.argument.ArgumentConfig;
 import me.st28.flexseries.flexlib.logging.LogHelper;
 import me.st28.flexseries.flexlib.messages.Message;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
-import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -105,7 +103,7 @@ public class BasicCommand {
         StringBuilder sb = new StringBuilder();
         sb.append("/").append(context.getLabel());
 
-        for (int i = 0; i < context.getOffset(); i++) {
+        for (int i = 0; i < context.getLevel(); i++) {
             sb.append(" ").append(context.getRawArgs()[i]);
         }
 
