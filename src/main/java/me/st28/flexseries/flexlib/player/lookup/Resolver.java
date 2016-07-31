@@ -152,7 +152,7 @@ abstract class Resolver {
                     }
                 }
 
-                return parse(json.parse(recv).getAsJsonObject());
+                return parse(json.parse(recv).getAsJsonArray().get(0).getAsJsonObject());
             } catch (Exception ex) {
                 return null;
             }
@@ -176,7 +176,7 @@ abstract class Resolver {
                     }
                 }
 
-                return parse(json.parse(recv).getAsJsonObject());
+                return parse(json.parse(recv).getAsJsonArray().get(0).getAsJsonObject());
             } catch (Exception ex) {
                 return null;
             }
