@@ -20,6 +20,7 @@ import me.st28.flexseries.flexlib.player.lookup.PlayerLookupModule;
 import me.st28.flexseries.flexlib.player.lookup.UnknownPlayerException;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 import me.st28.flexseries.flexlib.utils.ArgumentCallback;
+import me.st28.flexseries.flexlib.utils.SchedulerUtils;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -42,9 +43,9 @@ public class PlayerReference {
     public static void get(Class<? extends JavaPlugin> plugin, UUID uuid, ArgumentCallback<PlayerReference> callback) {
         Validate.notNull(uuid, "UUID cannot be null");
 
-        Bukkit.getScheduler().runTaskAsynchronously(JavaPlugin.getPlugin(plugin), () -> {
+        SchedulerUtils.runAsap(JavaPlugin.getPlugin(plugin), () -> {
             callback.call(plugin, new PlayerReference(uuid));
-        });
+        }, true);
     }
 
     /**
@@ -56,9 +57,9 @@ public class PlayerReference {
     public static void get(Class<? extends JavaPlugin> plugin, String name, ArgumentCallback<PlayerReference> callback) {
         Validate.notNull(name, "Name cannot be null");
 
-        Bukkit.getScheduler().runTaskAsynchronously(JavaPlugin.getPlugin(plugin), () -> {
+        SchedulerUtils.runAsap(JavaPlugin.getPlugin(plugin), () -> {
             callback.call(plugin, new PlayerReference(name));
-        });
+        }, true);
     }
 
     // ------------------------------------------------------------------------------------------ //
@@ -100,6 +101,11 @@ public class PlayerReference {
             throw new UnknownPlayerException(name);
         }
         this.name = lookup.getName(uuid);
+    }
+
+    @Override
+    public String toString() {
+        return uuid.toString() + " (" + name + ")";
     }
 
     public UUID getUniqueId() {
