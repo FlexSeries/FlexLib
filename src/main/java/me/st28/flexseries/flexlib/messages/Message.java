@@ -22,6 +22,7 @@ import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 import org.bukkit.command.CommandSender;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -47,10 +48,14 @@ public class Message {
     }
 
     public void sendTo(CommandSender sender, Object... replacements) {
+        sendTo(Collections.singletonList(sender), replacements);
+    }
+
+    public void sendTo(Collection<? extends CommandSender> senders, Object... replacements) {
         final int replacementCount = this.replacements.length + replacements.length;
 
         if (replacementCount == 0) {
-            new MCMLBuilder(message).toFancyMessage().send(sender);
+            new MCMLBuilder(message).toFancyMessage().send(senders);
             return;
         }
 
@@ -58,7 +63,7 @@ public class Message {
         Collections.addAll(finalReplacements, this.replacements);
         Collections.addAll(finalReplacements, replacements);
 
-        new MCMLBuilder(String.format(message, finalReplacements.toArray(new Object[replacementCount]))).toFancyMessage().send(sender);
+        new MCMLBuilder(String.format(message, finalReplacements.toArray(new Object[replacementCount]))).toFancyMessage().send(senders);
     }
 
 }
