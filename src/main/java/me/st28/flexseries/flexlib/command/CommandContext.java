@@ -117,4 +117,12 @@ public final class CommandContext {
         arguments.put(name, value);
     }
 
+    public final CommandSession getSession() {
+        return getSession("session");
+    }
+
+    public final CommandSession getSession(String name) {
+        return getArgument(name, CommandSession.class);
+    }
+
 }

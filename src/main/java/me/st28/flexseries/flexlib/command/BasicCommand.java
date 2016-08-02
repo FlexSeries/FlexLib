@@ -41,6 +41,7 @@ public class BasicCommand {
 
     Executor executor;
     ArgumentConfig[] argumentConfig;
+    ArgumentConfig[] autoArgumentConfig;
 
     BasicCommand parent;
     String defaultSubcommand;
@@ -77,6 +78,7 @@ public class BasicCommand {
             permission = meta.permission();
             isPlayerOnly = meta.playerOnly();
             argumentConfig = ArgumentConfig.parse(meta.args());
+            autoArgumentConfig = ArgumentConfig.parseAuto(meta.autoArgs());
             setAliases(Arrays.asList(meta.value()).subList(1, meta.value().length));
         }
 

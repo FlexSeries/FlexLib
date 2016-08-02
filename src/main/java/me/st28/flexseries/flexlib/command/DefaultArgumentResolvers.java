@@ -19,10 +19,12 @@ package me.st28.flexseries.flexlib.command;
 import me.st28.flexseries.flexlib.command.argument.ArgumentConfig;
 import me.st28.flexseries.flexlib.command.argument.ArgumentResolveException;
 import me.st28.flexseries.flexlib.command.argument.ArgumentResolver;
+import me.st28.flexseries.flexlib.command.argument.AutoArgumentResolver;
 import me.st28.flexseries.flexlib.logging.LogHelper;
 import me.st28.flexseries.flexlib.messages.Message;
 import me.st28.flexseries.flexlib.player.PlayerReference;
 import me.st28.flexseries.flexlib.player.lookup.UnknownPlayerException;
+import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 import me.st28.flexseries.flexlib.utils.BooleanUtils;
 import me.st28.flexseries.flexlib.utils.UuidUtils;
 import org.bukkit.Bukkit;
@@ -33,6 +35,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+/**
+ * Default FlexLib command argument resolvers.
+ */
 final class DefaultArgumentResolvers {
 
     static abstract class NumberResolver<T extends Number> extends ArgumentResolver<T> {
@@ -292,6 +297,32 @@ final class DefaultArgumentResolvers {
         @Override
         public List<String> getTabOptions(CommandContext context, ArgumentConfig config, String input) {
             return null;
+        }
+
+    }
+
+    static class SessionResolver extends AutoArgumentResolver<CommandSession> {
+
+        SessionResolver() {
+            super(false);
+        }
+
+        @Override
+        public CommandSession getDefault(CommandContext context, ArgumentConfig config) {
+            final CommandModule module = FlexPlugin.getGlobalModule(CommandModule.class);
+
+            final String id = config.getString("id");
+            if (id == null) {
+                throw new ArgumentResolveException("error.session_id_not_set");
+            }
+
+            boolean create = config.isSet("create");
+
+            CommandSession session = module.getSession(context.getCommand().getPlugin().getClass(), context.getSender(), id, create);
+            if (session == null && !config.isSet("optional")) {
+                throw new ArgumentResolveException("error.session_does_not_exist");
+            }
+            return session;
         }
 
     }

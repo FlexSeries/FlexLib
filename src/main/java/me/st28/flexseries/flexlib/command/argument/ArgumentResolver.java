@@ -20,7 +20,6 @@ import me.st28.flexseries.flexlib.FlexLib;
 import me.st28.flexseries.flexlib.command.CommandContext;
 import me.st28.flexseries.flexlib.logging.LogHelper;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
-import me.st28.flexseries.flexlib.utils.ArgumentCallback;
 
 import java.util.HashMap;
 import java.util.List;
@@ -121,6 +120,10 @@ public abstract class ArgumentResolver<T> {
      * @throws UnsupportedOperationException Thrown if the argument type does not support default values.
      */
     public T getDefault(CommandContext context, ArgumentConfig config) {
+        throw new UnsupportedOperationException("Argument does not have a default value.");
+    }
+
+    public T getDefaultAsync(CommandContext context, ArgumentConfig config) {
         throw new UnsupportedOperationException("Argument does not have a default value.");
     }
 

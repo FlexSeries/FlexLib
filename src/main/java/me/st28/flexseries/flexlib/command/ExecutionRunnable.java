@@ -42,14 +42,13 @@ class ExecutionRunnable implements Runnable {
 
         // Test permission (if set)
         if (!command.permission.isEmpty() && !sender.hasPermission(command.permission)) {
-            // TODO: Make this message configurable (pending message library)
-            sender.sendMessage(ChatColor.RED + "You do not have permission to use this command.");
+            sendMessage(Message.getGlobal("error.no_permission"));
             return;
         }
 
         // Check if sender is a player (if command is limited to players only)
         if (command.isPlayerOnly && !(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "You must be a player to use this command.");
+            sendMessage(Message.getGlobal("error.must_be_player"));
             return;
         }
 
@@ -61,7 +60,7 @@ class ExecutionRunnable implements Runnable {
 
         // Otherwise, handle arguments
         if (context.getCurArgs().length < command.getRequiredArgs(context)) {
-            sender.sendMessage(ChatColor.DARK_RED + "USAGE: " + ChatColor.RED + command.getUsage(context));
+            sendMessage(Message.getGlobal("error.command_usage", command.getUsage(context)));
             return;
         }
 
@@ -72,7 +71,7 @@ class ExecutionRunnable implements Runnable {
         final ArgumentConfig config = command.argumentConfig[index];
         final ArgumentResolver resolver = ArgumentResolver.getResolver(config.getType());
         if (resolver == null) {
-            sendMessage(Message.get(null, "error.command_unknown_argument"));
+            sendMessage(Message.get(null, "error.command_unknown_argument", config.getType()));
             return;
         }
 
@@ -107,10 +106,63 @@ class ExecutionRunnable implements Runnable {
 
         if (index == context.getCurArgs().length - 1) {
             // Done, run command
+
+            if (command.autoArgumentConfig.length > 0) {
+                // Handle auto arguments, if any
+                handleAutoArgument(0);
+                return;
+            }
+
             executeCommand();
         } else {
             // Parse next argument
             handleArgument(index + 1);
+        }
+    }
+
+    private void handleAutoArgument(int index) {
+        final ArgumentConfig config = command.autoArgumentConfig[index];
+        final ArgumentResolver resolver = ArgumentResolver.getResolver(config.getType());
+        if (resolver == null) {
+            sendMessage(Message.getGlobal("error.command_unknown_argument", config.getType()));
+            return;
+        }
+
+        Object resolved;
+        try {
+            resolved = resolver.getDefault(context, config);
+        } catch (ArgumentResolveException ex) {
+            sendMessage(ex.getErrorMessage());
+            return;
+        }
+
+        if (resolved == null && resolver.isAsync()) {
+            SchedulerUtils.runAsap(command.plugin, () -> {
+                Object asyncResolved;
+                try {
+                    asyncResolved = resolver.getDefaultAsync(context, config);
+                } catch (ArgumentResolveException ex) {
+                    sendMessage(ex.getErrorMessage());
+                    return;
+                }
+
+                handleAutoArgument0(config, asyncResolved, index);
+            }, true);
+            return;
+        }
+
+        handleAutoArgument0(config, resolved, index);
+    }
+
+    private void handleAutoArgument0(ArgumentConfig config, Object value, int index) {
+        context.setArgument(config.getName(), value);
+
+        if (index == command.autoArgumentConfig.length - 1) {
+            // Done, run command
+            executeCommand();
+        } else {
+            // Parse next auto argument
+            handleAutoArgument(index + 1);
         }
     }
 

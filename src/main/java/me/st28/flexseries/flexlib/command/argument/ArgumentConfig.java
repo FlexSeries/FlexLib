@@ -17,18 +17,18 @@
 package me.st28.flexseries.flexlib.command.argument;
 
 import me.st28.flexseries.flexlib.command.CommandContext;
+import me.st28.flexseries.flexlib.utils.GenericDataContainer;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class ArgumentConfig {
+public class ArgumentConfig extends GenericDataContainer {
 
     private final static Pattern PATTERN_INFO = Pattern.compile("([a-zA-Z0-9-_]+) ([a-zA-Z0-9-_]+) (always|player|nonplayer)");
+    private final static Pattern PATTERN_INFO_AUTO = Pattern.compile("([a-zA-Z0-9-_]+) ([a-zA-Z0-9-_]+)");
     private final static Pattern PATTERN_OPTION = Pattern.compile("-([a-zA-Z0-9-_]+)(?:=([a-zA-Z0-9-_]+))?");
 
     public static ArgumentConfig[] parse(String[] raw) {
@@ -37,8 +37,20 @@ public class ArgumentConfig {
         }
 
         List<ArgumentConfig> ret = new ArrayList<>();
-        for (int i = 0; i < raw.length; i++) {
+        for (int i = 0; i < raw.length; ++i) {
             ret.add(new ArgumentConfig(raw[i], i));
+        }
+        return ret.toArray(new ArgumentConfig[ret.size()]);
+    }
+
+    public static ArgumentConfig[] parseAuto(String[] raw) {
+        if (raw.length == 1 && raw[0].isEmpty()) {
+            return new ArgumentConfig[0];
+        }
+
+        List<ArgumentConfig> ret = new ArrayList<>();
+        for (int i = 0; i < raw.length; ++i) {
+            ret.add(new ArgumentConfig(raw[i]));
         }
         return ret.toArray(new ArgumentConfig[ret.size()]);
     }
@@ -54,7 +66,23 @@ public class ArgumentConfig {
     private final String name;
     private final String type;
 
-    private final Map<String, Object> settings = new HashMap<>();
+    /**
+     * This constructor is for auto arguments ONLY.
+     */
+    private ArgumentConfig(String raw) {
+        index = -1;
+        isRequired = REQUIRED_ALWAYS;
+
+        Matcher matcher = PATTERN_INFO_AUTO.matcher(raw);
+        if (!matcher.find()) {
+            throw new IllegalArgumentException("Invalid auto argument syntax '" + raw + "'");
+        }
+
+        name = matcher.group(1);
+        type = matcher.group(2);
+
+        parseOptions(raw);
+    }
 
     private ArgumentConfig(String raw, int index) {
         this.index = index;
@@ -81,11 +109,20 @@ public class ArgumentConfig {
                 throw new IllegalArgumentException("Invalid requirement '" + matcher.group(3) + "'");
         }
 
+        parseOptions(raw);
+    }
+
+    private void parseOptions(String raw) {
         Matcher optionMatcher = PATTERN_OPTION.matcher(raw);
         while (optionMatcher.find()) {
             Object value = null;
 
             final String rawValue = optionMatcher.group(2);
+
+            if (rawValue == null) {
+                data.put(optionMatcher.group(1), null);
+                continue;
+            }
 
             // Boolean
             switch (rawValue) {
@@ -116,7 +153,7 @@ public class ArgumentConfig {
                 value = rawValue;
             }
 
-            settings.put(optionMatcher.group(1), value);
+            data.put(optionMatcher.group(1), value);
         }
     }
 
@@ -146,58 +183,6 @@ public class ArgumentConfig {
 
     public String getType() {
         return type;
-    }
-
-    public boolean isSet(String name) {
-        return settings.containsKey(name);
-    }
-
-    public Object get(String name) {
-        return get(name, Object.class);
-    }
-
-    public Object get(String name, Object defaultValue) {
-        return get(name, Object.class, defaultValue);
-    }
-
-    public <T> T get(String name, Class<T> type) {
-        return get(name, type, null);
-    }
-
-    public <T> T get(String name, Class<T> type, T defaultValue) {
-        return !isSet(name) ? defaultValue : (T) settings.get(name);
-    }
-
-    public boolean getBoolean(String name) {
-        return (boolean) settings.get(name);
-    }
-
-    public boolean getBoolean(String name, boolean defaultValue) {
-        return get(name, boolean.class, defaultValue);
-    }
-
-    public String getString(String name) {
-        return (String) settings.get(name);
-    }
-
-    public String getString(String name, String defaultValue) {
-        return get(name, String.class, defaultValue);
-    }
-
-    public int getInteger(String name) {
-        return (int) settings.get(name);
-    }
-
-    public int getInteger(String name, int defaultValue) {
-        return get(name, int.class, defaultValue);
-    }
-
-    public double getDouble(String name) {
-        return (double) settings.get(name);
-    }
-
-    public double getDouble(String name, double defaultValue) {
-        return get(name, double.class, defaultValue);
     }
 
 }

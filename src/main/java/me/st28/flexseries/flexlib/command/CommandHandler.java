@@ -56,4 +56,9 @@ public @interface CommandHandler {
      */
     String[] args() default "";
 
+    /**
+     * @return The auto argument(s) for the command, in FeCAL.
+     */
+    String[] autoArgs() default "";
+
 }
