@@ -69,6 +69,14 @@ public final class CommandContext {
     }
 
     /**
+     * @return The player reference to the sender running the command.
+     *         Null if the sender is not a player.
+     */
+    public final PlayerReference getPlayer() {
+        return player;
+    }
+
+    /**
      * @return The label that the sender used to execute the command.
      */
     public final String getLabel() {
