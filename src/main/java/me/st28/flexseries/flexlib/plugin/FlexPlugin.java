@@ -26,7 +26,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public abstract class FlexPlugin extends JavaPlugin {
@@ -58,7 +58,7 @@ public abstract class FlexPlugin extends JavaPlugin {
 
     private final FlexCommandMap commandMap = new FlexCommandMap(this);
 
-    private final Map<Class<? extends FlexModule>, FlexModule> modules = new HashMap<>();
+    private final Map<Class<? extends FlexModule>, FlexModule> modules = new LinkedHashMap<>();
 
     @Override
     public final void onLoad() {
