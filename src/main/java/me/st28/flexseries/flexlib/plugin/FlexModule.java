@@ -166,6 +166,7 @@ public abstract class FlexModule<T extends FlexPlugin> {
             LogHelper.debug(this, "Registered listener");
         }
 
+        status = ModuleStatus.ENABLED;
         LogHelper.info(this, String.format("Module enabled (%dms)", System.currentTimeMillis() - startTime));
     }
 
