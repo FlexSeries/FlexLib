@@ -19,6 +19,8 @@ package me.st28.flexseries.flexlib.command;
 import me.st28.flexseries.flexlib.FlexLib;
 import me.st28.flexseries.flexlib.command.DefaultArgumentResolvers.BooleanResolver;
 import me.st28.flexseries.flexlib.command.DefaultArgumentResolvers.DoubleResolver;
+import me.st28.flexseries.flexlib.command.DefaultArgumentResolvers.FlexModuleResolver;
+import me.st28.flexseries.flexlib.command.DefaultArgumentResolvers.FlexPluginResolver;
 import me.st28.flexseries.flexlib.command.DefaultArgumentResolvers.FloatResolver;
 import me.st28.flexseries.flexlib.command.DefaultArgumentResolvers.IntegerResolver;
 import me.st28.flexseries.flexlib.command.DefaultArgumentResolvers.LongResolver;
@@ -58,6 +60,8 @@ public final class CommandModule extends FlexModule<FlexLib> {
         ArgumentResolver.register(null, "player", new PlayerResolver());
         ArgumentResolver.register(null, "string", new StringResolver());
         ArgumentResolver.register(null, "session", new SessionResolver());
+        ArgumentResolver.register(null, "flexplugin", new FlexPluginResolver());
+        ArgumentResolver.register(null, "flexmodule", new FlexModuleResolver());
     }
 
     public BasicCommand getCommand(Class<? extends FlexPlugin> plugin, String command) {

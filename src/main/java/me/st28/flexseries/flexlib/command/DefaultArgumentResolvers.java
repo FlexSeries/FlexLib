@@ -24,11 +24,13 @@ import me.st28.flexseries.flexlib.logging.LogHelper;
 import me.st28.flexseries.flexlib.messages.Message;
 import me.st28.flexseries.flexlib.player.PlayerReference;
 import me.st28.flexseries.flexlib.player.lookup.UnknownPlayerException;
+import me.st28.flexseries.flexlib.plugin.FlexModule;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 import me.st28.flexseries.flexlib.utils.BooleanUtils;
 import me.st28.flexseries.flexlib.utils.UuidUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -323,6 +325,86 @@ final class DefaultArgumentResolvers {
                 throw new ArgumentResolveException("error.session_does_not_exist");
             }
             return session;
+        }
+
+    }
+
+    static class FlexPluginResolver extends ArgumentResolver<FlexPlugin> {
+
+        public FlexPluginResolver() {
+            super(false);
+        }
+
+        @Override
+        public FlexPlugin resolve(CommandContext context, ArgumentConfig config, String input) {
+            Plugin found = null;
+            for (Plugin plugin : Bukkit.getPluginManager().getPlugins()) {
+                if (plugin.getName().equalsIgnoreCase(input)) {
+                    found = plugin;
+                    break;
+                }
+            }
+
+            if (found == null) {
+                throw new ArgumentResolveException("error.plugin_not_found", input);
+            }
+
+            if (!(found instanceof FlexPlugin)) {
+                throw new ArgumentResolveException("error.plugin_not_flexplugin", found.getName());
+            }
+
+            return (FlexPlugin) found;
+        }
+
+        @Override
+        public List<String> getTabOptions(CommandContext context, ArgumentConfig config, String input) {
+            return null;
+        }
+
+        @Override
+        public String getPermissionString(FlexPlugin arg) {
+            return arg.getName().toLowerCase();
+        }
+
+    }
+
+    static class FlexModuleResolver extends ArgumentResolver<FlexModule> {
+
+        public FlexModuleResolver() {
+            super(false);
+        }
+
+        @Override
+        public FlexModule resolve(CommandContext context, ArgumentConfig config, String input) {
+            final String argName = config.getString("arg");
+            final FlexPlugin plugin = argName == null ? context.getArgument(FlexPlugin.class) : context.getArgument(argName, FlexPlugin.class);
+
+            if (plugin == null) {
+                throw new ArgumentResolveException("error.module_plugin_not_found");
+            }
+
+            FlexModule found = null;
+            for (FlexModule module : plugin.getModules()) {
+                if (module.getName().equalsIgnoreCase(input)) {
+                    found = module;
+                    break;
+                }
+            }
+
+            if (found == null) {
+                throw new ArgumentResolveException("error.module_not_found", plugin.getName(), input);
+            }
+            return found;
+        }
+
+        @Override
+        public List<String> getTabOptions(CommandContext context, ArgumentConfig config, String input) {
+            return null;
+        }
+
+        @Override
+        public String getPermissionString(FlexModule arg) {
+            return arg.getName().toLowerCase();
         }
 
     }
