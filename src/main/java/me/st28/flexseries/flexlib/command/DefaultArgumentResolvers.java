@@ -244,9 +244,13 @@ final class DefaultArgumentResolvers {
             }
 
             // 3) Perform checks
-            performChecks(context, config, player);
+            if (player != null) {
+                final PlayerReference ref = new PlayerReference(player);
+                performChecks(context, config, ref);
+                return ref;
+            }
 
-            return player == null ? null : new PlayerReference(player);
+            return null;
         }
 
         @Override
@@ -271,7 +275,7 @@ final class DefaultArgumentResolvers {
             final PlayerReference finalRef = ref;
 
             try {
-                Bukkit.getScheduler().callSyncMethod(context.getCommand().getPlugin(), () -> performChecks(context, config, finalRef.getPlayer())).get();
+                Bukkit.getScheduler().callSyncMethod(context.getCommand().getPlugin(), () -> performChecks(context, config, finalRef)).get();
             } catch (InterruptedException | ExecutionException ex) {
                 Throwable cause = ex.getCause();
                 if (cause != null && cause instanceof ArgumentResolveException) {
@@ -285,12 +289,12 @@ final class DefaultArgumentResolvers {
             return ref;
         }
 
-        private Void performChecks(CommandContext context, ArgumentConfig config, Player player) {
-            if (player == null && config.isSet("online")) {
-                throw new ArgumentResolveException("error.player_not_online");
+        private Void performChecks(CommandContext context, ArgumentConfig config, PlayerReference player) {
+            if (!player.isOnline() && config.isSet("online")) {
+                throw new ArgumentResolveException("error.player_not_online", player.getName());
             }
 
-            if (player != null && config.isSet("notSender") && context.getSender() == player) {
+            if (player.isOnline() && config.isSet("notSender") && context.getSender() == player.getPlayer()) {
                 throw new ArgumentResolveException("error.player_cannot_be_sender");
             }
             return null;
