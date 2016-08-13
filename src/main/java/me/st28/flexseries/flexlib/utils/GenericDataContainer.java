@@ -78,4 +78,8 @@ public class GenericDataContainer {
         return get(name, double.class, defaultValue);
     }
 
+    public void set(String name, Object value) {
+        data.put(name, value);
+    }
+
 }
