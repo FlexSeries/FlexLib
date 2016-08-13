@@ -17,6 +17,7 @@
 package me.st28.flexseries.flexlib.command.argument;
 
 import me.st28.flexseries.flexlib.messages.Message;
+import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 
 /**
  * Thrown when an argument fails to be resolved.
@@ -26,8 +27,11 @@ public class ArgumentResolveException extends RuntimeException {
     private Message errorMessage;
 
     public ArgumentResolveException(String message, Object... replacements) {
-        super(message);
         errorMessage = Message.getGlobal(message, replacements);
+    }
+
+    public ArgumentResolveException(Class<? extends FlexPlugin> plugin, String message, Object... replacements) {
+        errorMessage = Message.get(plugin, message, replacements);
     }
 
     public ArgumentResolveException(Message message) {
