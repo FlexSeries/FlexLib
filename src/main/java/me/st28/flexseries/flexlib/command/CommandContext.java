@@ -113,7 +113,20 @@ public final class CommandContext {
         return (T) arguments.get(name);
     }
 
-    final void setArgument(String name, Object value) {
+    /**
+     * @return The first argument matching the given type.
+     *         Null if no argument with the given type was found.
+     */
+    public final <T> T getArgument(Class<T> type) {
+        for (Object val : arguments.values()) {
+            if (val.getClass() == type) {
+                return (T) val;
+            }
+        }
+        return null;
+    }
+
+    public final void setArgument(String name, Object value) {
         arguments.put(name, value);
     }
 
