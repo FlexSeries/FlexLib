@@ -21,15 +21,24 @@ import me.st28.flexseries.flexlib.command.argument.ArgumentResolveException;
 import me.st28.flexseries.flexlib.command.argument.ArgumentResolver;
 import me.st28.flexseries.flexlib.messages.Message;
 import me.st28.flexseries.flexlib.utils.SchedulerUtils;
-import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 // TODO: Why is this a runnable?
 class ExecutionRunnable implements Runnable {
 
+    private final static Pattern PATTERN_PERMISSION_VAR = Pattern.compile("\\{(n:)?([a-zA-Z0-9-_]+)\\}");
+
     private final BasicCommand command;
     private final CommandContext context;
+
+    private String permission;
+    private final Map<String, String> permissionVariables = new HashMap<>(); // Argument name, full replacement key
 
     ExecutionRunnable(CommandContext context) {
         this.command = context.getCommand();
@@ -41,9 +50,36 @@ class ExecutionRunnable implements Runnable {
         final CommandSender sender = context.getSender();
 
         // Test permission (if set)
-        if (!command.permission.isEmpty() && !sender.hasPermission(command.permission)) {
-            sendMessage(Message.getGlobal("error.no_permission"));
-            return;
+        if (!command.permission.isEmpty()) {
+            Matcher matcher = PATTERN_PERMISSION_VAR.matcher(command.permission);
+            while (matcher.find()) {
+                // If group(1) is set, indicates that variable is an argument name
+                if (matcher.group(1) != null) {
+                    permissionVariables.put(matcher.group(1), matcher.group(0));
+                } else {
+                    final String type = matcher.group(2);
+                    String arg = null;
+                    for (ArgumentConfig config : command.argumentConfig) {
+                        if (config.getType().equals(type)) {
+                            arg = config.getName();
+                        }
+                    }
+
+                    if (arg == null) {
+                        sendMessage(Message.getGlobal("error.command_unknown_argument", type));
+                        return;
+                    }
+
+                    permissionVariables.put(arg, matcher.group(0));
+                }
+            }
+
+            if (!permissionVariables.isEmpty()) {
+                permission = command.permission;
+            } else if (!sender.hasPermission(command.permission)) {
+                sendMessage(Message.getGlobal("error.no_permission"));
+                return;
+            }
         }
 
         // Check if sender is a player (if command is limited to players only)
@@ -52,19 +88,25 @@ class ExecutionRunnable implements Runnable {
             return;
         }
 
-        // If no arguments, just run the command
-        if (command.argumentConfig.length == 0) {
-            command.executor.execute(context);
+        // Check if there are arguments
+        if (command.argumentConfig.length > 0) {
+            if (context.getCurArgs().length < command.getRequiredArgs(context)) {
+                sendMessage(Message.getGlobal("error.command_usage", command.getUsage(context)));
+                return;
+            }
+
+            handleArgument(0);
             return;
         }
 
-        // Otherwise, handle arguments
-        if (context.getCurArgs().length < command.getRequiredArgs(context)) {
-            sendMessage(Message.getGlobal("error.command_usage", command.getUsage(context)));
+        // Check if there are auto arguments
+        if (command.autoArgumentConfig.length > 0) {
+            handleAutoArgument(0);
             return;
         }
 
-        handleArgument(0);
+        // If no arguments or auto arguments, just run the command
+        command.executor.execute(context);
     }
 
     private void handleArgument(int index) {
@@ -93,17 +135,41 @@ class ExecutionRunnable implements Runnable {
                     return;
                 }
 
-                handleArgument0(config, asyncResolved, index);
+                handleArgument0(resolver, config, asyncResolved, index);
             }, true);
             return;
         }
 
-        handleArgument0(config, resolved, index);
+        handleArgument0(resolver, config, resolved, index);
     }
 
-    private void handleArgument0(ArgumentConfig config, Object value, int index) {
-        context.setArgument(config.getName(), value);
+    private void handleArgument0(ArgumentResolver resolver, ArgumentConfig config, Object value, int index) {
+        final String argName = config.getName();
 
+        context.setArgument(argName, value);
+
+        // If pending permission check, attempt to finish permission string
+        if (permissionVariables.containsKey(argName)) {
+            permission = permission.replace(permissionVariables.get(argName), resolver.getPermissionString(value));
+            permissionVariables.remove(argName);
+
+            // If empty, no more permission variables are pending. Perform permission check.
+            if (permissionVariables.isEmpty()) {
+                SchedulerUtils.runSynchronously(command.plugin, () -> {
+                    if (!context.getSender().hasPermission(command.permission)) {
+                        sendMessage(Message.getGlobal("error.no_permission"));
+                        return;
+                    }
+                    handleArgument1(config, value, index);
+                });
+                return;
+            }
+        }
+
+        handleArgument1(config, value, index);
+    }
+
+    private void handleArgument1(ArgumentConfig config, Object value, int index) {
         if (index == context.getCurArgs().length - 1) {
             // Done, run command
 

@@ -18,6 +18,8 @@ package me.st28.flexseries.flexlib;
 
 import me.st28.flexseries.flexlib.command.CommandModule;
 import me.st28.flexseries.flexlib.commands.CommandLibTest;
+import me.st28.flexseries.flexlib.commands.FlexPluginCommands;
+import me.st28.flexseries.flexlib.messages.MasterMessageModule;
 import me.st28.flexseries.flexlib.messages.MessageModule;
 import me.st28.flexseries.flexlib.player.lookup.PlayerLookupModule;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
@@ -26,6 +28,7 @@ public class FlexLib extends FlexPlugin {
 
     @Override
     protected void handleLoad() {
+        registerModule(new MasterMessageModule(this));
         registerModule(new CommandModule(this));
         registerModule(new MessageModule<>(this));
         registerModule(new PlayerLookupModule(this));
@@ -36,6 +39,7 @@ public class FlexLib extends FlexPlugin {
         setDebugEnabled(true);
 
         getCommandMap().register(new CommandLibTest());
+        getCommandMap().register(new FlexPluginCommands());
     }
 
 }

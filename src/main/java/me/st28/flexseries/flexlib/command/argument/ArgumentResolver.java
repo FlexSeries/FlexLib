@@ -127,4 +127,11 @@ public abstract class ArgumentResolver<T> {
         throw new UnsupportedOperationException("Argument does not have a default value.");
     }
 
+    /**
+     * @return A string representation of the argument for use as a permission replacement.
+     */
+    public String getPermissionString(T arg) {
+        return arg.toString();
+    }
+
 }

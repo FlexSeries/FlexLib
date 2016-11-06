@@ -1,0 +1,45 @@
+FlexLib 1.0.0 Command Framework
+===============================
+
+Command logic is handled primarily in methods annotated with @CommandHandler
+
+If the methods are in a normal class, the first string in the name will be treated as the label for the command
+
+
+Lists
+=====
+
+"Global" and per-plugin lists. Falls back to global if it doesn't exist in per-plugin configuration (basically,
+plugins can overwrite certain parts of the list formats).
+
+Argument Language Syntax/Example
+================================
+
+FeCAL -> Flex Command Argument Language (lol)
+
+Required/Optional (! / ?)
+
+!/? name type (options...)
+
+Options:
+	optional: By default, an argument is required (null will cause the command to halt execution).
+
+Standard types:
+	player: A PlayerReference representing the player.
+		online - If set, requires the player to be online
+		notSender - If set, requires the player to not be the sender
+	string: A standard string
+		min=INTEGER - If set, defines a minimum length for the string
+		max=INTEGER - If set, defines a maximum length for the string
+		TODO -> pattern=REGEX - If set, the string must conform to the specified regex
+	integer/long/float/double: A number
+	    min=TYPE - If set, defines a minimum value for the number
+	    max=TYPE - If set, defines a maximum type for the number
+	session: A CommandSession
+	    id - The ID of the session. Sessions are unique per plugin, user, ID combination. Must be set.
+	    create - If set, will create a session if it doesn't already exist.
+	    optional - If set, will allow the session to be null. (By default, if a session doesn't exist
+	               and 'create' isn't defined, then an error will occur).
+	flexplugin: A FlexPlugin
+	flexmodule: A FlexModule
+	    arg=STRING - The name of the FlexPlugin argument. If not specified, will attempt to find the plugin automatically.

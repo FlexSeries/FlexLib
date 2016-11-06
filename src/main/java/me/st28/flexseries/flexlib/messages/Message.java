@@ -18,8 +18,10 @@ package me.st28.flexseries.flexlib.messages;
 
 import com.stealthyone.mcb.mcml.MCMLBuilder;
 import me.st28.flexseries.flexlib.FlexLib;
+import me.st28.flexseries.flexlib.player.PlayerReference;
 import me.st28.flexseries.flexlib.plugin.FlexPlugin;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -45,6 +47,17 @@ public class Message {
     public Message(String message, Object... replacements) {
         this.message = message;
         this.replacements = replacements;
+    }
+
+    public String getProcessedMessage() {
+        return String.format(message, replacements);
+    }
+
+    public void sendTo(PlayerReference player, Object... replacements) {
+        final Player online = player.getPlayer();
+        if (online != null) {
+            sendTo(online, replacements);
+        }
     }
 
     public void sendTo(CommandSender sender, Object... replacements) {

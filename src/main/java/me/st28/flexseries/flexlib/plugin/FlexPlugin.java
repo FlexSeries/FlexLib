@@ -26,6 +26,9 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -226,6 +229,10 @@ public abstract class FlexPlugin extends JavaPlugin {
     public final <T extends FlexModule> T getModule(Class<T> clazz) {
         Validate.notNull(clazz, "Class cannot be null");
         return (T) modules.get(clazz);
+    }
+
+    public final Collection<FlexModule> getModules() {
+        return Collections.unmodifiableCollection(modules.values());
     }
 
     // ------------------------------------------------------------------------------------------ //

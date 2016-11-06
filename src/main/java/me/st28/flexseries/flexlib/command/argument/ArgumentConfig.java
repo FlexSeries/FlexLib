@@ -27,8 +27,8 @@ import java.util.regex.Pattern;
 
 public class ArgumentConfig extends GenericDataContainer {
 
-    private final static Pattern PATTERN_INFO = Pattern.compile("([a-zA-Z0-9-_]+) ([a-zA-Z0-9-_]+) (always|player|nonplayer)");
-    private final static Pattern PATTERN_INFO_AUTO = Pattern.compile("([a-zA-Z0-9-_]+) ([a-zA-Z0-9-_]+)");
+    private final static Pattern PATTERN_INFO = Pattern.compile("([a-zA-Z0-9-_]+) ([a-zA-Z0-9-_:]+) (always|player|nonplayer|optional)");
+    private final static Pattern PATTERN_INFO_AUTO = Pattern.compile("([a-zA-Z0-9-_]+) ([a-zA-Z0-9-_:]+)");
     private final static Pattern PATTERN_OPTION = Pattern.compile("-([a-zA-Z0-9-_]+)(?:=([a-zA-Z0-9-_]+))?");
 
     public static ArgumentConfig[] parse(String[] raw) {
@@ -60,6 +60,7 @@ public class ArgumentConfig extends GenericDataContainer {
     private final static int REQUIRED_ALWAYS = 0;
     private final static int REQUIRED_PLAYER = 1;
     private final static int REQUIRED_NONPLAYER = 2;
+    private final static int REQUIRED_OPTIONAL = 3;
 
     private final int index;
     private final int isRequired;
@@ -103,6 +104,9 @@ public class ArgumentConfig extends GenericDataContainer {
                 break;
             case "nonplayer":
                 isRequired = REQUIRED_NONPLAYER;
+                break;
+            case "optional":
+                isRequired = REQUIRED_OPTIONAL;
                 break;
             default:
                 // Should never happen
@@ -174,6 +178,8 @@ public class ArgumentConfig extends GenericDataContainer {
                 return context.getSender() instanceof Player;
             case REQUIRED_NONPLAYER:
                 return !(context.getSender() instanceof Player);
+            case REQUIRED_OPTIONAL:
+                return false;
         }
     }
 

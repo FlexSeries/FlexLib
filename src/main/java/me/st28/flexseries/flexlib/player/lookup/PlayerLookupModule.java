@@ -199,6 +199,7 @@ public final class PlayerLookupModule extends FlexModule<FlexLib> implements Lis
                 return entry;
             }).name;
         } catch (Exception ex) {
+            ex.printStackTrace();
             return null;
         }
     }
