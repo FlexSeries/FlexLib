@@ -23,6 +23,13 @@ import org.bukkit.command.CommandSender
 object CommandLibTest {
 
     @CommandHandler(
+        "hello"
+    )
+    fun hello(sender: CommandSender, context: CommandContext) {
+        sender.sendMessage("Hello World!")
+    }
+
+    @CommandHandler(
         "hello3 test"
     )
     fun hello3_test(sender: CommandSender, context: CommandContext) {
@@ -34,7 +41,7 @@ object CommandLibTest {
         aliases = arrayOf("test3")
     )
     fun hello3_test2(sender: CommandSender, context: CommandContext) {
-        sender.sendMessage("Hello3 ${context.getCurrentLabel()}")
+        sender.sendMessage("Hello3 ${context.label}")
     }
 
     @CommandHandler(

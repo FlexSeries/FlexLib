@@ -50,7 +50,7 @@ abstract class FlexModule<out T : FlexPlugin>(plugin: T, name: String, descripti
 
         private set
 
-    private lateinit var config: YamlFileManager
+    private lateinit var configFile: YamlFileManager
 
     init {
         this.plugin = plugin
@@ -71,28 +71,27 @@ abstract class FlexModule<out T : FlexPlugin>(plugin: T, name: String, descripti
             ModuleStatus.DISABLED,
             ModuleStatus.DISABLED_DEPENDENCY,
             ModuleStatus.DISABLED_ERROR
-            -> {
-                return false
-            }
+            -> { }
+            else -> return false
         }
 
         val startTime = System.currentTimeMillis()
         status = ModuleStatus.LOADING
 
-        config = YamlFileManager(plugin.dataFolder.path + File.separator + name)
-        if (config.isEmpty()) {
-            val configHandle = config.config
+        configFile = YamlFileManager(plugin.dataFolder.path + File.separator + "config-$name.yml")
+        if (configFile.isEmpty()) {
+            val config = configFile.config
 
             val def = plugin.getResource("modules/$name/config.yml")
             if (def != null) {
-                configHandle.addDefaults(YamlConfiguration.loadConfiguration(InputStreamReader(def)))
-                configHandle.options().copyDefaults(true)
-                config.save()
+                config.addDefaults(YamlConfiguration.loadConfiguration(InputStreamReader(def)))
+                config.options().copyDefaults(true)
+                configFile.save()
             }
         }
 
         try {
-            config.reload()
+            configFile.reload()
             handleReload(true)
             handleEnable()
             handleReload(false)
@@ -115,7 +114,7 @@ abstract class FlexModule<out T : FlexPlugin>(plugin: T, name: String, descripti
     fun reload() {
         status = ModuleStatus.RELOADING
 
-        config.reload()
+        configFile.reload()
 
         try {
             handleReload(false)
@@ -142,7 +141,7 @@ abstract class FlexModule<out T : FlexPlugin>(plugin: T, name: String, descripti
 
         try {
             handleSave(false, true)
-            config.save()
+            configFile.save()
             handleDisable()
         } catch (ex: Exception) {
             status = ModuleStatus.DISABLED_ERROR
@@ -154,7 +153,7 @@ abstract class FlexModule<out T : FlexPlugin>(plugin: T, name: String, descripti
     }
 
     fun getConfig(): FileConfiguration {
-        return config.config
+        return configFile.config
     }
 
     fun getResource(name: String): InputStream {

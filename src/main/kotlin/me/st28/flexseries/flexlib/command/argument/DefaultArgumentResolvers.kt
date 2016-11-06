@@ -18,7 +18,6 @@ package me.st28.flexseries.flexlib.command.argument
 
 import me.st28.flexseries.flexlib.command.CommandContext
 import me.st28.flexseries.flexlib.command.CommandModule
-import me.st28.flexseries.flexlib.command.CommandSession
 import me.st28.flexseries.flexlib.logging.LogHelper
 import me.st28.flexseries.flexlib.message.Message
 import me.st28.flexseries.flexlib.player.PlayerReference
@@ -218,7 +217,7 @@ internal object PlayerResolver : ArgumentResolver<PlayerReference>(true) {
             throw ArgumentResolveException("error.player_not_online", player.name)
         }
 
-        if (player.isOnline() && config.isSet("notSender") && context.getSender() == player.getPlayer()) {
+        if (player.isOnline() && config.isSet("notSender") && context.sender == player.online) {
             throw ArgumentResolveException("error.player_cannot_be_sender")
         }
     }
@@ -229,7 +228,7 @@ internal object PlayerResolver : ArgumentResolver<PlayerReference>(true) {
 
 }
 
-internal object SessionResolver : AutoArgumentResolver<CommandSession>(false) {
+/*internal object SessionResolver : AutoArgumentResolver<CommandSession>(false) {
 
     override fun getDefault(context: CommandContext, config: ArgumentConfig): CommandSession? {
         val module = FlexPlugin.getGlobalModule(CommandModule::class)
@@ -238,11 +237,11 @@ internal object SessionResolver : AutoArgumentResolver<CommandSession>(false) {
 
         val create = config.isSet("create")
 
-        val session = module!!.getSession(context.command.plugin.javaClass.kotlin, context.getSender()!!, id, create)
+        val session = module!!.getSession(context.command.plugin.javaClass.kotlin, context.sender!!, id, create)
         if (session != null && !config.isSet("optional")) {
             throw ArgumentResolveException("error.session_does_not_exist")
         }
         return session
     }
 
-}
+}*/

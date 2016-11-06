@@ -24,7 +24,6 @@ import java.util.*
 class ArgumentConfig : GenericDataContainer {
 
     companion object {
-
         val PATTERN_INFO: Regex = Regex("([a-zA-Z0-9-_]+) ([a-zA-Z0-9-_:]+) (always|player|nonplayer|optional)")
         val PATTERN_INFO_AUTO: Regex = Regex("([a-zA-Z0-9-_]+) ([a-zA-Z0-9-_:]+)")
         val PATTERN_OPTION: Regex = Regex("-([a-zA-Z0-9-_]+)(?:=([a-zA-Z0-9-_]+))?")
@@ -34,8 +33,8 @@ class ArgumentConfig : GenericDataContainer {
                 return arrayOf()
             }
 
-            var ret: MutableList<ArgumentConfig> = ArrayList()
-            for (i in 0 .. raw.size) {
+            val ret: MutableList<ArgumentConfig> = ArrayList()
+            for (i in 0 until raw.size) {
                 if (isAuto) {
                     ret.add(ArgumentConfig(raw[i]))
                 } else {
@@ -44,7 +43,6 @@ class ArgumentConfig : GenericDataContainer {
             }
             return ret.toTypedArray()
         }
-
     }
 
     val index: Int
@@ -52,34 +50,34 @@ class ArgumentConfig : GenericDataContainer {
     val name: String
     val type: String
 
-    private constructor(raw: String) {
-        index = -1
-        required = RequiredState.ALWAYS
-
-        val matcher = PATTERN_INFO_AUTO.matchEntire(raw) ?: throw IllegalArgumentException("Invalid auto argument syntax '$raw'")
-
-        name = matcher.groupValues[1]
-        type = matcher.groupValues[2]
-
-        parseOptions(raw)
-    }
-
-    private constructor(raw: String, index: Int) {
+    private constructor(raw: String, index: Int = -1) {
         this.index = index
 
-        val matcher = PATTERN_INFO.matchEntire(raw) ?: throw IllegalArgumentException("Invalid argument syntax '$raw'")
+        if (index == -1) {
+            // Auto argument
+            required = RequiredState.ALWAYS
 
-        name = matcher.groupValues[1]
-        type = matcher.groupValues[2]
-        required = RequiredState.valueOf(matcher.groupValues[3].toUpperCase())
+            val matcher = PATTERN_INFO_AUTO.matchEntire(raw) ?: throw IllegalArgumentException("Invalid auto argument syntax '$raw'")
 
+            name = matcher.groupValues[1]
+            type = matcher.groupValues[2]
 
-        parseOptions(raw)
+            parseOptions(raw)
+        } else {
+            // Normal argument
+            val matcher = PATTERN_INFO.matchEntire(raw) ?: throw IllegalArgumentException("Invalid argument syntax '$raw'")
+
+            name = matcher.groupValues[1]
+            type = matcher.groupValues[2]
+            required = RequiredState.valueOf(matcher.groupValues[3].toUpperCase())
+
+            parseOptions(raw)
+        }
     }
 
     private fun parseOptions(raw: String) {
         PATTERN_OPTION.findAll(raw).forEach {
-            var value: Any? = null
+            var value: Any?
 
             val rawValue: String = it.groupValues[2]
             if (rawValue.isEmpty()) {
@@ -88,9 +86,9 @@ class ArgumentConfig : GenericDataContainer {
             }
 
             // Boolean
-            value = when (rawValue) {
-                "true" -> value
-                "false" -> value
+            value = when(rawValue) {
+                "true" -> true
+                "false" -> false
                 else -> null
             }
 
@@ -113,15 +111,19 @@ class ArgumentConfig : GenericDataContainer {
         }
     }
 
-    fun getUsage(context: CommandContext): String {
+    fun getUsage(context: CommandContext?): String {
         return String.format(if (isRequired(context)) "<%s>" else "[%s]", name)
     }
 
-    fun isRequired(context: CommandContext): Boolean {
+    fun isRequired(context: CommandContext?): Boolean {
+        if (context == null) {
+            return required != RequiredState.OPTIONAL
+        }
+
         return when (required) {
             RequiredState.ALWAYS -> true
-            RequiredState.PLAYER -> context.getSender() is Player
-            RequiredState.NONPLAYER -> context.getSender() !is Player
+            RequiredState.PLAYER -> context.sender is Player
+            RequiredState.NONPLAYER -> context.sender !is Player
             RequiredState.OPTIONAL -> false
         }
     }
@@ -136,3 +138,4 @@ enum class RequiredState {
     OPTIONAL
 
 }
+

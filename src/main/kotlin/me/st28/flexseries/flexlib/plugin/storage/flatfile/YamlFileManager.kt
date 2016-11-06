@@ -27,11 +27,17 @@ import java.io.File
 class YamlFileManager(filePath: String) {
 
     val file: File
-    lateinit var config: FileConfiguration
+    var config: FileConfiguration
         private set
 
     init {
         file = File(filePath)
+        if (!file.exists()) {
+            file.parentFile.mkdirs()
+            file.createNewFile()
+        }
+        config = YamlConfiguration.loadConfiguration(file)
+        save()
         reload()
     }
 

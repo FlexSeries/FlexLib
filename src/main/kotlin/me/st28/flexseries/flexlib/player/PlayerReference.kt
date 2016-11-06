@@ -32,6 +32,12 @@ class PlayerReference {
     val uuid: UUID
     val name: String
 
+    val online: Player?
+        get() = Bukkit.getPlayer(uuid)
+
+    val offline: OfflinePlayer
+        get() = Bukkit.getOfflinePlayer(uuid)
+
     constructor(player: Player) {
         uuid = player.uniqueId
         name = player.name
@@ -53,15 +59,7 @@ class PlayerReference {
     }
 
     fun isOnline(): Boolean {
-        return getPlayer() != null
-    }
-
-    fun getPlayer(): Player? {
-        return Bukkit.getPlayer(uuid)
-    }
-
-    fun getOfflinePlayer(): OfflinePlayer {
-        return Bukkit.getOfflinePlayer(uuid)
+        return online != null
     }
 
 }

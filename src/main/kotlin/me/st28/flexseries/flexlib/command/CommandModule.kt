@@ -20,17 +20,17 @@ import me.st28.flexseries.flexlib.FlexLib
 import me.st28.flexseries.flexlib.command.argument.*
 import me.st28.flexseries.flexlib.plugin.FlexModule
 import me.st28.flexseries.flexlib.plugin.FlexPlugin
-import org.bukkit.command.CommandSender
 import java.util.*
 import kotlin.reflect.KClass
 
+/**
+ * The main command manager for the FlexLib command framework.
+ */
 class CommandModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "commands", "Manages the FlexLib command framework") {
-
-    // Welcome to nested map hell, enjoy your stay
 
     val commands: MutableMap<KClass<out FlexPlugin>, MutableMap<String, FlexCommand>> = HashMap()
 
-    val sessions: MutableMap<String, MutableMap<String, CommandSession>> = HashMap()
+    //val sessions: MutableMap<String, MutableMap<String, CommandSession>> = HashMap()
 
     override fun handleEnable() {
         ArgumentResolver.register(null, "boolean", BooleanResolver)
@@ -40,7 +40,7 @@ class CommandModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "commands", "
         ArgumentResolver.register(null, "double", DoubleResolver)
         ArgumentResolver.register(null, "player", PlayerResolver)
         ArgumentResolver.register(null, "string", StringResolver)
-        ArgumentResolver.register(null, "session", SessionResolver)
+        //ArgumentResolver.register(null, "session", SessionResolver)
         //ArgumentResolver.register(null, "flexplugin", FlexPluginResolver)
         //ArgumentResolver.register(null, "flexmodule", FlexModuleResolver)
     }
@@ -70,7 +70,7 @@ class CommandModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "commands", "
         commands[plugin]!!.put(command.label.toLowerCase(), command)
     }
 
-    fun getSession(plugin: KClass<out FlexPlugin>, sender: CommandSender, id: String, create: Boolean): CommandSession? {
+    /*fun getSession(plugin: KClass<out FlexPlugin>, sender: CommandSender, id: String, create: Boolean): CommandSession? {
         val key = "${plugin.java.canonicalName}#$id"
         val subKey = "${sender.javaClass.canonicalName}#${sender.name}"
 
@@ -83,6 +83,6 @@ class CommandModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "commands", "
             subMap.put(subKey, CommandSession())
         }
         return subMap[subKey]
-    }
+    }*/
 
 }

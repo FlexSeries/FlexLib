@@ -27,7 +27,7 @@ import java.util.regex.Pattern
 class MessageModule<out T : FlexPlugin>(plugin: T) : FlexModule<T>(plugin, "messages", "Manages a plugin's messages") {
 
     companion object {
-        val PATTERN_VARIABLE: Pattern = Pattern.compile("\\{([0-9]+)//}")
+        val PATTERN_VARIABLE: Pattern = Pattern.compile("\\{([0-9]+)\\}")
     }
 
     private val messages: MutableMap<String, String> = HashMap()
@@ -54,13 +54,13 @@ class MessageModule<out T : FlexPlugin>(plugin: T) : FlexModule<T>(plugin, "mess
     }
 
     fun getMessage(name: String, vararg replacements: Any?): Message {
-        var message: String
+        val message: String
         if (messages.containsKey(name)) {
             message = PATTERN_VARIABLE.matcher(messages[name]).replaceAll("%$1\\\$s")
         } else {
             message = name
         }
-        return Message(message, replacements)
+        return Message(message, *replacements)
     }
 
 }

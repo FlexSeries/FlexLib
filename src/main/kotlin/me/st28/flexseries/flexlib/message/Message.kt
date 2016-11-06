@@ -24,7 +24,7 @@ import org.bukkit.command.CommandSender
 import java.util.*
 import kotlin.reflect.KClass
 
-class Message(message: String, vararg replacements: Any?) {
+class Message(message: String, vararg replacements: Any? = emptyArray()) {
 
     companion object {
 
@@ -33,12 +33,12 @@ class Message(message: String, vararg replacements: Any?) {
             if (module == null) {
                 return Message(name, replacements)
             } else {
-                return module.getMessage(name, replacements)
+                return module.getMessage(name, *replacements)
             }
         }
 
         fun getGlobal(name: String, vararg replacements: Any?): Message {
-            return get(FlexLib::class, name, replacements)
+            return get(FlexLib::class, name, *replacements)
         }
 
     }
@@ -54,14 +54,14 @@ class Message(message: String, vararg replacements: Any?) {
     fun getProcessedMessage(): String = String.format(message, replacements)
 
     fun sendTo(player: PlayerReference, vararg replacements: Any?) {
-        val online = player.getPlayer()
+        val online = player.online
         if (online != null) {
-            sendTo(online, replacements)
+            sendTo(online, *replacements)
         }
     }
 
     fun sendTo(sender: CommandSender, vararg replacements: Any?) {
-        sendTo(arrayListOf(sender), replacements)
+        sendTo(arrayListOf(sender), *replacements)
     }
 
     fun sendTo(senders: Collection<CommandSender>, vararg replacements: Any?) {
@@ -71,11 +71,12 @@ class Message(message: String, vararg replacements: Any?) {
             return
         }
 
-        val finalReplacements: MutableList<Any?> = ArrayList(replacementCount)
-        finalReplacements.addAll(this.replacements)
-        finalReplacements.addAll(replacements)
-
-        MCMLBuilder(String.format(message, finalReplacements.toTypedArray())).toFancyMessage().send(senders)
+        MCMLBuilder(message.format(*this.replacements)).toFancyMessage().send(senders)
     }
 
+}
+
+// Extension method
+fun CommandSender.sendMessage(message: Message) {
+    message.sendTo(this)
 }

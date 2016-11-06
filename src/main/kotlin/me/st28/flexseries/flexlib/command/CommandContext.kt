@@ -22,12 +22,18 @@ import org.bukkit.entity.Player
 import java.util.*
 import kotlin.reflect.KClass
 
+/**
+ * Holds the context in which a command was executed.
+ */
 class CommandContext {
 
     val command: BasicCommand
-    private val sender: CommandSender?
+
+    val sender: CommandSender?
+        get() = if (player != null) player.online else nonPlayer
+    private val nonPlayer: CommandSender?
     val player: PlayerReference?
-    val labels: MutableList<String> = ArrayList()
+    val label: String
     val rawArgs: Array<String>
     val curArgs: Array<String>
     val level: Int
@@ -37,29 +43,17 @@ class CommandContext {
     constructor(command: BasicCommand, sender: CommandSender, label: String, args: Array<String>, level: Int) {
         this.command = command
         if (sender is Player) {
-            this.sender = null
+            this.nonPlayer = null
             this.player = PlayerReference(sender)
         } else {
-            this.sender = sender
+            this.nonPlayer = sender
             this.player = null
         }
 
-        labels.add(label)
+        this.label = label
         this.rawArgs = args
-        this.curArgs = if (args.isEmpty()) emptyArray<String>() else rawArgs.toList().subList(level, rawArgs.size).toTypedArray()
+        this.curArgs = if (args.isEmpty()) emptyArray() else rawArgs.toList().subList(level, rawArgs.size).toTypedArray()
         this.level = level
-    }
-
-    fun getLabel(): String {
-        return labels[0]
-    }
-
-    fun getCurrentLabel(): String {
-        return labels[level]
-    }
-
-    fun getSender(): CommandSender? {
-        return if (player != null) player.getPlayer() else sender
     }
 
     fun <T: Any> getArgument(name: String): T? {
@@ -80,12 +74,5 @@ class CommandContext {
     }
 
     fun setArgument(name: String, value: Any?) = arguments.put(name, value)
-
-    fun getSession(name: String? = null): CommandSession? {
-        when {
-            name != null -> return getArgument(name)
-            else -> return getArgument(CommandSession::class)
-        }
-    }
 
 }

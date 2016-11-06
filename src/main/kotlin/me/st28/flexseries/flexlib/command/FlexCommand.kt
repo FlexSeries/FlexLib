@@ -21,43 +21,53 @@ import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import kotlin.reflect.KFunction
 
+/**
+ * Represents a FlexLib command that is registered with Bukkit.
+ * This class is used exclusively for base commands.
+ *
+ * @param plugin The plugin this command is registered under.
+ * @param label The primary label for this command.
+ */
 class FlexCommand(plugin: FlexPlugin, label: String) : BasicCommand(plugin, label) {
 
-    internal var bukkitCommand: Command? = null
+    /**
+     * The Bukkit wrapper for executing this command.
+     */
+    internal val bukkitCommand: Command
 
     init {
-        setMeta(null, null)
+        // Create the Bukkit command that executes this FlexCommand
+        bukkitCommand = object: Command(label, "(description)", "(usage)", aliases) {
+            override fun execute(sender: CommandSender, commandLabel: String, args: Array<String>): Boolean {
+                this@FlexCommand.execute(sender, commandLabel, args, 0)
+                return true
+            }
+        }
     }
 
     override fun getUsage(context: CommandContext): String {
         val sb = StringBuilder()
-        sb.append("/").append(context.getLabel())
+        sb.append("/").append(context.label)
         for (ac in argumentConfig) {
             sb.append(" ").append(ac.getUsage(context))
         }
         return sb.toString()
     }
 
-    override fun setMeta(meta: CommandHandler?, handler: KFunction<Unit>?) {
-    //override fun setMeta(meta: CommandHandler?, handler: ((sender: CommandSender, context: CommandContext) -> Unit)?) {
-        super.setMeta(meta, handler)
+    override fun setMeta(meta: CommandHandler, obj: Any, handler: KFunction<Unit>) {
+        super.setMeta(meta, obj, handler)
 
-        if (handler != null) {
-            println("Handler name: '${handler.name}'")
-            for (parameter in handler.parameters) {
-                println("param: $parameter")
+        bukkitCommand.description = if (meta.description.isEmpty()) "(no description set)" else meta.description
+        // TODO: Update aliases with Bukkit
+
+        // Default usage message
+        if (argumentConfig.isNotEmpty()) {
+            val sb = StringBuilder()
+            sb.append("/").append(label)
+            for (ac in argumentConfig) {
+                sb.append(" ").append(ac.getUsage(null))
             }
-        }
-
-        if (bukkitCommand == null) {
-            bukkitCommand = object : Command(label, "(description)", "(usage)", aliases) {
-
-                override fun execute(sender: CommandSender?, commandLabel: String?, args: Array<String>?): Boolean {
-                    this@FlexCommand.execute(sender!!, commandLabel!!, args!!, 0)
-                    return true
-                }
-
-            }
+            bukkitCommand.usage = sb.toString()
         }
     }
 

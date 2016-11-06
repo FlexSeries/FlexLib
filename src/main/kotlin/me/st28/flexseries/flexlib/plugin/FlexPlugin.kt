@@ -17,7 +17,6 @@
 package me.st28.flexseries.flexlib.plugin
 
 import me.st28.flexseries.flexlib.FlexLib
-import me.st28.flexseries.flexlib.command.FlexCommand
 import me.st28.flexseries.flexlib.command.FlexCommandMap
 import me.st28.flexseries.flexlib.event.plugin.PluginReloadedEvent
 import me.st28.flexseries.flexlib.logging.LogHelper
@@ -96,7 +95,7 @@ abstract class FlexPlugin : JavaPlugin() {
             LogHelper.severe(this, "An exception occurred while enabling, functionality may be reduced.", ex)
         }
 
-        status = PluginStatus.ENABLED;
+        status = PluginStatus.ENABLED
         LogHelper.info(this, String.format("%s v%s by %s ENABLED (%dms)",
             name,
             description.version,

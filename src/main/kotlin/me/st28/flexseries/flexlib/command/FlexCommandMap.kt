@@ -21,18 +21,24 @@ import me.st28.flexseries.flexlib.plugin.FlexPlugin
 import org.bukkit.Bukkit
 import org.bukkit.command.Command
 import org.bukkit.command.CommandMap
-import org.bukkit.command.CommandSender
 import java.lang.reflect.Method
 import kotlin.reflect.KFunction
+import kotlin.reflect.declaredFunctions
 import kotlin.reflect.declaredMemberFunctions
 
-class FlexCommandMap(plugin: FlexPlugin) {
+/**
+ * Holds a {@link FlexPlugin}'s command mappings.
+ */
+class FlexCommandMap {
 
-    companion object {
+    private companion object {
 
         var bukkit_commandMap: CommandMap? = null
         var bukkit_registerMethod: Method? = null
 
+        /**
+         * Registers a FlexCommand's Bukkit command with Bukkit's plugin manager via reflection.
+         */
         private fun registerBukkitCommand(plugin: FlexPlugin, command: FlexCommand) {
             val pluginManager = Bukkit.getPluginManager()
 
@@ -55,34 +61,26 @@ class FlexCommandMap(plugin: FlexPlugin) {
 
     val plugin: FlexPlugin
 
-    init {
+    constructor(plugin: FlexPlugin) {
         this.plugin = plugin
     }
 
+    /**
+     * Registers an object containing methods annotated with {@link CommandHandler} that represent
+     * command handlers.
+     */
     fun register(obj: Any) {
         val commandModule = FlexPlugin.getGlobalModule(CommandModule::class)!!
+        //obj.javaClass.kotlin.declaredFunctions
         for (f in obj.javaClass.kotlin.declaredMemberFunctions) {
-            println("Found function in object")
-            println("name: '${f.name}'")
-
-            for (a in f.annotations) {
-                println("Annotation '${a.javaClass.kotlin.qualifiedName}'")
-                println("test: '${a.toString()}'")
-            }
-
-            //val meta: CommandHandler = f.annotations.find { it.javaClass.kotlin == CommandHandler::class } as CommandHandler? ?: continue
             val meta: CommandHandler = f.annotations.find { it is CommandHandler } as CommandHandler? ?: continue
 
-            println("Meta found")
-
             val commandPath = meta.command.split(" ")
-            println("Path: $commandPath")
 
-            // 1) Get base command (or create + register if doesn't exist)
+            // 1) Get base command (or create and register it if it doesn't exist)
             var base = commandModule.getCommand(plugin.javaClass.kotlin, commandPath[0]) as FlexCommand?
             if (base == null) {
-                println("Creating base")
-                // Base doesn't exist, create and register it with the command module
+                // Base doesn't exist, create and register it with the command module.
                 base = FlexCommand(plugin, commandPath[0])
                 commandModule.registerCommand(plugin.javaClass.kotlin, base)
                 registerBukkitCommand(plugin, base)
@@ -103,12 +101,15 @@ class FlexCommandMap(plugin: FlexPlugin) {
             }
 
             // 3) Update final command's executor and meta
-            subcmd.setMeta(meta, f as KFunction<Unit>)
-            //subcmd.setMeta(meta, f as (sender: CommandSender, context: CommandContext) -> Unit)
+            subcmd.setMeta(meta, obj, f as KFunction<Unit>)
 
             // Set default
             if (meta.defaultSubcommand) {
-                if (subcmd.parent!!.defaultSubcommand != null) {
+                if (subcmd.parent == null) {
+                    return
+                }
+
+                if (subcmd.parent!!.defaultSubcommand.isNotEmpty()) {
                     LogHelper.warning(plugin, "Multiple default subcommands are defined for command '${subcmd.parent!!.label}'")
                 }
                 subcmd.parent!!.defaultSubcommand = subcmd.label
