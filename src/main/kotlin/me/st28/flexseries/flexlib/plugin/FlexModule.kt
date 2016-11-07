@@ -41,13 +41,6 @@ abstract class FlexModule<out T : FlexPlugin>(plugin: T, name: String, descripti
         private set
 
     var dataFolder: File
-        get() {
-            if (!dataFolder.exists()) {
-                dataFolder.mkdirs()
-            }
-            return dataFolder
-        }
-
         private set
 
     private lateinit var configFile: YamlFileManager
@@ -113,6 +106,10 @@ abstract class FlexModule<out T : FlexPlugin>(plugin: T, name: String, descripti
 
     fun reload() {
         status = ModuleStatus.RELOADING
+
+        if (!dataFolder.exists()) {
+            dataFolder.mkdirs()
+        }
 
         configFile.reload()
 
