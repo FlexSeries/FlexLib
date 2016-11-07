@@ -24,7 +24,7 @@ import org.bukkit.command.CommandSender
 import java.util.*
 import kotlin.reflect.KClass
 
-class Message(message: String, vararg replacements: Any? = emptyArray()) {
+class Message {
 
     companion object {
 
@@ -41,12 +41,16 @@ class Message(message: String, vararg replacements: Any? = emptyArray()) {
             return get(FlexLib::class, name, *replacements)
         }
 
+        fun plain(message: String): Message {
+            return Message(message)
+        }
+
     }
 
     private val message: String
     private val replacements: Array<out Any?>
 
-    init {
+    constructor(message: String, vararg replacements: Any? = emptyArray()) {
         this.message = message
         this.replacements = replacements
     }

@@ -22,11 +22,13 @@ import me.st28.flexseries.flexlib.logging.LogHelper
 import me.st28.flexseries.flexlib.message.Message
 import me.st28.flexseries.flexlib.player.PlayerReference
 import me.st28.flexseries.flexlib.player.lookup.UnknownPlayerException
+import me.st28.flexseries.flexlib.plugin.FlexModule
 import me.st28.flexseries.flexlib.plugin.FlexPlugin
 import me.st28.flexseries.flexlib.util.BooleanUtils
 import me.st28.flexseries.flexlib.util.UuidUtils
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
+import org.bukkit.plugin.Plugin
 import java.util.concurrent.Callable
 
 internal abstract class NumberResolver<T : Number>(displayName: String) : ArgumentResolver<T>(false) {
@@ -224,6 +226,69 @@ internal object PlayerResolver : ArgumentResolver<PlayerReference>(true) {
 
     override fun getTabOptions(context: CommandContext, config: ArgumentConfig, input: String): List<String>? {
         return null
+    }
+
+}
+
+internal object FlexPluginResolver : ArgumentResolver<FlexPlugin>(false) {
+
+    override fun resolve(context: CommandContext, config: ArgumentConfig, input: String): FlexPlugin? {
+        var found: Plugin? = null
+        for (plugin in Bukkit.getPluginManager().plugins) {
+            if (plugin.name.equals(input, true)) {
+                found = plugin
+                break
+            }
+        }
+
+        if (found == null) {
+            throw ArgumentResolveException("error.plugin_not_found", input)
+        }
+
+        if (found !is FlexPlugin) {
+            throw ArgumentResolveException("error.plugin_not_flexplugin", found.name)
+        }
+
+        return found
+    }
+
+    override fun getTabOptions(context: CommandContext, config: ArgumentConfig, input: String): List<String>? {
+        return null
+    }
+
+    override fun getPermissionString(arg: FlexPlugin): String {
+        return arg.name.toLowerCase()
+    }
+
+}
+
+internal object FlexModuleResolver : ArgumentResolver<FlexModule<*>>(false) {
+
+    override fun resolve(context: CommandContext, config: ArgumentConfig, input: String): FlexModule<*>? {
+        val argName: String? = config.get("arg")
+        val plugin: FlexPlugin = (if (argName == null) context.getArgument(FlexPlugin::class) else context.getArgument(argName))
+                ?: throw ArgumentResolveException("error.module_plugin_not_found")
+
+        var found: FlexModule<*>? = null
+        for (module in plugin.modules.values) {
+            if (module.name.equals(input, true)) {
+                found = module
+                break
+            }
+        }
+
+        if (found == null) {
+            throw ArgumentResolveException("error.module_not_found", plugin.name, input)
+        }
+        return found
+    }
+
+    override fun getTabOptions(context: CommandContext, config: ArgumentConfig, input: String): List<String>? {
+        return null
+    }
+
+    override fun getPermissionString(arg: FlexModule<*>): String {
+        return arg.name.toLowerCase()
     }
 
 }

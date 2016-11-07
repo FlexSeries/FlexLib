@@ -18,6 +18,8 @@ package me.st28.flexseries.flexlib.commands
 
 import me.st28.flexseries.flexlib.command.CommandContext
 import me.st28.flexseries.flexlib.command.CommandHandler
+import me.st28.flexseries.flexlib.message.Message
+import me.st28.flexseries.flexlib.plugin.FlexPlugin
 import org.bukkit.command.CommandSender
 
 object FlexPluginCommands {
@@ -32,7 +34,9 @@ object FlexPluginCommands {
         permission = "{flexplugin}.reload"
     )
     fun reload(sender: CommandSender, context: CommandContext) {
-
+        val plugin = context.getArgument<FlexPlugin>("plugin")!!
+        plugin.reloadAll()
+        Message.getGlobal("notice.plugin_reloaded", plugin.name).sendTo(sender)
     }
 
 }

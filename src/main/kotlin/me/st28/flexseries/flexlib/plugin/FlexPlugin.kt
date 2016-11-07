@@ -20,6 +20,7 @@ import me.st28.flexseries.flexlib.FlexLib
 import me.st28.flexseries.flexlib.command.FlexCommandMap
 import me.st28.flexseries.flexlib.event.plugin.PluginReloadedEvent
 import me.st28.flexseries.flexlib.logging.LogHelper
+import me.st28.flexseries.flexlib.message.MessageModule
 import org.bukkit.Bukkit
 import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.event.Listener
@@ -32,11 +33,11 @@ abstract class FlexPlugin : JavaPlugin() {
     companion object {
 
         fun <T : FlexModule<*>> getGlobalModule(module: KClass<T>): T? {
-            return JavaPlugin.getPlugin(FlexLib::class.java).getModule(module)
+            return JavaPlugin.getPlugin(FlexLib::class.java)!!.getModule(module)
         }
 
         fun <T : FlexModule<*>> getPluginModule(plugin: KClass<out FlexPlugin>, module: KClass<in T>) : T? {
-            return JavaPlugin.getPlugin(plugin.java).getModule(module)
+            return JavaPlugin.getPlugin(plugin.java)!!.getModule(module)
         }
 
     }
@@ -56,8 +57,11 @@ abstract class FlexPlugin : JavaPlugin() {
 
     override fun onLoad() {
         commandMap = FlexCommandMap(this)
-
         status = PluginStatus.LOADING
+
+        if (getResource("messages.yml") != null) {
+            registerModule(MessageModule(this))
+        }
 
         handleLoad()
     }
@@ -160,7 +164,7 @@ abstract class FlexPlugin : JavaPlugin() {
     }
 
     fun <T: FlexModule<*>> getModule(module: KClass<in T>) : T? {
-        return modules[module] as T
+        return modules[module] as T?
     }
 
     // ------------------------------------------------------------------------------------------ //

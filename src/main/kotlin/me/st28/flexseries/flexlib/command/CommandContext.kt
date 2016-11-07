@@ -57,7 +57,7 @@ class CommandContext {
     }
 
     fun <T: Any> getArgument(name: String): T? {
-        return arguments.get(name) as T
+        return arguments.get(name) as T?
     }
 
     fun <T : Any> getArgument(type: KClass<T>) : T? {
@@ -67,11 +67,13 @@ class CommandContext {
             }
 
             if (v.javaClass.kotlin == type) {
-                return v as T
+                return v as T?
             }
         }
         return null
     }
+
+    fun isArgumentSet(name: String): Boolean = arguments.containsKey(name)
 
     fun setArgument(name: String, value: Any?) = arguments.put(name, value)
 

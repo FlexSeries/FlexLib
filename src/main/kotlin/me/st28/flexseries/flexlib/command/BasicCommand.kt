@@ -266,23 +266,31 @@ private class CommandExecutionHandler(context: CommandContext) {
             return
         }
 
-        var resolved: Any?
+        var resolved: Any? = null
         try {
-            resolved = resolver.resolve(context, config, context.curArgs[index])
+            if (index >= context.curArgs.size) {
+                resolved = resolver.getDefault(context, config)
+            } else {
+                resolved = resolver.resolve(context, config, context.curArgs[index])
+            }
         } catch (ex: ArgumentResolveException) {
             sendMessage(ex.errorMessage)
             return
-        }
+        } catch (ex: UnsupportedOperationException) { }
 
         if (resolved == null && resolver.isAsync) {
             SchedulerUtils.runAsync(command.plugin, Runnable {
-                var asyncResolved: Any?
+                var asyncResolved: Any? = null
                 try {
-                    asyncResolved = resolver.resolveAsync(context, config, context.curArgs[index])
+                    if (index >= context.curArgs.size) {
+                        asyncResolved = resolver.getDefaultAsync(context, config)
+                    } else {
+                        asyncResolved = resolver.resolveAsync(context, config, context.curArgs[index])
+                    }
                 } catch (ex: ArgumentResolveException) {
                     sendMessage(ex.errorMessage)
                     return@Runnable
-                }
+                } catch (ex: UnsupportedOperationException) { }
 
                 handleArgument0(resolver, config, asyncResolved, index)
             })
@@ -295,7 +303,9 @@ private class CommandExecutionHandler(context: CommandContext) {
     private fun handleArgument0(resolver: ArgumentResolver<*>, config: ArgumentConfig, value: Any?, index: Int) {
         val argName = config.name
 
-        context.setArgument(argName, value)
+        if (value != null) {
+            context.setArgument(argName, value)
+        }
 
         // If pending permission check, attempt to finish permission string
         if (permissionVariables.containsKey(argName)) {
@@ -304,6 +314,8 @@ private class CommandExecutionHandler(context: CommandContext) {
 
             // If empty, no more permission variables are pending. Perform permission check.
             if (permissionVariables.isEmpty()) {
+                println("Testing permission: $permission")
+
                 SchedulerUtils.runSync(command.plugin, Runnable {
                     if (!context.sender!!.hasPermission(command.permission)) {
                         sendMessage(Message.getGlobal("error.no_permission"))
@@ -319,7 +331,7 @@ private class CommandExecutionHandler(context: CommandContext) {
     }
 
     private fun handleArgument1(config: ArgumentConfig, value: Any?, index: Int) {
-        if (index == context.curArgs.size - 1) {
+        if (index >= context.curArgs.size - 1) {
             // Done, run command
 
             if (command.autoArgumentConfig.isNotEmpty()) {
@@ -370,10 +382,11 @@ private class CommandExecutionHandler(context: CommandContext) {
     }
 
     private fun handleAutoArgument0(config: ArgumentConfig, value: Any?, index: Int) {
-        context.setArgument(config.name, value)
+        if (value != null) {
+            context.setArgument(config.name, value)
+        }
 
-
-        if (index == command.autoArgumentConfig.size - 1) {
+        if (index >= command.autoArgumentConfig.size - 1) {
             // Done, run command
             executeCommand()
         } else {

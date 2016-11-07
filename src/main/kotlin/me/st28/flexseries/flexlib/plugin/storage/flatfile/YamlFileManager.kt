@@ -24,13 +24,13 @@ import java.io.File
 /**
  * Helper class for reading and writing YAML files.
  */
-class YamlFileManager(filePath: String) {
+class YamlFileManager {
 
     val file: File
     var config: FileConfiguration
         private set
 
-    init {
+    constructor(filePath: String) {
         file = File(filePath)
         if (!file.exists()) {
             file.parentFile.mkdirs()
@@ -40,6 +40,8 @@ class YamlFileManager(filePath: String) {
         save()
         reload()
     }
+
+    constructor(file: File) : this(file.path)
 
     fun reload() {
         if (!file.exists()) {

@@ -41,8 +41,8 @@ class CommandModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "commands", "
         ArgumentResolver.register(null, "player", PlayerResolver)
         ArgumentResolver.register(null, "string", StringResolver)
         //ArgumentResolver.register(null, "session", SessionResolver)
-        //ArgumentResolver.register(null, "flexplugin", FlexPluginResolver)
-        //ArgumentResolver.register(null, "flexmodule", FlexModuleResolver)
+        ArgumentResolver.register(null, "flexplugin", FlexPluginResolver)
+        ArgumentResolver.register(null, "flexmodule", FlexModuleResolver)
     }
 
     fun getCommand(plugin: KClass<out FlexPlugin>, command: String): BasicCommand? {
