@@ -279,7 +279,7 @@ private class CommandExecutionHandler(context: CommandContext) {
         } catch (ex: UnsupportedOperationException) { }
 
         if (resolved == null && resolver.isAsync) {
-            SchedulerUtils.runAsync(command.plugin, Runnable {
+            SchedulerUtils.runAsync(command.plugin, {
                 var asyncResolved: Any? = null
                 try {
                     if (index >= context.curArgs.size) {
@@ -289,7 +289,7 @@ private class CommandExecutionHandler(context: CommandContext) {
                     }
                 } catch (ex: ArgumentResolveException) {
                     sendMessage(ex.errorMessage)
-                    return@Runnable
+                    return@runAsync
                 } catch (ex: UnsupportedOperationException) { }
 
                 handleArgument0(resolver, config, asyncResolved, index)
@@ -316,10 +316,10 @@ private class CommandExecutionHandler(context: CommandContext) {
             if (permissionVariables.isEmpty()) {
                 println("Testing permission: $permission")
 
-                SchedulerUtils.runSync(command.plugin, Runnable {
+                SchedulerUtils.runSync(command.plugin, {
                     if (!context.sender!!.hasPermission(command.permission)) {
                         sendMessage(Message.getGlobal("error.no_permission"))
-                        return@Runnable
+                        return@runSync
                     }
                     handleArgument1(config, value, index)
                 })
@@ -364,13 +364,13 @@ private class CommandExecutionHandler(context: CommandContext) {
         }
 
         if (resolved == null && resolver.isAsync) {
-            SchedulerUtils.runAsync(command.plugin, Runnable {
+            SchedulerUtils.runAsync(command.plugin, {
                 var asyncResolved: Any?
                 try {
                     asyncResolved = resolver.getDefaultAsync(context, config)
                 } catch (ex: ArgumentResolveException) {
                     sendMessage(ex.errorMessage)
-                    return@Runnable
+                    return@runAsync
                 }
 
                 handleAutoArgument0(config, asyncResolved, index)
@@ -396,13 +396,13 @@ private class CommandExecutionHandler(context: CommandContext) {
     }
 
     private fun executeCommand() {
-        SchedulerUtils.runSync(command.plugin, Runnable {
+        SchedulerUtils.runSync(command.plugin, {
             command.executor!!.invoke(context)
         })
     }
 
     private fun sendMessage(message: Message) {
-        SchedulerUtils.runSync(command.plugin, Runnable {
+        SchedulerUtils.runSync(command.plugin, {
             context.sender?.sendMessage(message)
         })
     }

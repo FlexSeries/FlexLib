@@ -21,27 +21,27 @@ import org.bukkit.plugin.java.JavaPlugin
 
 object SchedulerUtils {
 
-    fun runSync(plugin: JavaPlugin, runnable: Runnable) {
+    fun runSync(plugin: JavaPlugin, function: () -> Unit) {
         if (Bukkit.isPrimaryThread()) {
-            runnable.run()
+            function.invoke()
         } else {
-            Bukkit.getScheduler().runTask(plugin, runnable)
+            Bukkit.getScheduler().runTask(plugin, function)
         }
     }
 
-    fun runAsync(plugin: JavaPlugin, runnable: Runnable) {
+    fun runAsync(plugin: JavaPlugin, function: () -> Unit) {
         if (Bukkit.isPrimaryThread()) {
-            Bukkit.getScheduler().runTaskAsynchronously(plugin, runnable)
+            Bukkit.getScheduler().runTaskAsynchronously(plugin, function)
         } else {
-            runnable.run()
+            function.invoke()
         }
     }
 
-    fun runAsap(plugin: JavaPlugin, runnable: Runnable, async: Boolean) {
+    fun runAsap(plugin: JavaPlugin, function: () -> Unit, async: Boolean) {
         if (async) {
-            runAsync(plugin, runnable)
+            runAsync(plugin, function)
         } else {
-            runSync(plugin, runnable)
+            runSync(plugin, function)
         }
     }
 
