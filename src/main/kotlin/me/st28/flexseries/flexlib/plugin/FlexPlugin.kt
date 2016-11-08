@@ -97,7 +97,9 @@ abstract class FlexPlugin : JavaPlugin() {
 
         // Handle implementation specific enable tasks
         try {
+            handleReload(true)
             handleEnable()
+            handleReload(false)
         } catch (ex: Exception) {
             status = PluginStatus.ENABLED_ERROR
             LogHelper.severe(this, "An exception occurred while enabling, functionality may be reduced.", ex)

@@ -42,6 +42,9 @@ class FlexLib : FlexPlugin() {
     }
 
     override fun handleReload(isFirstReload: Boolean) {
+        if (isFirstReload) {
+            return
+        }
         PermissionHelper.reload(config.getConfigurationSection("permission helper"))
     }
 
