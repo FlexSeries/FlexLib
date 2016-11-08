@@ -24,6 +24,7 @@ import java.util.*
 object PermissionHelper {
 
     private var vaultPerm: net.milkbowl.vault.permission.Permission? = null
+    private var vaultChat: net.milkbowl.vault.chat.Chat? = null
 
     internal val groupEntries: MutableMap<String, GroupEntry> = LinkedHashMap()
 
@@ -35,9 +36,13 @@ object PermissionHelper {
             return
         }
 
-        // Get Vault permission instance
+        // Setup vault
         if (vaultPerm == null) {
             vaultPerm = Bukkit.getServicesManager().getRegistration(net.milkbowl.vault.permission.Permission::class.java)!!.provider
+        }
+
+        if (vaultChat == null) {
+            vaultChat = Bukkit.getServicesManager().getRegistration(net.milkbowl.vault.chat.Chat::class.java)!!.provider
         }
 
         groupEntries.clear()
@@ -87,7 +92,11 @@ object PermissionHelper {
         return entry.containsPlayer(player) || (checkInheritance && entry.playerInherits(player))
     }
 
-    fun getTopGroup(player: Player, groups: List<String>, defaultGroup: String): String {
+    fun getPrimaryGroup(player: Player): String {
+        return vaultChat!!.getPrimaryGroup(player)
+    }
+
+    fun getTopGroup(player: Player, groups: List<String>, defaultGroup: String? = null): String {
         val reversed = groupEntries.keys.reversed()
         for (group in reversed) {
             val entry = groupEntries[group]!!
@@ -95,11 +104,10 @@ object PermissionHelper {
                 return group
             }
         }
-        return defaultGroup
+        return defaultGroup ?: getPrimaryGroup(player)
     }
 
 }
-
 
 internal interface GroupEntry {
 
