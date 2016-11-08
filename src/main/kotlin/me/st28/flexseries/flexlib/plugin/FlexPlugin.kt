@@ -25,6 +25,8 @@ import org.bukkit.Bukkit
 import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.event.Listener
 import org.bukkit.plugin.java.JavaPlugin
+import org.bukkit.scheduler.BukkitRunnable
+import sun.rmi.runtime.Log
 import java.util.*
 import kotlin.reflect.KClass
 
@@ -54,6 +56,8 @@ abstract class FlexPlugin : JavaPlugin() {
         private set
 
     val modules: MutableMap<KClass<in FlexModule<*>>, FlexModule<*>> = LinkedHashMap()
+
+    private var autosaveRunnable: BukkitRunnable? = null
 
     override fun onLoad() {
         commandMap = FlexCommandMap(this)
@@ -115,6 +119,23 @@ abstract class FlexPlugin : JavaPlugin() {
             return
         }
 
+        autosaveRunnable?.cancel()
+
+        var autosaveInterval = config.getInt("autosave interval", 0)
+        if (autosaveInterval == 0) {
+            autosaveRunnable = null
+            LogHelper.warning(this, "Autosaving disabled. It is recommended to enable it to help prevent data loss!")
+        } else {
+            autosaveRunnable = object: BukkitRunnable() {
+                override fun run() {
+                    saveAll(true)
+                }
+            }
+
+            autosaveRunnable?.runTaskTimer(this, autosaveInterval * 1200L, autosaveInterval * 1200L)
+            LogHelper.info(this, "Autosaving enabled. Saving every $autosaveInterval minute(s).")
+        }
+
         handleConfigReload(config)
     }
 
@@ -137,6 +158,40 @@ abstract class FlexPlugin : JavaPlugin() {
         } catch (ex: Exception) {
             status = PluginStatus.ENABLED_ERROR
             throw RuntimeException("An exception occurred while reloading", ex)
+        }
+    }
+
+    fun saveAll(async: Boolean, finalSave: Boolean = false) {
+        for (module in modules.values) {
+            if (module.status.isEnabled()) {
+                try {
+                    module.save(async, finalSave)
+                } catch (ex: Exception) {
+                    LogHelper.severe(this, "An exception occurred while saving module '${module.name}'", ex)
+                }
+            }
+        }
+
+        try {
+            handleSave(async, finalSave)
+        } catch (ex: Exception) {
+            LogHelper.severe(this, "An exception occurred while saving", ex)
+        }
+
+        if (hasConfig) {
+            saveConfig()
+        }
+    }
+
+    override fun onDisable() {
+        status = PluginStatus.DISABLING
+
+        saveAll(false, true)
+
+        try {
+            handleDisable()
+        } catch (ex: Exception) {
+            LogHelper.severe(this, "An exception occurred while disabling", ex)
         }
     }
 
