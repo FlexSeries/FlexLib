@@ -156,7 +156,7 @@ internal object StringResolver : ArgumentResolver<String>(false) {
 
 }
 
-internal object PlayerResolver : ArgumentResolver<PlayerReference>(true) {
+object PlayerResolver : ArgumentResolver<PlayerReference>(true) {
 
     override fun resolve(context: CommandContext, config: ArgumentConfig, input: String): PlayerReference? {
         // NO ASYNC/BLOCKING CALLS IN THIS METHOD
@@ -201,7 +201,7 @@ internal object PlayerResolver : ArgumentResolver<PlayerReference>(true) {
 
         // 3) Perform checks
         try {
-            Bukkit.getScheduler().callSyncMethod(context.command.plugin, Callable { performChecks(context, config, ref!!) })
+            Bukkit.getScheduler().callSyncMethod(context.command.plugin, { performChecks(context, config, ref!!) })
         } catch (ex: Exception) {
             if (ex.cause != null && ex.cause is ArgumentResolveException) {
                 throw ex.cause as ArgumentResolveException
