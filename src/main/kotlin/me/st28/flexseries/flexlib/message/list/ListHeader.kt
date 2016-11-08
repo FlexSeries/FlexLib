@@ -67,7 +67,7 @@ class ListHeader {
         val applicableLeftSuffix = leftSuffix ?: defaultHeader?.leftSuffix
 
         if (!applicableLeftText.isNullOrEmpty()) {
-            val leftRepeat: Int = sideLength / applicableLeftText!!.length
+            val leftRepeat: Int = (sideLength / applicableLeftText!!.length) / 2
             if (leftRepeat > 0) {
                 sb.append(applicableLeftPrefix)
 
@@ -87,7 +87,7 @@ class ListHeader {
         val applicableRightSuffix = rightSuffix ?: defaultHeader?.rightSuffix
 
         if (!applicableRightText.isNullOrEmpty()) {
-            val rightRepeat: Int = sideLength / applicableRightText!!.length
+            val rightRepeat: Int = (sideLength / applicableRightText!!.length) / 2
             if (rightRepeat > 0) {
                 sb.append(applicableRightPrefix)
 

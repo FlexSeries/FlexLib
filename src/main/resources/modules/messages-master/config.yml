@@ -17,7 +17,7 @@ format:
 list:
   config:
     page items: 8
-    line length: 50
+    line length: 40
 
   format:
     header:
