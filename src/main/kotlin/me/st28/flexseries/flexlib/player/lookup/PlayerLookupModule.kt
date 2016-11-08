@@ -61,6 +61,12 @@ class PlayerLookupModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "player-
             "sqlite" -> storage = Storage_SQLite()
             else -> throw IllegalArgumentException("Invalid storage type '$storageType'")
         }
+        storage.enable(this, storageSec.getConfigurationSection(storageType))
+        LogHelper.info(this, "Using $storage for storage.")
+    }
+
+    override fun handleDisable() {
+        storage.disable()
     }
 
     fun getUuid(name: String): UUID? {
