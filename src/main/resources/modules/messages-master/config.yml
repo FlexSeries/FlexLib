@@ -1,14 +1,55 @@
-mood:
-  alert: '&e'
-  error: '&c'
-  notice: '&9'
+format:
+  mood:
+    alert: '&e'
+    error: '&c'
+    notice: '&9'
 
-object:
-  command: '[&b{1}](!"{2}" "&cClick to run command.")'
-  command_suggestion: '[&b{1}](?"{2}" "&cClick to edit command.")'
-  input: '''&6{?}{#.#}''' # Raw user input
-  input_sanitized: '&6{?}{#.#}' # Input that has been corrected by a plugin
-  item: '&6{?}{#.#}'
-  player: '&6{?}{#.#}' # Matched player's name
-  url: '[&b{1}](>"{2}" "Click for URL")'
-  usage: '&4USAGE: &c{1}'
+  object:
+    command: '[&b{1}](!"{2}" "&cClick to run command.")'
+    command_suggestion: '[&b{1}](?"{2}" "&cClick to edit command.")'
+    input: '''&6{?}{#.#}''' # Raw user input
+    input_sanitized: '&6{?}{#.#}' # Input that has been corrected by a plugin
+    item: '&6{?}{#.#}'
+    player: '&6{?}{#.#}' # Matched player's name
+    url: '[&b{1}](>"{2}" "Click for URL")'
+    usage: '&4USAGE: &c{1}'
+
+list:
+  config:
+    page items: 8
+    line length: 50
+
+  format:
+    header:
+      DEFAULT:
+        left:
+          prefix: '&8&m'
+          text: '-'
+          suffix: '&r'
+        right:
+          prefix: '&8&m'
+          text: '-'
+          suffix: ''
+
+      page:
+        center: '&a{1} &c(pg.{PAGE}/{MAXPAGES})'
+
+      page_subtitle:
+        center: '&a{1}: &6{2} &c(pg.{PAGE}/{MAXPAGES})'
+
+      title:
+        center: '&a{1}'
+
+      subtitle:
+        center: '&a{1}: &6{2}'
+
+      help:
+        center: '&aHelp: &6{1} &c(pg.{PAGE}/{MAXPAGES})'
+
+    element:
+      command: '&c{1} &8- &e{2}'
+      command_help: '&c{$command {1}{,}{1} $} &8- &e{2}'
+      command_help: '&c{$command_suggestion {1}{,}{1} $} &8- &e{2}'
+      element: '&6{1}'
+      element_description: '&e{1}: &6{2}'
+      number: '&e{1}) &6{2}'

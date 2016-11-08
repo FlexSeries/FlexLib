@@ -17,6 +17,8 @@
 package me.st28.flexseries.flexlib.message
 
 import me.st28.flexseries.flexlib.FlexLib
+import me.st28.flexseries.flexlib.logging.LogHelper
+import me.st28.flexseries.flexlib.message.list.ListHeader
 import me.st28.flexseries.flexlib.plugin.FlexModule
 import java.util.*
 import java.util.regex.Pattern
@@ -39,6 +41,12 @@ class MasterMessageModule : FlexModule<FlexLib> {
     private val moodFormats: MutableMap<String, String> = HashMap()
     private val objectFormats: MutableMap<String, String> = HashMap()
 
+    internal var listPageItems: Int = 0
+    internal var listLineLength: Int = 0
+
+    internal val listElementFormats: MutableMap<String, String> = HashMap()
+    internal val listHeaderFormats: MutableMap<String, ListHeader> = HashMap()
+
     constructor(plugin: FlexLib) : super(plugin, "messages-master", "Main message formatting module")
 
     override fun handleReload(isFirstReload: Boolean) {
@@ -50,18 +58,46 @@ class MasterMessageModule : FlexModule<FlexLib> {
 
         /* Load mood formats */
         moodFormats.clear()
-
-        val moodSec = config.getConfigurationSection("mood")
-        for ((key, value) in moodSec.getValues(true)) {
-            moodFormats.put(key, value as String)
+        val moodSec = config.getConfigurationSection("format.mood")
+        if (moodSec != null) {
+            for ((key, value) in moodSec.getValues(true)) {
+                moodFormats.put(key, value as String)
+            }
         }
 
         /* Load object formats */
         objectFormats.clear()
+        val objectSec = config.getConfigurationSection("format.object")
+        if (objectSec != null) {
+            for ((key, value) in objectSec.getValues(true)) {
+                objectFormats.put(key, value as String)
+            }
+        }
 
-        val objectSec = config.getConfigurationSection("object")
-        for ((key, value) in objectSec.getValues(true)) {
-            objectFormats.put(key, value as String)
+        /* Load list configuration */
+        listPageItems = config.getInt("list.config.page items", 8)
+        listLineLength = config.getInt("list.config.line length", 50)
+
+        // Load headers
+        listHeaderFormats.clear()
+        val listHeaderSec = config.getConfigurationSection("list.format.header")
+        if (listHeaderSec != null) {
+            for (name in listHeaderSec.getKeys(false)) {
+                try {
+                    listHeaderFormats.put(name, ListHeader(listHeaderSec.getConfigurationSection(name)))
+                } catch (ex: Exception) {
+                    LogHelper.severe(this, "An exception occurred while loading list header '$name'", ex)
+                }
+            }
+        }
+
+        // Load elements
+        listElementFormats.clear()
+        val listElementSec = config.getConfigurationSection("list.format.element")
+        if (listElementSec != null) {
+            for ((key, value) in listElementSec.getValues(true)) {
+                listElementFormats.put(key, value as String)
+            }
         }
     }
 
