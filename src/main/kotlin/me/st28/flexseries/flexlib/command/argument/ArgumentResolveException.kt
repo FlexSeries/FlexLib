@@ -25,11 +25,11 @@ class ArgumentResolveException : RuntimeException {
     val errorMessage: Message
 
     constructor(message: String, vararg replacements: Any?) {
-        errorMessage = Message.getGlobal(message, replacements)
+        errorMessage = Message.getGlobal(message, *replacements)
     }
 
     constructor(plugin: KClass<out FlexPlugin>, message: String, vararg replacements: Any?) {
-        errorMessage = Message.get(plugin, message, replacements)
+        errorMessage = Message.get(plugin, message, *replacements)
     }
 
     constructor(message: Message) {
