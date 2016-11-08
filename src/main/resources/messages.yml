@@ -1,40 +1,28 @@
-general:
-  errors:
-    integer_too_low: '{mood=error}{ITEM} must be {MIN} or higher.'
-    integer_too_high: '{mood=error}{ITEM} must be {MAX} or lower.'
-    item_must_be_boolean: '{mood=error}{ITEM} must be a boolean.'
-    item_must_be_int: '{mood=error}{ITEM} must be an integer.'
-    must_be_player: '{mood=error}You must be a player to do this.'
-    no_permission: '{mood=error}You do not have permission to do this.'
-    player_cannot_be_self: '{mood=error}You cannot be the target of this command.'
-    player_matched_multiple: '{mood=error}Name {o=input}{NAME}{/} matches multiple players. Please be more specific.'
-    player_matched_none: '{mood=error}Unable to find player {o=input}{NAME}{/}.'
-    player_matched_none_offline: '{mood=error}Unable to find offline player {o=input}{NAME}{/}.'
-    player_matched_offline: '{mood=error}Player {o=input_sanitized}{NAME}{/} is offline.'
-    plugin_not_found: '{mood=error}Plugin {o=input}{PLUGIN}{/} not found.'
-
-lib_command:
-  errors:
-    invalid_input: '{mood=error}Invalid input {o=input}{INPUT}{/} for argument {o=input_sanitized}{ARGUMENT}{/}.'
-    invalid_input_list: '{mood=error}Invalid input {o=input}{INPUT}{/}.'
-    uncaught_exception: '{mood=error}An error occurred while running this command ({MESSAGE}).'
-    usage: '{o=usage}{USAGE}{/}'
-
-lib_player_settings:
-  errors:
-    group_not_found: '{mood=error}Unknown group {o=input}{GROUP}{/}.'
-    setting_not_found: '{mood=error}Unknown setting {o=input}{SETTING}{/}.'
-    setting_not_found_group: '{mood=error}Unknown setting {o=input}{SETTING}{/} in group {o=input}{GROUP}{/}.'
-    setting_not_toggleable: '{mood=error}Setting {o=input_sanitized}{SETTING}{/} is not toggleable.'
-    setting_not_toggleable_group: '{mood=error}Setting {o=input_sanitized}{SETTING}{/} in group {o=input_sanitized}{GROUP}{/} is not toggleable.'
-  notices:
-    toggle_enabled: '{mood=notice}Toggle {o=item}{TOGGLE}{/} was &aenabled{mood=.}.'
-    toggle_disabled: '{mood=notice}Toggle {o=item}{TOGGLE}{/} was &cdisabled{mood=.}.'
-
-lib_plugin:
-  errors:
-    plugin_not_flexplugin: '{mood=error}Plugin {o=input_sanitized}{PLUGIN}{/} is not a FlexPlugin.'
-    module_not_found: '{mood=error}Module {o=input}{MODULE}{/} not found in plugin {o=input_sanitized}{PLUGIN}{/}.'
-  notices:
-    plugin_reloaded: '{o=tag}{PLUGIN}{/}{mood=notice}Plugin configuration &creloaded {mood=.}from the disk.'
-    plugin_saved: '{o=tag}{PLUGIN}{/}{mood=notice}Plugin data &asaved {mood=.}to the disk.'
+error:
+  command_unknown_argument: '&cUnknown command argument type ''{1}'''
+  command_usage: '&4USAGE: &c{1}'
+  input_not_boolean: '&cInput must be true or false.'
+  input_not_decimal: '&cInput must be a number.'
+  input_not_integer: '&cInput must be an integer.'
+  input_too_small_decimal: '&cInput must be {1} or greater.'
+  input_too_small_integer: '&cInput must be {1} or greater.'
+  input_too_large_decimal: '&cInput must be {1} or less.'
+  input_too_large_integer: '&cInput must be {1} or less.'
+  input_outside_range_decimal: '&cInput must be {1} to {2}.'
+  input_outside_range_integer: '&cInput must be {1} to {2}.'
+  internal_error: '&cAn internal error occurred. Please contact a staff member to let them know.'
+  module_not_found: '&cNo module named ''{2}'' found in FlexPlugin ''{1}'''
+  module_plugin_not_found: '&cNo FlexPlugin has been specified.'
+  must_be_player: '&cYou must be a player to do this.'
+  no_permission: '&cYou do not have permission to do this.'
+  player_not_found: '&cUnable to find player ''{1}'''
+  player_not_online: '&cPlayer {1} is not online.'
+  player_cannot_be_sender: '&cYou cannot be the target of this command.'
+  plugin_not_flexplugin: '&cPlugin ''{1}'' is not a FlexPlugin.'
+  plugin_not_found: '&cUnable to find plugin ''{1}'''
+  session_does_not_exist: '&cYou do not have an active command session. Please contact a staff member to let them know.'
+  session_id_not_set: '&cNo session ID is set for this command. Please contact a staff member to let them know.'
+  string_too_short: '&cInput must be {1} characters or more.'
+  string_too_long: '&cInput must be {1} characters or less.'
+  string_outside_range: '&cInput must be {1}-{2} characters in length.'
+  unknown_command: '&cUnknown subcommand ''{1}'''

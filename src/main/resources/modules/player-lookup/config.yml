@@ -1,0 +1,18 @@
+cache:
+  max size: -1
+  timeout: 600
+
+storage:
+  type: 'sqlite'
+  sqlite:
+    file: 'uuidIndex.db'
+
+lookup:
+  enabled: true
+  resolver: 'MCAPI_ca'
+  MC-API_net:
+    connect timeout: 5000
+    read timeout: 5000
+  MCAPI_ca:
+    connect timeout: 5000
+    read timeout: 5000
