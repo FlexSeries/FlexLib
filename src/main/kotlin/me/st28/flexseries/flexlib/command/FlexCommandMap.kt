@@ -31,15 +31,15 @@ import kotlin.reflect.declaredMemberFunctions
  */
 class FlexCommandMap {
 
-    private companion object {
+    internal companion object {
 
-        var bukkit_commandMap: CommandMap? = null
-        var bukkit_registerMethod: Method? = null
+        private var bukkit_commandMap: CommandMap? = null
+        private var bukkit_registerMethod: Method? = null
 
         /**
          * Registers a FlexCommand's Bukkit command with Bukkit's plugin manager via reflection.
          */
-        private fun registerBukkitCommand(plugin: FlexPlugin, command: FlexCommand) {
+        fun registerBukkitCommand(plugin: FlexPlugin, command: FlexCommand) {
             val pluginManager = Bukkit.getPluginManager()
 
             try {
@@ -56,6 +56,8 @@ class FlexCommandMap {
                 LogHelper.severe(plugin, "An exception occurred while registering command with Bukkit", ex)
             }
         }
+
+        fun getBukkitCommandMap(): CommandMap = bukkit_commandMap!!
 
     }
 

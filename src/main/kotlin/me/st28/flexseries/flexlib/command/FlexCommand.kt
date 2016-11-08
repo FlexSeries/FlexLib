@@ -45,6 +45,12 @@ class FlexCommand(plugin: FlexPlugin, label: String) : BasicCommand(plugin, labe
         }
     }
 
+    override fun setAliases(aliases: List<String>) {
+        super.setAliases(aliases)
+
+        bukkitCommand.aliases.addAll(aliases)
+    }
+
     override fun getUsage(context: CommandContext): String {
         val sb = StringBuilder()
         sb.append("/").append(context.label)
@@ -58,7 +64,7 @@ class FlexCommand(plugin: FlexPlugin, label: String) : BasicCommand(plugin, labe
         super.setMeta(meta, obj, handler)
 
         bukkitCommand.description = if (meta.description.isEmpty()) "(no description set)" else meta.description
-        // TODO: Update aliases with Bukkit
+        FlexCommandMap.registerBukkitCommand(plugin, this)
 
         // Default usage message
         if (argumentConfig.isNotEmpty()) {
