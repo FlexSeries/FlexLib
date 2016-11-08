@@ -19,6 +19,7 @@ package me.st28.flexseries.flexlib
 import me.st28.flexseries.flexlib.command.CommandModule
 import me.st28.flexseries.flexlib.commands.CommandLibTest
 import me.st28.flexseries.flexlib.commands.FlexPluginCommands
+import me.st28.flexseries.flexlib.message.MasterMessageModule
 import me.st28.flexseries.flexlib.message.MessageModule
 import me.st28.flexseries.flexlib.player.lookup.PlayerLookupModule
 import me.st28.flexseries.flexlib.plugin.FlexPlugin
@@ -27,6 +28,7 @@ class FlexLib : FlexPlugin() {
 
     override fun handleLoad() {
         registerModule(CommandModule(this))
+        registerModule(MasterMessageModule(this))
         registerModule(MessageModule(this))
         registerModule(PlayerLookupModule(this))
     }

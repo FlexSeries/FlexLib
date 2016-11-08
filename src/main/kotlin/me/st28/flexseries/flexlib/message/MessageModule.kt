@@ -56,7 +56,8 @@ class MessageModule<out T : FlexPlugin>(plugin: T) : FlexModule<T>(plugin, "mess
     fun getMessage(name: String, vararg replacements: Any?): Message {
         val message: String
         if (messages.containsKey(name)) {
-            message = PATTERN_VARIABLE.matcher(messages[name]).replaceAll("%$1\\\$s")
+            val masterManager = FlexPlugin.getGlobalModule(MasterMessageModule::class)!!
+            message = masterManager.processMessage(PATTERN_VARIABLE.matcher(messages[name]).replaceAll("%$1\\\$s"))
         } else {
             message = name
         }
