@@ -1,0 +1,11 @@
+debug: false
+autosave interval: 10
+
+permission helper:
+  inheritance:
+  - member
+  - moderator
+  - administrator
+
+command library:
+  max argument suggestions: 50

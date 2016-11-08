@@ -21,6 +21,7 @@ import me.st28.flexseries.flexlib.commands.CommandLibTest
 import me.st28.flexseries.flexlib.commands.FlexPluginCommands
 import me.st28.flexseries.flexlib.message.MasterMessageModule
 import me.st28.flexseries.flexlib.message.MessageModule
+import me.st28.flexseries.flexlib.permission.PermissionHelper
 import me.st28.flexseries.flexlib.player.lookup.PlayerLookupModule
 import me.st28.flexseries.flexlib.plugin.FlexPlugin
 
@@ -38,6 +39,10 @@ class FlexLib : FlexPlugin() {
 
         commandMap.register(CommandLibTest)
         commandMap.register(FlexPluginCommands)
+    }
+
+    override fun handleReload(isFirstReload: Boolean) {
+        PermissionHelper.reload(config.getConfigurationSection("permission helper"))
     }
 
 }
