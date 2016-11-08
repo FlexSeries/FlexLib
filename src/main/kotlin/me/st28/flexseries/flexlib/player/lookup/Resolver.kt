@@ -37,14 +37,18 @@ internal interface Resolver {
 internal class Resolver_MCAPIca : Resolver {
 
     companion object {
+
+        val NAME: String = "MCAPI_ca"
+
         val json: JsonParser = JsonParser()
+
     }
 
     private var connectTimeout: Int = 0
     private var readTimeout: Int = 0
 
     override fun getName(): String {
-        return "MCAPI_ca"
+        return NAME
     }
 
     override fun loadConfig(config: ConfigurationSection) {

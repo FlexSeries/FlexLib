@@ -54,7 +54,7 @@ class PlayerLookupModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "player-
             nameToUuids.remove((it.value as CacheEntry).name)
         }.build()
 
-        // Load storage settings
+        /* Load storage settings */
         val storageSec = config.getConfigurationSection("storage")
         val storageType = storageSec.getString("type")
         when (storageType) {
@@ -63,6 +63,18 @@ class PlayerLookupModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "player-
         }
         storage.enable(this, storageSec.getConfigurationSection(storageType))
         LogHelper.info(this, "Using $storage for storage.")
+
+        /* Load lookup settings */
+        val lookupSec = config.getConfigurationSection("lookup")
+        if (lookupSec.getBoolean("enabled")) {
+            val resolverName = lookupSec.getString("resolver")
+            resolver = when (resolverName) {
+                Resolver_MCAPIca.NAME -> Resolver_MCAPIca()
+                else -> throw IllegalArgumentException("Invalid lookup resolver '$resolverName'")
+            }
+
+            LogHelper.info(this, "Lookup enabled, using resolver: $resolverName")
+        }
     }
 
     override fun handleDisable() {

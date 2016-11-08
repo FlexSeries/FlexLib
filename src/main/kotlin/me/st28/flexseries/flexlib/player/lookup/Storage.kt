@@ -53,6 +53,7 @@ internal class Storage_SQLite : Storage {
     override fun enable(module: PlayerLookupModule, config: ConfigurationSection) {
         val file = File(module.dataFolder.toString() + File.separator + config.getString("file", "uuidIndex.db"))
         if (!file.exists()) {
+            file.parentFile.mkdirs()
             file.createNewFile()
         }
 
