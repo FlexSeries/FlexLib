@@ -27,6 +27,7 @@ import org.bukkit.event.Listener
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.scheduler.BukkitRunnable
 import sun.rmi.runtime.Log
+import java.io.File
 import java.util.*
 import kotlin.reflect.KClass
 
@@ -71,31 +72,36 @@ abstract class FlexPlugin : JavaPlugin() {
     }
 
     override fun onEnable() {
-        var startTime = System.currentTimeMillis()
+        val startTime = System.currentTimeMillis()
 
         status = PluginStatus.ENABLING
 
-        // Register self as listener where applicable
+        /* Register self as listener where applicable */
         if (this is Listener) {
             Bukkit.getPluginManager().registerEvents(this, this)
         }
 
-        // Determine if there is a configuration file or not, and save it if there is
+        /* Determine if there is a configuration file or not, and save it if there is */
         if (getResource("config.yml") != null) {
             saveDefaultConfig()
             config.options().copyDefaults(false)
             saveConfig()
 
             hasConfig = true
+        } else if (File(dataFolder.path + File.separator + "config.yml").exists()) {
+            hasConfig = true
+        }
+
+        if (hasConfig) {
             reloadConfig()
         }
 
-        // Load modules
+        /* Load modules */
         for (module in modules.values) {
             module.enable()
         }
 
-        // Handle implementation specific enable tasks
+        /* Handle implementation specific enable tasks */
         try {
             handleReload(true)
             handleEnable()
@@ -120,6 +126,8 @@ abstract class FlexPlugin : JavaPlugin() {
         if (!hasConfig) {
             return
         }
+
+        isDebugEnabled = config.getBoolean("debug", false)
 
         autosaveRunnable?.cancel()
 

@@ -45,7 +45,7 @@ object LogHelper {
 
         prefix.append("]")
 
-        Bukkit.getLogger().log(level, "${prefix.toString()} $message", ex)
+        Bukkit.getLogger().log(level, "$prefix $message", ex)
     }
 
     fun debug(plugin: FlexPlugin, message: String, ex: Exception? = null) {
@@ -56,7 +56,7 @@ object LogHelper {
         log(
             plugin,
             suffix = "DEBUG",
-            level = Level.FINE,
+            level = Level.INFO,
             message = message,
             ex = ex
         )
@@ -71,7 +71,7 @@ object LogHelper {
             module.plugin,
             identifier = module.name,
             suffix = "DEBUG",
-            level = Level.FINE,
+            level = Level.INFO,
             message = message,
             ex = ex
         )
