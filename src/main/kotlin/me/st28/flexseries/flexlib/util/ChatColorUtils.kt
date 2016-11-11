@@ -45,3 +45,7 @@ object ChatColorUtils {
     }
 
 }
+
+fun String.translateColorCodes(ch: Char = '&'): String {
+    return ChatColor.translateAlternateColorCodes(ch, this)
+}
