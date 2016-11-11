@@ -37,9 +37,9 @@ class ListBuilder {
         pageItems = FlexPlugin.getGlobalModule(MasterMessageModule::class)!!.listPageItems
     }
 
-    fun page(page: Int, count: Int): ListBuilder {
+    fun page(page: Int, elemCount: Int): ListBuilder {
         this.page = page
-        this.pageCount = count
+        this.pageCount = Math.ceil(elemCount / pageItems.toDouble()).toInt()
         return this
     }
 
@@ -85,9 +85,25 @@ class ListBuilder {
     }
 
     /**
+     * Retrieves elements from a specified populator.
+     */
+    fun elements(type: String, populator: (Int) -> Array<String>): ListBuilder {
+        val index = page * pageItems
+        for (i in 0 until pageItems) {
+            try {
+                element(type, index.toString(), *populator(index + i))
+            } catch (ex: IndexOutOfBoundsException) {
+                // We're done
+                break
+            }
+        }
+        return this
+    }
+
+    /**
      * Similar to setMessagesString, except with direct Message objects
      */
-    fun setMessages(populator: (Int) -> Message): ListBuilder {
+    fun messages(populator: (Int) -> Message): ListBuilder {
         val index = page * pageItems
         for (i in 0 until pageItems) {
             try {
@@ -106,7 +122,7 @@ class ListBuilder {
      *
      * @param page The current page, starting at 0.
      */
-    fun setMessagesString(populator: (Int) -> String): ListBuilder {
+    fun messagesString(populator: (Int) -> String): ListBuilder {
         val index = page * pageItems
         for (i in 0 until pageItems) {
             try {
@@ -120,9 +136,9 @@ class ListBuilder {
     }
 
     /**
-     * Similar to [setMessagesString] except with direct [Message] objects.
+     * Similar to [messagesString] except with direct [Message] objects.
      */
-    fun setMessages(collection: Collection<Message>): ListBuilder {
+    fun messages(collection: Collection<Message>): ListBuilder {
         val index = page * pageItems
         for (i in 0 until pageItems) {
             try {
@@ -138,7 +154,7 @@ class ListBuilder {
     /**
      * Sets the messages for a specified page based on a given collection.
      */
-    fun setMessagesString(collection: Collection<String>): ListBuilder {
+    fun messagesString(collection: Collection<String>): ListBuilder {
         val index = page * pageItems
         for (i in 0 until pageItems) {
             try {
