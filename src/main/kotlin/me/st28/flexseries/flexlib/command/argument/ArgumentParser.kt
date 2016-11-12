@@ -20,6 +20,7 @@ import me.st28.flexseries.flexlib.command.CommandContext
 import me.st28.flexseries.flexlib.util.UuidUtils
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
+import java.util.*
 
 /**
  * @param consumed The number of raw arguments consumed by this parser. Default = 1
@@ -61,7 +62,14 @@ abstract class ArgumentParser<out T : Any>(val consumed: Int = 1, val async: Boo
      * @return Null if there are no tab completions.
      */
     open fun getTabOptions(context: CommandContext, config: ArgumentConfig, input: String, max: Int): List<String>? {
-        return null
+        val names: MutableList<String> = ArrayList()
+        for ((index, p) in Bukkit.getOnlinePlayers().withIndex()) {
+            if (index > max) {
+                break
+            }
+            names.add(p.name)
+        }
+        return names
     }
 
 }

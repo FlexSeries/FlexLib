@@ -34,8 +34,6 @@ class CommandModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "commands", "
 
     internal val commands: MutableMap<KClass<out FlexPlugin>, MutableMap<String, FlexCommand>> = HashMap()
 
-    //internal val argumentParsers: MutableMap<KClass<out Any>, ArgumentParser<Any>> = HashMap()
-    //internal val argumentParsers: MutableMap<KType, ArgumentParser<Any>> = HashMap()
     internal val argumentParsers: MutableMap<String, ArgumentParser<Any>> = HashMap()
 
     override fun handleEnable() {
@@ -78,7 +76,6 @@ class CommandModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "commands", "
 
     fun getArgumentParser(type: KType): ArgumentParser<Any>? {
         return argumentParsers[type.toString().replace("?", "")]
-        //return argumentParsers[type]
     }
 
 }
