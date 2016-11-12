@@ -69,9 +69,12 @@ abstract class ArgumentParser<out T : Any>(val consumed: Int = 1, val async: Boo
 object PlayerParser : ArgumentParser<Player>() {
 
     override fun parse(context: CommandContext, config: ArgumentConfig, raw: Array<String>): Player? {
-        /*if (raw == "{sender}") {
-
-        }*/
+        if (raw[0] == "" || raw[0] == "{sender}") {
+            if (context.sender !is Player) {
+                throw ArgumentParseException("error.must_be_player")
+            }
+            return context.sender
+        }
 
         // 1) Try UUID
         try {

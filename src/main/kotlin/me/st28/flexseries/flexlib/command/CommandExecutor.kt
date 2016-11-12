@@ -155,11 +155,29 @@ internal class CommandExecutor {
             if (args.size < parser.consumed) {
                 // Not enough arguments
                 if (!ac.isRequired) {
-                    params.add(null)
+                    // Argument isn't required
+
+                    // Get default argument or just add null to the params list
+                    if (ac.default != null) {
+                        params.add(parser.parse(context, ac, arrayOf(ac.default)))
+                    } else {
+                        params.add(null)
+                    }
                     continue
                 } else {
-                    println("MISSING REQUIRED ARGUMENT")
-                    return null
+                    // Argument is required
+                    if (ac.default != null) {
+                        val parsed = parser.parse(context, ac, arrayOf(ac.default))
+
+                        if (parsed == null) {
+                            // Even default is null, so give error
+                            println("MISSING REQUIRED ARGUMENT")
+                            return null
+                        }
+
+                        params.add(parsed)
+                    }
+                    continue
                 }
             }
 

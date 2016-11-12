@@ -36,11 +36,12 @@ class ArgumentConfig : GenericDataContainer {
         this.name = p.name!!
         this.type = p.type
 
-        // Nullable type = not required
-        this.isRequired = !p.type.isMarkedNullable
-
         // Check for default raw value
         default = (p.annotations.firstOrNull { it is Default } as Default?)?.raw
+
+        // Nullable type = not required
+        // Nullable + default = not required
+        this.isRequired = !p.type.isMarkedNullable && default == null
 
         println("Argument")
         println(" Name: $name")
