@@ -14,35 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package me.st28.flexseries.flexlib.command
+package me.st28.flexseries.flexlib.command.argument
 
-@Target(AnnotationTarget.FUNCTION)
+/**
+ * Sets the default input value for an argument.
+ * If an empty string, will default to the argument type's default.
+ */
+@Target(AnnotationTarget.VALUE_PARAMETER)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class CommandHandler (
-
-    /**
-     * The path for executing the command (base label and subcommand labels).
-     */
-    val command: String,
-
-    /**
-     * The aliases for the command.
-     */
-    val aliases: Array<String> = arrayOf(),
-
-    /**
-     * The description of the command.
-     */
-    val description: String = "",
-
-    /**
-     * The permission required to run this command.
-     */
-    val permission: String = "",
-
-    /**
-     * True indicates that the command handler is a placeholder and contains no logic.
-     */
-    val dummy: Boolean = false
-
-)
+annotation class Default(val raw: String = "")

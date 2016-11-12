@@ -14,26 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package me.st28.flexseries.flexlib.command.argument
+package me.st28.flexseries.flexlib.commands
 
-import me.st28.flexseries.flexlib.message.Message
-import me.st28.flexseries.flexlib.plugin.FlexPlugin
-import kotlin.reflect.KClass
+import me.st28.flexseries.flexlib.command.CommandHandler
+import org.bukkit.Bukkit
+import org.bukkit.command.CommandSender
 
-class ArgumentResolveException : RuntimeException {
+object NewCommandTest {
 
-    val errorMessage: Message
-
-    constructor(message: String, vararg replacements: Any?) {
-        errorMessage = Message.getGlobal(message, *replacements)
+    @CommandHandler("test")
+    fun sayHello(sender: CommandSender) {
+        Bukkit.broadcastMessage("Hello console!")
     }
 
-    constructor(plugin: KClass<out FlexPlugin>, message: String, vararg replacements: Any?) {
-        errorMessage = Message.get(plugin, message, *replacements)
+    /*@CommandHandler("test")
+    fun sayHello(player: Player) {
+        Bukkit.broadcastMessage("Hello player ${player.name}!")
     }
 
-    constructor(message: Message) {
-        this.errorMessage = message
-    }
+    @CommandHandler("player % info")
+    fun player_info(sender: CommandSender, @Default player: Player) {
+        sender.sendMessage("Player info: ${player.name} (${player.uniqueId})")
+    }*/
 
 }

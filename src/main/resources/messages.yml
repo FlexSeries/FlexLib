@@ -1,6 +1,9 @@
 error:
-  command_unknown_argument: '&cUnknown command argument type ''{1}'''
-  command_usage: '&4USAGE: &c{1}'
+  command:
+    unknown_argument_type: '{#error#}Unknown command argument type {$input {1} $}.'
+    usage: '&4USAGE: &c{1}'
+    unknown: '&cUnknown command {$input {1} $}'
+
   input_not_boolean: '&cInput must be true or false.'
   input_not_decimal: '&cInput must be a number.'
   input_not_integer: '&cInput must be an integer.'
@@ -25,4 +28,3 @@ error:
   string_too_short: '&cInput must be {1} characters or more.'
   string_too_long: '&cInput must be {1} characters or less.'
   string_outside_range: '&cInput must be {1}-{2} characters in length.'
-  unknown_command: '&cUnknown subcommand ''{1}'''

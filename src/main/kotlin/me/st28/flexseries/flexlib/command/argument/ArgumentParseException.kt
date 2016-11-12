@@ -14,19 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package me.st28.flexseries.flexlib.command
+package me.st28.flexseries.flexlib.command.argument
 
-import org.bukkit.command.CommandSender
-
-class CommandContext(
-        val command: FlexCommand,
-        val sender: CommandSender,
-        val label: String,
-        val args: Array<String>
-) {
-
-    fun getArgs(offset: Int): Array<String> {
-        return args.copyOfRange(offset, args.size)
-    }
-
+class ArgumentParseException : RuntimeException() {
 }

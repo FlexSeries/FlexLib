@@ -21,25 +21,28 @@ import me.st28.flexseries.flexlib.plugin.FlexPlugin
 import org.bukkit.Bukkit
 import org.bukkit.command.Command
 import org.bukkit.command.CommandMap
+import org.bukkit.command.CommandSender
+import org.bukkit.entity.Player
 import java.lang.reflect.Method
+import java.util.*
 import kotlin.reflect.KFunction
-import kotlin.reflect.declaredFunctions
 import kotlin.reflect.declaredMemberFunctions
+import kotlin.reflect.defaultType
 
 /**
- * Holds a {@link FlexPlugin}'s command mappings.
+ * Handles command registration for a [FlexPlugin].
  */
-class FlexCommandMap {
+class FlexCommandMap(val plugin: FlexPlugin) {
 
-    internal companion object {
+    private companion object {
 
-        private var bukkit_commandMap: CommandMap? = null
-        private var bukkit_registerMethod: Method? = null
+        var bukkit_commandMap: CommandMap? = null
+        var bukkit_registerMethod: Method? = null
 
         /**
          * Registers a FlexCommand's Bukkit command with Bukkit's plugin manager via reflection.
          */
-        fun registerBukkitCommand(plugin: FlexPlugin, command: FlexCommand) {
+        private fun registerBukkitCommand(plugin: FlexPlugin, command: FlexCommand) {
             val pluginManager = Bukkit.getPluginManager()
 
             try {
@@ -57,65 +60,118 @@ class FlexCommandMap {
             }
         }
 
-        fun getBukkitCommandMap(): CommandMap = bukkit_commandMap!!
-
-    }
-
-    val plugin: FlexPlugin
-
-    constructor(plugin: FlexPlugin) {
-        this.plugin = plugin
     }
 
     /**
-     * Registers an object containing methods annotated with {@link CommandHandler} that represent
+     * Registers an object containing methods annotated with [CommandHandler] that represent
      * command handlers.
      */
     fun register(obj: Any) {
+        println("Looking for command handlers in object: ${obj.javaClass.canonicalName}")
         val commandModule = FlexPlugin.getGlobalModule(CommandModule::class)!!
-        //obj.javaClass.kotlin.declaredFunctions
-        for (f in obj.javaClass.kotlin.declaredMemberFunctions) {
+        outer@ for (f in obj.javaClass.kotlin.declaredMemberFunctions) {
             val meta: CommandHandler = f.annotations.find { it is CommandHandler } as CommandHandler? ?: continue
 
-            val commandPath = meta.command.split(" ")
+            // Parameter 0 of the function is the instance of the class (object in this case)
 
-            // 1) Get base command (or create and register it if it doesn't exist)
-            var base = commandModule.getCommand(plugin.javaClass.kotlin, commandPath[0]) as FlexCommand?
+            // 1) Determine if function is player only based on the first parameter.
+            println("Registering function '${f.name}'")
+
+            // 2) Determine if function is player only based on the first parameter. Otherwise, it
+            //    must be a CommandSender.
+            val playerOnly: Boolean = when (f.parameters[1].type) {
+                Player::class.defaultType -> true
+                CommandSender::class.defaultType -> false
+                else -> {
+                    LogHelper.severe(plugin, "Invalid command handler '${f.name}': first parameter is not a CommandSender or Player")
+                    continue@outer
+                }
+            }
+
+            println(" Is player only: $playerOnly")
+
+            // 3) Get base command (or create and register it if it doesn't exist)
+            val commandPath: Stack<String> = Stack()
+            commandPath.addAll(meta.command.split(" ").reversed())
+
+            if (commandPath.peek() == "%") {
+                LogHelper.severe(plugin, "Base command can not have reversed arguments")
+                continue@outer
+            }
+
+            println(" Command path: $commandPath")
+            val baseLabel = commandPath.pop()
+
+            var base = commandModule.getBaseCommand(plugin.javaClass.kotlin, baseLabel)
             if (base == null) {
                 // Base doesn't exist, create and register it with the command module.
-                base = FlexCommand(plugin, commandPath[0])
-                commandModule.registerCommand(plugin.javaClass.kotlin, base)
+                println(" Base command doesn't exist. Creating...")
+
+                base = FlexCommand(plugin, baseLabel)
+                commandModule.registerCommand(base)
                 registerBukkitCommand(plugin, base)
             }
 
             // 2) Iterate through labels until subcommand is found (creating along the way)
             var subcmd: BasicCommand = base
-            for (i in 1 until commandPath.size) {
-                val curLabel = commandPath[i].toLowerCase()
+            var offset = 0
+            while (commandPath.isNotEmpty()) {
+                println("Command path not empty")
 
-                var temp = subcmd.subcommands[curLabel]
+                val curLabel = commandPath.pop()
+                println(" curLabel: $curLabel")
+
+                // Check for reverse subcommands
+                if (curLabel == "%") {
+                    println(" Command is reverse")
+
+                    // Find offset
+                    while (commandPath.peek() == "%") {
+                        ++offset
+                        commandPath.pop()
+                    }
+
+                    val newLabel = commandPath.pop()
+
+                    // Look for reverse subcommand
+                    var temp: BasicCommand? = null
+                    for (entry in subcmd.reverseSubcommands) {
+                        if (entry.first == offset && entry.second == newLabel) {
+                            // Found existing
+                            //subcmd = entry.third
+                            temp = entry.third
+                            break
+                        }
+                    }
+
+                    if (temp == null) {
+                        // Command not found, create it
+                        temp = BasicCommand(plugin, newLabel)
+                        subcmd.reverseSubcommands.add(Triple(offset, newLabel, BasicCommand(plugin, newLabel)))
+                    }
+
+                    subcmd = temp
+                    continue
+                }
+
+                /* No reverse subcommand, look for normal subcommands */
+                offset = 0
+                var temp: BasicCommand? = subcmd.subcommands[curLabel]
                 if (temp == null) {
-                    // Subcommand doesn't exist, create and register under the parent
+                    // Subcommand doesn't exist, create it now
                     temp = BasicCommand(plugin, curLabel)
                     subcmd.registerSubcommand(temp)
                 }
                 subcmd = temp
             }
 
-            // 3) Update final command's executor and meta
-            subcmd.setMeta(meta, obj, f as KFunction<Unit>)
+            // 3) Set command executor
+            //subcmd.setMeta(meta, playerOnly, obj, f as KFunction<Any>)
+            subcmd.executors.add(CommandExecutor(meta, playerOnly, subcmd, obj, f as KFunction<Any>, offset))
 
-            // Set default
-            if (meta.defaultSubcommand) {
-                if (subcmd.parent == null) {
-                    return
-                }
+            println("Registering executor in subcmd ${subcmd.label}")
 
-                if (subcmd.parent!!.defaultSubcommand.isNotEmpty()) {
-                    LogHelper.warning(plugin, "Multiple default subcommands are defined for command '${subcmd.parent!!.label}'")
-                }
-                subcmd.parent!!.defaultSubcommand = subcmd.label
-            }
+            // TODO: 4) Set default
         }
     }
 
