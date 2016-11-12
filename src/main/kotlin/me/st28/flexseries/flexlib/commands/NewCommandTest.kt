@@ -19,12 +19,19 @@ package me.st28.flexseries.flexlib.commands
 import me.st28.flexseries.flexlib.command.CommandHandler
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
+import org.bukkit.entity.Player
 
+// TODO: Add way to change name of parameter in usage message
 object NewCommandTest {
 
+    /*@CommandHandler("test")
+    fun sayHello(sender: CommandSender, target: Player) {
+        Bukkit.broadcastMessage("Hello console! Target: ${target.name}")
+    }*/
+
     @CommandHandler("test")
-    fun sayHello(sender: CommandSender) {
-        Bukkit.broadcastMessage("Hello console!")
+    fun sayHello(sender: CommandSender, target: Player?) {
+        Bukkit.broadcastMessage("Hello console! Target: ${target?.name ?: "(null)"}")
     }
 
     /*@CommandHandler("test")

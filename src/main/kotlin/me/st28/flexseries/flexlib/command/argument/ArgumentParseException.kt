@@ -16,5 +16,24 @@
  */
 package me.st28.flexseries.flexlib.command.argument
 
-class ArgumentParseException : RuntimeException() {
+import me.st28.flexseries.flexlib.message.Message
+import me.st28.flexseries.flexlib.plugin.FlexPlugin
+import kotlin.reflect.KClass
+
+class ArgumentParseException : RuntimeException {
+
+    val errorMessage: Message
+
+    constructor(message: Message) {
+        errorMessage = message
+    }
+
+    constructor(message: String, vararg replacements: Any?) {
+        errorMessage = Message.getGlobal(message, *replacements)
+    }
+
+    constructor(plugin: KClass<out FlexPlugin>, message: String, vararg replacements: Any?) {
+        errorMessage = Message.get(plugin, message, *replacements)
+    }
+
 }

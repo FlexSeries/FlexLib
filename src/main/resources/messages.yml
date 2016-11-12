@@ -18,7 +18,7 @@ error:
   module_plugin_not_found: '&cNo FlexPlugin has been specified.'
   must_be_player: '&cYou must be a player to do this.'
   no_permission: '&cYou do not have permission to do this.'
-  player_not_found: '&cUnable to find player ''{1}'''
+  player_not_found: '{#error#}Unable to find player {$input {1} $}.'
   player_not_online: '&cPlayer {1} is not online.'
   player_cannot_be_sender: '&cYou cannot be the target of this command.'
   plugin_not_flexplugin: '&cPlugin ''{1}'' is not a FlexPlugin.'

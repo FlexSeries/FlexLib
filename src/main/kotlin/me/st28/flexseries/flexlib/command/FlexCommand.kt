@@ -16,6 +16,9 @@
  */
 package me.st28.flexseries.flexlib.command
 
+import me.st28.flexseries.flexlib.command.argument.ArgumentParseException
+import me.st28.flexseries.flexlib.logging.LogHelper
+import me.st28.flexseries.flexlib.message.Message
 import me.st28.flexseries.flexlib.plugin.FlexPlugin
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
@@ -38,9 +41,25 @@ class FlexCommand(plugin: FlexPlugin, label: String) : BasicCommand(plugin, labe
         // Create the Bukkit command that executes this FlexCommand
         bukkitCommand = object : Command(label, "(description)", "(usage)", aliases) {
             override fun execute(sender: CommandSender, label: String, args: Array<String>): Boolean {
-                //this@FlexCommand.execute(sender, label, args, 0)
                 // TODO: Error handling
-                this@FlexCommand.execute(CommandContext(this@FlexCommand, sender, label, args), 0)
+
+                var ret: Any?
+                try {
+                    ret = this@FlexCommand.execute(CommandContext(this@FlexCommand, sender, label, args), 0)
+                } catch (ex: ArgumentParseException) {
+                    // Catch any argument parse exceptions and show the user the error
+                    ret = ex.errorMessage
+                } catch (ex: Exception) {
+                    // Catch any other exception
+                    LogHelper.severe(plugin, "An exception occurred during execution of command", ex)
+                    ret = Message.getGlobal("error.internal_error")
+                }
+
+                if (ret is Message) {
+                    ret.sendTo(sender)
+                } else if (ret is String) {
+                    sender.sendMessage(ret)
+                }
                 return true
             }
         }

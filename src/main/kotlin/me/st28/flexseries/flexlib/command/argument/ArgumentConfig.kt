@@ -35,8 +35,11 @@ class ArgumentConfig : GenericDataContainer {
     constructor(p: KParameter) {
         this.name = p.name!!
         this.type = p.type
-        this.isRequired = !p.isOptional
 
+        // Nullable type = not required
+        this.isRequired = !p.type.isMarkedNullable
+
+        // Check for default raw value
         default = (p.annotations.firstOrNull { it is Default } as Default?)?.raw
 
         println("Argument")

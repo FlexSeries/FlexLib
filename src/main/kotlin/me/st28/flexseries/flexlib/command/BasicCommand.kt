@@ -104,9 +104,11 @@ open class BasicCommand {
         println("Applicable executors: ${applicable.size}")
 
         if (applicable.isEmpty()) {
-            // This shouldn't happen since the dummy command check happened prior
+            // No executors found
             println("NO EXECUTOR FOUND, THIS SHOULDN'T HAPPEN")
-            return null
+
+            // TODO: Show usage and description
+            return executors.joinToString("\n") { it.getUsage(context) }
         } else if (applicable.size == 1) {
             // Easy, only one applicable command executor was found
             return applicable[0].execute(context, offset)

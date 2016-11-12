@@ -35,7 +35,8 @@ class CommandModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "commands", "
     internal val commands: MutableMap<KClass<out FlexPlugin>, MutableMap<String, FlexCommand>> = HashMap()
 
     //internal val argumentParsers: MutableMap<KClass<out Any>, ArgumentParser<Any>> = HashMap()
-    internal val argumentParsers: MutableMap<KType, ArgumentParser<Any>> = HashMap()
+    //internal val argumentParsers: MutableMap<KType, ArgumentParser<Any>> = HashMap()
+    internal val argumentParsers: MutableMap<String, ArgumentParser<Any>> = HashMap()
 
     override fun handleEnable() {
         registerArgumentParser(Player::class, PlayerParser)
@@ -66,7 +67,7 @@ class CommandModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "commands", "
      *         False if there already is a parser registered for the specified type.
      */
     fun <T: Any> registerArgumentParser(type: KClass<T>, parser: ArgumentParser<T>): Boolean {
-        val key = type.defaultType
+        val key = type.defaultType.toString()
         if (argumentParsers.containsKey(key)) {
             return false
         }
@@ -76,7 +77,8 @@ class CommandModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "commands", "
     }
 
     fun getArgumentParser(type: KType): ArgumentParser<Any>? {
-        return argumentParsers[type]
+        return argumentParsers[type.toString().replace("?", "")]
+        //return argumentParsers[type]
     }
 
 }

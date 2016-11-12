@@ -17,9 +17,11 @@
 package me.st28.flexseries.flexlib.command
 
 import me.st28.flexseries.flexlib.command.argument.ArgumentConfig
+import me.st28.flexseries.flexlib.command.argument.ArgumentParseException
 import me.st28.flexseries.flexlib.message.Message
 import org.bukkit.entity.Player
 import java.util.*
+import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.defaultType
 
@@ -114,7 +116,12 @@ internal class CommandExecutor {
     }
 
     fun getRequiredArgs(): Int {
-        return arguments.count { it.isRequired }
+        return arguments
+                .filter { it.isRequired }
+                .sumBy {
+                    it.getParser()?.consumed ?: 1
+                    // Should this throw an error if the parser isn't found?
+                }
     }
 
     fun execute(context: CommandContext, offset: Int): Any? {
@@ -144,6 +151,28 @@ internal class CommandExecutor {
         // TODO: Get arguments
         for (ac in arguments) {
             val parser = ac.getParser() ?: return Message.getGlobal("error.command.unknown_argument_type", ac.type)
+
+            if (args.size < parser.consumed) {
+                // Not enough arguments
+                if (!ac.isRequired) {
+                    params.add(null)
+                    continue
+                } else {
+                    println("MISSING REQUIRED ARGUMENT")
+                    return null
+                }
+            }
+
+            val parsed = parser.parse(context, ac, args.take(parser.consumed).toTypedArray())
+
+            if (parsed == null && ac.isRequired) {
+                println("NULL PARSED")
+                // If this happens, argument must be parsed asynchronously (where applicable).
+                // Otherwise, throw an exception
+                return null
+            }
+
+            params.add(parsed)
         }
 
         return function.call(obj, *params.toTypedArray())

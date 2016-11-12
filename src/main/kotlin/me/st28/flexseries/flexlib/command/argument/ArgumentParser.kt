@@ -31,26 +31,26 @@ abstract class ArgumentParser<out T : Any>(val consumed: Int = 1, val async: Boo
      * Attempts to parse the raw input into an argument of the implementation's type parameter.
      *
      * @param context The [CommandContext] in which the command is being executed.
-     * @param raw The raw input supplied by the sender.
+     * @param raw The raw input supplied by the sender. Contains [consumed] element(s).
      * @return A value based on the given input.
      *         Null if data required for the argument wasn't found. This should only happen if the
      *         implementation supports async parsing.
      * @throws ArgumentParseException Should be thrown when the argument failed to be parsed due to
      *         invalid or illegal input.
      */
-    abstract fun parse(context: CommandContext, config: ArgumentConfig, raw: String): T?
+    abstract fun parse(context: CommandContext, config: ArgumentConfig, raw: Array<String>): T?
 
     /**
      * Attempts to parse the raw input into an argument of the implementation's type parameter.
      * This method is called synchronously and is free to do database and other blocking calls.
      *
      * @param context The [CommandContext] in which the command is being executed.
-     * @param raw The raw input supplied by the sender.
+     * @param raw The raw input supplied by the sender. Contains [consumed] element(s).
      * @return A value based on the given input.
      * @throws ArgumentParseException Should be thrown when the argument failed to be parsed due to
      *         invalid or illegal input.
      */
-    open fun parseAsync(context: CommandContext, config: ArgumentConfig, raw: String): T {
+    open fun parseAsync(context: CommandContext, config: ArgumentConfig, raw: Array<String>): T {
         throw UnsupportedOperationException("Parser does not support async parsing")
     }
 
@@ -68,21 +68,21 @@ abstract class ArgumentParser<out T : Any>(val consumed: Int = 1, val async: Boo
 
 object PlayerParser : ArgumentParser<Player>() {
 
-    override fun parse(context: CommandContext, config: ArgumentConfig, raw: String): Player? {
+    override fun parse(context: CommandContext, config: ArgumentConfig, raw: Array<String>): Player? {
         /*if (raw == "{sender}") {
 
         }*/
 
         // 1) Try UUID
         try {
-            return Bukkit.getPlayer(UuidUtils.fromString(raw))
+            return Bukkit.getPlayer(UuidUtils.fromString(raw[0]))
         } catch (ex: IllegalArgumentException) {
             // Not a UUID
         }
 
         // 2) Try name
-        return Bukkit.getPlayerExact(raw)
-            ?: throw ArgumentParseException()
+        return Bukkit.getPlayerExact(raw[0])
+            ?: throw ArgumentParseException("error.player_not_found", raw[0])
     }
 
 }
