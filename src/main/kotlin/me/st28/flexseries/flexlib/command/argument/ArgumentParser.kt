@@ -17,17 +17,32 @@
 package me.st28.flexseries.flexlib.command.argument
 
 import me.st28.flexseries.flexlib.command.CommandContext
+import me.st28.flexseries.flexlib.command.CommandModule
+import me.st28.flexseries.flexlib.plugin.FlexPlugin
 import me.st28.flexseries.flexlib.util.UuidUtils
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
-import java.text.NumberFormat
 import java.util.*
+import kotlin.reflect.KClass
 
 /**
  * @param consumed The number of raw arguments consumed by this parser. Default = 1
  * @param async True if this parser implements [parseAsync].
  */
 abstract class ArgumentParser<out T : Any>(val consumed: Int = 1, val async: Boolean = false) {
+
+   companion object {
+
+       /**
+        * Helper method for registering an argument parser.
+        *
+        * @see CommandModule.registerArgumentParser
+        */
+       fun <T: Any> register(type: KClass<T>, parser: ArgumentParser<T>): Boolean {
+           return FlexPlugin.getGlobalModule(CommandModule::class)!!.registerArgumentParser(type, parser)
+       }
+
+   }
 
     /**
      * Attempts to parse the raw input into an argument of the implementation's type parameter.
