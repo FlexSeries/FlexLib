@@ -80,17 +80,20 @@ open class BasicCommand {
         }
 
         // 2) Check for reverse subcommands
-        for ((cOffset, cLabel, command) in reverseSubcommands) {
+        // TODO: Reverse subcommand execution (on hold)
+        /*for ((cOffset, cLabel, command) in reverseSubcommands) {
             if (cOffset >= curArgs.size) {
                 // Not enough arguments, skip
                 continue
             }
 
+            println("Reverse subcommand: ${curArgs[cOffset]}")
+
             if (curArgs[cOffset] == cLabel) {
                 // Matching subcommand found, attempt to execute
                 return command.execute(context, offset + 1)
             }
-        }
+        }*/
 
         // 3) If this is a dummy command (doesn't have any logic on its own), then attempt to run
         //    its default subcommand

@@ -43,11 +43,11 @@ object NewCommandTest {
     /*@CommandHandler("test")
     fun sayHello(player: Player) {
         Bukkit.broadcastMessage("Hello player ${player.name}!")
-    }
+    }*/
 
     @CommandHandler("player % info")
     fun player_info(sender: CommandSender, @Default player: Player) {
         sender.sendMessage("Player info: ${player.name} (${player.uniqueId})")
-    }*/
+    }
 
 }
