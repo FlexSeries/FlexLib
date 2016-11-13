@@ -18,7 +18,9 @@ package me.st28.flexseries.flexlib.command
 
 import me.st28.flexseries.flexlib.FlexLib
 import me.st28.flexseries.flexlib.command.argument.ArgumentParser
+import me.st28.flexseries.flexlib.command.argument.IntParser
 import me.st28.flexseries.flexlib.command.argument.PlayerParser
+import me.st28.flexseries.flexlib.command.argument.StringParser
 import me.st28.flexseries.flexlib.logging.LogHelper
 import me.st28.flexseries.flexlib.plugin.FlexModule
 import me.st28.flexseries.flexlib.plugin.FlexPlugin
@@ -44,7 +46,9 @@ class CommandModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "commands", "
     internal val sessions: MutableMap<String, MutableMap<UUID, CommandSession>> = HashMap()
 
     override fun handleEnable() {
+        registerArgumentParser(Int::class, IntParser)
         registerArgumentParser(Player::class, PlayerParser)
+        registerArgumentParser(String::class, StringParser)
     }
 
     fun getBaseCommand(plugin: KClass<out FlexPlugin>, command: String): FlexCommand? {

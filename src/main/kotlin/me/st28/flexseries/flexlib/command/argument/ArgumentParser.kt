@@ -20,6 +20,7 @@ import me.st28.flexseries.flexlib.command.CommandContext
 import me.st28.flexseries.flexlib.util.UuidUtils
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
+import java.text.NumberFormat
 import java.util.*
 
 /**
@@ -70,6 +71,26 @@ abstract class ArgumentParser<out T : Any>(val consumed: Int = 1, val async: Boo
             names.add(p.name)
         }
         return names
+    }
+
+}
+
+object StringParser : ArgumentParser<String>() {
+
+    override fun parse(context: CommandContext, config: ArgumentConfig, raw: Array<String>): String? {
+        return raw[0]
+    }
+
+}
+
+object IntParser : ArgumentParser<Int>() {
+
+    override fun parse(context: CommandContext, config: ArgumentConfig, raw: Array<String>): Int? {
+        try {
+            return Integer.valueOf(raw[0])
+        } catch (ex: NumberFormatException) {
+            throw ArgumentParseException("error.input_not_integer")
+        }
     }
 
 }

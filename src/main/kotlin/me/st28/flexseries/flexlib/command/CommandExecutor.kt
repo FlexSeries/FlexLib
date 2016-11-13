@@ -20,6 +20,7 @@ import me.st28.flexseries.flexlib.command.argument.ArgumentConfig
 import me.st28.flexseries.flexlib.command.argument.ArgumentParseException
 import me.st28.flexseries.flexlib.logging.LogHelper
 import me.st28.flexseries.flexlib.message.Message
+import me.st28.flexseries.flexlib.message.list.ListBuilder
 import me.st28.flexseries.flexlib.plugin.FlexPlugin
 import me.st28.flexseries.flexlib.util.SchedulerUtils
 import org.bukkit.Bukkit
@@ -298,6 +299,10 @@ internal class CommandExecutor {
             ret.sendTo(sender)
         } else if (ret is String) {
             sender.sendMessage(ret)
+        } else if (ret is ListBuilder) {
+            ret.sendTo(sender)
+        } else if (ret != null) {
+            LogHelper.warning(command.plugin, "Unknown command return type '${ret.javaClass.kotlin.qualifiedName}'")
         }
 
         session.running = false
