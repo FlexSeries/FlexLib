@@ -19,11 +19,19 @@ package me.st28.flexseries.flexlib.command
 import org.bukkit.command.CommandSender
 
 class CommandContext(
-        val command: FlexCommand,
         val sender: CommandSender,
         val label: String,
-        val args: Array<String>
+        val args: Array<String>,
+        offset: Int
 ) {
+
+    internal var offset: Int
+
+    val relativeArgs: Array<String> = args.copyOfRange(offset, args.size)
+
+    init {
+        this.offset = offset
+    }
 
     fun getArgs(offset: Int): Array<String> {
         return args.copyOfRange(offset, args.size)

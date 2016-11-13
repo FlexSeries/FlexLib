@@ -18,10 +18,12 @@ package me.st28.flexseries.flexlib.command
 
 import me.st28.flexseries.flexlib.command.argument.ArgumentConfig
 import me.st28.flexseries.flexlib.command.argument.ArgumentParseException
+import me.st28.flexseries.flexlib.logging.LogHelper
 import me.st28.flexseries.flexlib.message.Message
-import org.bukkit.entity.Player
+import me.st28.flexseries.flexlib.plugin.FlexPlugin
+import me.st28.flexseries.flexlib.util.SchedulerUtils
+import org.bukkit.Bukkit
 import java.util.*
-import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.defaultType
 
@@ -124,20 +126,15 @@ internal class CommandExecutor {
                 }
     }
 
-    fun execute(context: CommandContext, offset: Int): Any? {
-        val params: MutableList<Any?> = ArrayList()
-
-        // Add sender to params
-        if (isPlayerOnly) {
-            params.add(context.sender as Player)
-        } else {
-            params.add(context.sender)
+    fun execute(context: CommandContext, offset: Int) {
+        // Get session
+        val session = FlexPlugin.getGlobalModule(CommandModule::class)!!.createSession(command, context)
+        if (session == null) {
+            Message.getGlobal("error.command.already_executing").sendTo(context.sender)
+            return
         }
 
-        // Add context to params, where applicable
-        if (requiresContext) {
-            params.add(context)
-        }
+        session.offset = offset
 
         val args = Stack<String>()
         args.addAll(context.getArgs(offset).reversed())
@@ -145,55 +142,165 @@ internal class CommandExecutor {
         // Make sure enough arguments were provided.
         if (args.size < getRequiredArgs()) {
             // Not enough arguments, show usage
-            return Message.getGlobal("error.command_usage", getUsage(context))
+            Message.getGlobal("error.command_usage", getUsage(context)).sendTo(context.sender)
+            return
         }
 
-        // TODO: Get arguments
-        for (ac in arguments) {
-            val parser = ac.getParser() ?: return Message.getGlobal("error.command.unknown_argument_type", ac.type)
+        // Get arguments
+        handleNextArgument(session, context, args, 0)
+    }
 
-            if (args.size < parser.consumed) {
-                // Not enough arguments
-                if (!ac.isRequired) {
-                    // Argument isn't required
+    /**
+     * Handles an argument config at a time.
+     *
+     * @param session The session for the command.
+     */
+    private fun handleNextArgument(session: CommandSession, context: CommandContext, args: Stack<String>, curArg: Int) {
+        // Check to see if command execution has been canceled
+        if (!session.running) {
+            return
+        }
 
-                    // Get default argument or just add null to the params list
-                    if (ac.default != null) {
-                        params.add(parser.parse(context, ac, arrayOf(ac.default)))
-                    } else {
-                        params.add(null)
-                    }
-                    continue
-                } else {
-                    // Argument is required
-                    if (ac.default != null) {
-                        val parsed = parser.parse(context, ac, arrayOf(ac.default))
+        val async = !Bukkit.isPrimaryThread()
 
-                        if (parsed == null) {
-                            // Even default is null, so give error
-                            println("MISSING REQUIRED ARGUMENT")
-                            return null
+        val ac = arguments[curArg]
+
+        val parser = ac.getParser() ?: return session.cancelWith(Message.getGlobal("error.command.unknown_argument_type", ac.type))
+
+        if (args.size < parser.consumed) {
+            // Not enough arguments
+            if (!ac.isRequired) {
+                // Argument isn't required
+
+                // Get default argument or just add null to the params list
+                if (ac.default != null) {
+                    // Detect synchronous or asynchronous
+                    try {
+                        if (async) {
+                            session.params.add(parser.parseAsync(context, ac, arrayOf(ac.default)))
+                        } else {
+                            session.params.add(parser.parse(context, ac, arrayOf(ac.default)))
                         }
-
-                        params.add(parsed)
+                    } catch (ex: ArgumentParseException) {
+                        return session.cancelWith(ex.errorMessage)
                     }
-                    continue
+                } else {
+                    session.params.add(null)
+                }
+            } else {
+                // Argument is required
+
+                if (ac.default != null) {
+                    val parsed: Any?
+
+                    // Detect synchronous or asynchronous
+                    try {
+                        if (async) {
+                            parsed = parser.parseAsync(context, ac, arrayOf(ac.default))
+                        } else {
+                            parsed = parser.parse(context, ac, arrayOf(ac.default))
+                        }
+                    } catch (ex: ArgumentParseException) {
+                        return session.cancelWith(ex.errorMessage)
+                    }
+
+                    if (parsed == null) {
+                        // If default is null and this is async
+                        if (async) {
+                            println("MISSING REQUIRED ARGUMENT")
+                        } else {
+                            // Attempt to resolve argument asynchronously
+                            SchedulerUtils.runAsync(command.plugin) {
+                                handleNextArgument(session, context, args, curArg)
+                            }
+                        }
+                        return
+                    }
+
+                    session.params.add(parsed)
                 }
             }
+        } else {
+            // Enough arguments provided
 
-            val parsed = parser.parse(context, ac, args.take(parser.consumed).toTypedArray())
+            val consumed = args.take(parser.consumed)
+            val parsed = try {
+                parser.parse(context, ac, consumed.toTypedArray())
+            } catch (ex: ArgumentParseException) {
+                return session.cancelWith(ex.errorMessage)
+            }
 
             if (parsed == null && ac.isRequired) {
                 println("NULL PARSED")
-                // If this happens, argument must be parsed asynchronously (where applicable).
-                // Otherwise, throw an exception
-                return null
+
+                if (parser.async) {
+                    println("MISSING REQUIRED ARGUMENT")
+                } else {
+                    // Attempt to resolve argument asynchronously
+
+                    // Replace consumed arguments first
+                    args.addAll(consumed.asReversed())
+                    SchedulerUtils.runAsync(command.plugin) {
+                        handleNextArgument(session, context, args, curArg)
+                    }
+                }
+
+                return
             }
 
-            params.add(parsed)
+            session.params.add(parsed)
         }
 
-        return function.call(obj, *params.toTypedArray())
+        // Finish command execution or handle next argument synchronously
+        SchedulerUtils.runSync(command.plugin) {
+            if (curArg + 1 == arguments.size) {
+                // We're done with argument config
+                finishExecution(session)
+            } else {
+                // Execute next argument
+                handleNextArgument(session, context, args, curArg + 1)
+            }
+        }
+    }
+
+    /**
+     * Finishes the execution of the command.
+     * This function should be called synchronously.
+     */
+    private fun finishExecution(session: CommandSession) {
+        // Check to see if command execution has been canceled
+        if (!session.running) {
+            return
+        }
+
+        val sender = session.getSender() ?: return
+        val params = session.params
+
+        // Add sender to params
+        params.add(0, sender)
+
+        // Add context to params, where applicable
+        if (requiresContext) {
+            params.add(1, CommandContext(sender, session.label, session.args, session.offset))
+        }
+
+        var ret: Any?
+        try {
+            ret = function.call(obj, *params.toTypedArray())
+        } catch (ex: Exception) {
+            // Catch any other exception
+            LogHelper.severe(command.plugin, "An exception occurred during execution of command", ex)
+            ret = Message.getGlobal("error.internal_error")
+        }
+
+        // Send return value, if possible, to sender
+        if (ret is Message) {
+            ret.sendTo(sender)
+        } else if (ret is String) {
+            sender.sendMessage(ret)
+        }
+
+        session.running = false
     }
 
 }

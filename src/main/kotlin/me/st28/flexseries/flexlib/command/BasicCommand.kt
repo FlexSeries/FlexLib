@@ -24,6 +24,9 @@ import java.util.*
  */
 open class BasicCommand {
 
+    // Used for session tracking
+    internal val uuid: UUID = UUID.randomUUID()
+
     /* Immutable command properties */
     val plugin: FlexPlugin
     val label: String
@@ -76,6 +79,7 @@ open class BasicCommand {
 
         // 1) If the next argument is a valid subcommand, execute it.
         if (args.size > offset && subcommands.containsKey(args[offset].toLowerCase())) {
+            ++context.offset
             return subcommands[args[offset].toLowerCase()]!!.execute(context, offset + 1)
         }
 

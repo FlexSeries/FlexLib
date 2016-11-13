@@ -1,5 +1,6 @@
 error:
   command:
+    already_executing: '{#error#}This command is still executing.'
     unknown_argument_type: '{#error#}Unknown command argument type {$input {1} $}.'
     usage: '&4USAGE: &c{1}'
     unknown: '&cUnknown command {$input {1} $}'

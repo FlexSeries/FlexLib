@@ -19,9 +19,13 @@ package me.st28.flexseries.flexlib.command
 import me.st28.flexseries.flexlib.FlexLib
 import me.st28.flexseries.flexlib.command.argument.ArgumentParser
 import me.st28.flexseries.flexlib.command.argument.PlayerParser
+import me.st28.flexseries.flexlib.logging.LogHelper
 import me.st28.flexseries.flexlib.plugin.FlexModule
 import me.st28.flexseries.flexlib.plugin.FlexPlugin
 import org.bukkit.entity.Player
+import org.bukkit.event.EventHandler
+import org.bukkit.event.Listener
+import org.bukkit.event.player.PlayerQuitEvent
 import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
@@ -30,11 +34,14 @@ import kotlin.reflect.defaultType
 /***
  * The main command manager for the FlexLib command framework.
  */
-class CommandModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "commands", "Manages the FlexLib command framework") {
+class CommandModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "commands", "Manages the FlexLib command framework"), Listener {
 
     internal val commands: MutableMap<KClass<out FlexPlugin>, MutableMap<String, FlexCommand>> = HashMap()
 
     internal val argumentParsers: MutableMap<String, ArgumentParser<Any>> = HashMap()
+
+    // Sender identifier, < command UUID -> session >
+    internal val sessions: MutableMap<String, MutableMap<UUID, CommandSession>> = HashMap()
 
     override fun handleEnable() {
         registerArgumentParser(Player::class, PlayerParser)
@@ -76,6 +83,34 @@ class CommandModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "commands", "
 
     fun getArgumentParser(type: KType): ArgumentParser<Any>? {
         return argumentParsers[type.toString().replace("?", "")]
+    }
+
+    /**
+     * Creates a session for the specified command and sender.
+     *
+     * @return The newly created session.
+     *         Null if a session already exists.
+     */
+    internal fun createSession(command: BasicCommand, context: CommandContext): CommandSession? {
+        val identifier = (context.sender as? Player)?.uniqueId?.toString() ?: "CONSOLE"
+        val pSessions = sessions.getOrPut(identifier, { HashMap() })
+
+        if (pSessions[command.uuid]?.running ?: false) {
+            return null
+        }
+
+        pSessions.put(command.uuid, CommandSession(plugin, context))
+        return pSessions[command.uuid]!!
+    }
+
+    @EventHandler
+    fun onPlayerQuit(e: PlayerQuitEvent) {
+        val sessions = this.sessions.remove(e.player.uniqueId.toString()) ?: return
+
+        LogHelper.debug(this, "Cancelling command sessions for ${e.player.name}")
+        for (v in sessions.values) {
+            v.running = false
+        }
     }
 
 }
