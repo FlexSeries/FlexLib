@@ -138,7 +138,7 @@ internal class CommandExecutor {
         session.offset = offset
 
         val args = Stack<String>()
-        args.addAll(context.getArgs(offset).reversed())
+        args.addAll(context.getRelativeArgs())
 
         // Make sure enough arguments were provided.
         if (args.size < getRequiredArgs()) {
@@ -147,8 +147,13 @@ internal class CommandExecutor {
             return
         }
 
-        // Get arguments
-        handleNextArgument(session, context, args, 0)
+        if (arguments.isEmpty()) {
+            // No arguments, run command
+            finishExecution(session)
+        } else {
+            // Get arguments
+            handleNextArgument(session, context, args, 0)
+        }
     }
 
     /**

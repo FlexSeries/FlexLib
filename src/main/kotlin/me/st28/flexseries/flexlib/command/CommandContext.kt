@@ -27,13 +27,15 @@ class CommandContext(
 
     internal var offset: Int
 
-    val relativeArgs: Array<String> = args.copyOfRange(offset, args.size)
-
     init {
         this.offset = offset
     }
 
     fun getArgs(offset: Int): Array<String> {
+        return args.copyOfRange(offset, args.size)
+    }
+
+    fun getRelativeArgs(): Array<String> {
         return args.copyOfRange(offset, args.size)
     }
 
