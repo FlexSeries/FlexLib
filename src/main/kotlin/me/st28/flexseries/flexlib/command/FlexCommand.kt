@@ -16,6 +16,8 @@
  */
 package me.st28.flexseries.flexlib.command
 
+import me.st28.flexseries.flexlib.message.Message
+import me.st28.flexseries.flexlib.message.list.ListBuilder
 import me.st28.flexseries.flexlib.plugin.FlexPlugin
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
@@ -38,7 +40,15 @@ class FlexCommand(plugin: FlexPlugin, label: String) : BasicCommand(plugin, labe
         // Create the Bukkit command that executes this FlexCommand
         bukkitCommand = object : Command(label, "(description)", "(usage)", aliases) {
             override fun execute(sender: CommandSender, label: String, args: Array<String>): Boolean {
-                this@FlexCommand.execute(CommandContext(sender, label, args, 0), 0)
+                val ret = this@FlexCommand.execute(CommandContext(sender, label, args, 0), 0) ?: return true
+
+                if (ret is Message) {
+                    ret.sendTo(sender)
+                } else if (ret is String) {
+                    sender.sendMessage(ret)
+                } else if (ret is ListBuilder) {
+                    ret.sendTo(sender)
+                }
                 return true
             }
         }

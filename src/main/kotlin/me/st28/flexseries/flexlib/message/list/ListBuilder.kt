@@ -25,6 +25,8 @@ import java.util.*
 
 class ListBuilder {
 
+    private val masterModule: MasterMessageModule
+
     private var pageItems: Int
     private var nextPageCommand: String = ""
 
@@ -32,11 +34,19 @@ class ListBuilder {
 
     private var page: Int = 0
     private var pageCount: Int = 0
+    private var index: Int = 0
 
     init {
-        pageItems = FlexPlugin.getGlobalModule(MasterMessageModule::class)!!.listPageItems
+        masterModule = FlexPlugin.getGlobalModule(MasterMessageModule::class)!!
+        pageItems = masterModule.listPageItems
     }
 
+    /**
+     * Sets the page information for the builder.
+     *
+     * @param page The page to send. Starts at 0
+     * @param elemCount The total number of elements.
+     */
     fun page(page: Int, elemCount: Int): ListBuilder {
         this.page = page
         this.pageCount = Math.ceil(elemCount / pageItems.toDouble()).toInt()
@@ -63,7 +73,7 @@ class ListBuilder {
         val defaultHeader = module.listHeaderFormats["DEFAULT"]
 
         if (header != null) {
-            messages.add(Message.plain(header.getFormatted(page, pageCount, defaultHeader, *replacements)))
+            messages.add(Message.plain(header.getFormatted(page + 1, pageCount, defaultHeader, *replacements)))
         }
         return this
     }
@@ -80,7 +90,9 @@ class ListBuilder {
 
     fun element(type: String, vararg replacements: String): ListBuilder {
         val format = FlexPlugin.getGlobalModule(MasterMessageModule::class)!!.listElementFormats[type] ?: "Unknown format: '$type'"
-        messages.add(Message.plain(String.format(MessageModule.setupPatternReplace(format), *replacements)))
+                .replace("{INDEX}", (index + 1).toString())
+
+        messages.add(Message.processed(String.format(MessageModule.setupPatternReplace(format), *replacements)))
         return this
     }
 
@@ -91,7 +103,7 @@ class ListBuilder {
         val index = page * pageItems
         for (i in 0 until pageItems) {
             try {
-                element(type, index.toString(), *populator(index + i))
+                element(type, *populator(index + i))
             } catch (ex: IndexOutOfBoundsException) {
                 // We're done
                 break

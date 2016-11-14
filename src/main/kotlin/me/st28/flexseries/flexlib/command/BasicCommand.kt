@@ -16,7 +16,9 @@
  */
 package me.st28.flexseries.flexlib.command
 
+import me.st28.flexseries.flexlib.message.list.ListBuilder
 import me.st28.flexseries.flexlib.plugin.FlexPlugin
+import org.apache.commons.lang.mutable.Mutable
 import java.util.*
 
 /**
@@ -78,9 +80,16 @@ open class BasicCommand {
         val curArgs = context.getArgs(offset)
 
         // 1) If the next argument is a valid subcommand, execute it.
-        if (args.size > offset && subcommands.containsKey(args[offset].toLowerCase())) {
-            ++context.offset
-            return subcommands[args[offset].toLowerCase()]!!.execute(context, offset + 1)
+        if (args.size > offset) {
+            val subLabel = args[offset].toLowerCase()
+            if (subLabel == "help") {
+                // Help command
+                return showHelp(context)
+            } else if (subcommands.containsKey(subLabel)) {
+                // Registered subcommand
+                ++context.offset
+                return subcommands[args[offset].toLowerCase()]!!.execute(context, offset + 1)
+            }
         }
 
         // 2) Check for reverse subcommands
@@ -112,10 +121,10 @@ open class BasicCommand {
 
         if (applicable.isEmpty()) {
             // No executors found
-            println("NO EXECUTOR FOUND, THIS SHOULDN'T HAPPEN")
 
             // TODO: Show usage and description
-            return executors.joinToString("\n") { it.getUsage(context) }
+            //return executors.joinToString("\n") { it.getUsage(context) }
+            return showHelp(context) // Default to help command
         } else if (applicable.size == 1) {
             // Easy, only one applicable command executor was found
             return applicable[0].execute(context, offset)
@@ -125,6 +134,42 @@ open class BasicCommand {
             // TODO: Handle
             return null
         }
+    }
+
+    private fun showHelp(context: CommandContext): ListBuilder {
+        val builder = ListBuilder()
+
+        val page: Int = try {
+            Integer.parseInt(context.getArgs(context.offset + 1)[0]) - 1
+        } catch (ex: Exception) {
+            0
+        }
+
+        val rawPath: MutableList<String> = ArrayList()
+        rawPath.add(label)
+        var temp = parent
+        while (temp != null) {
+            rawPath.add(temp.label)
+            temp = temp.parent
+        }
+
+        val path = rawPath.reversed().joinToString(" ", "/")
+
+        val fullHelp: MutableList<Pair<String, String>> = ArrayList()
+
+        for (subcmd in subcommands.values) {
+            for (executor in subcmd.executors) {
+                fullHelp.add(Pair(executor.getUsage(), if (executor.description.isEmpty()) "(no description set)" else executor.description))
+            }
+        }
+
+        builder.page(page, fullHelp.count())
+
+        builder.header("help", path)
+
+        builder.elements("command", { index -> fullHelp[index].toList().toTypedArray() })
+
+        return builder
     }
 
 }

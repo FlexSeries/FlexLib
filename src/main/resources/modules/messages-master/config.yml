@@ -47,9 +47,9 @@ list:
         center: '&aHelp: &6{1} &c(pg.{PAGE}/{MAXPAGES})'
 
     element:
-      command: '&c{1} &8- &e{2}'
-      command_help: '&c{$command {1}{,}{1} $} &8- &e{2}'
+      #command: '{$command {1}{,}{1} $} &8- &e{2}'
+      command: '&b{1} &8- &e{2}'
       command_help: '&c{$command_suggestion {1}{,}{1} $} &8- &e{2}'
       element: '&6{1}'
       element_description: '&e{1}: &6{2}'
-      number: '&e{1}) &6{2}'
+      number: '&e{INDEX}) &6{2}'

@@ -45,6 +45,10 @@ class Message {
             return Message(message)
         }
 
+        fun processed(message: String): Message {
+            return Message(FlexPlugin.getGlobalModule(MasterMessageModule::class)!!.processMessage(message))
+        }
+
     }
 
     private val message: String
