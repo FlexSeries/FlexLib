@@ -20,6 +20,7 @@ import me.st28.flexseries.flexlib.message.MasterMessageModule
 import me.st28.flexseries.flexlib.message.Message
 import me.st28.flexseries.flexlib.message.MessageModule
 import me.st28.flexseries.flexlib.plugin.FlexPlugin
+import org.bukkit.ChatColor
 import org.bukkit.command.CommandSender
 import java.util.*
 
@@ -35,6 +36,8 @@ class ListBuilder {
     private var page: Int = 0
     private var pageCount: Int = 0
     private var index: Int = 0
+
+    private var emptyMessage: String = "&c&oNothing here"
 
     init {
         masterModule = FlexPlugin.getGlobalModule(MasterMessageModule::class)!!
@@ -60,6 +63,11 @@ class ListBuilder {
 
     fun nextPageCommand(command: String): ListBuilder {
         this.nextPageCommand = command
+        return this
+    }
+
+    fun emptyMessage(message: String): ListBuilder {
+        this.emptyMessage = message
         return this
     }
 
@@ -181,6 +189,9 @@ class ListBuilder {
 
     fun sendTo(vararg sender: CommandSender) {
         val senders = sender.asList()
+        if (messages.size <= 1) {
+            message(emptyMessage)
+        }
         messages.forEach { it.sendTo(senders) }
     }
 
