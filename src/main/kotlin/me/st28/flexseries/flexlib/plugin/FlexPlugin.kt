@@ -203,6 +203,16 @@ abstract class FlexPlugin : JavaPlugin() {
         } catch (ex: Exception) {
             LogHelper.severe(this, "An exception occurred while disabling", ex)
         }
+
+        for (module in modules.values.reversed()) {
+            if (module.status.isEnabled()) {
+                try {
+                    module.disable()
+                } catch (ex: Exception) {
+                    LogHelper.severe(this, "An exception occurred while disabling module '${module.name}'", ex)
+                }
+            }
+        }
     }
 
     /**
