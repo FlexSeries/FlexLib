@@ -17,6 +17,7 @@
 package me.st28.flexseries.flexlib
 
 import me.st28.flexseries.flexlib.command.CommandModule
+import me.st28.flexseries.flexlib.commands.FlexPluginCommands
 import me.st28.flexseries.flexlib.commands.NewCommandTest
 import me.st28.flexseries.flexlib.message.MasterMessageModule
 import me.st28.flexseries.flexlib.message.MessageModule
@@ -36,8 +37,8 @@ class FlexLib : FlexPlugin() {
     override fun handleEnable() {
         isDebugEnabled = true
 
-        /*commandMap.register(CommandLibTest)
-        commandMap.register(FlexPluginCommands)*/
+        //commandMap.register(CommandLibTest)
+        commandMap.register(FlexPluginCommands)
         commandMap.register(NewCommandTest)
     }
 
