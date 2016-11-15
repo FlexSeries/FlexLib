@@ -47,11 +47,11 @@ class ListBuilder {
     /**
      * Sets the page information for the builder.
      *
-     * @param page The page to send. Starts at 0
+     * @param page The page to send. Starts at 1 since this is mostly supplied by user input.
      * @param elemCount The total number of elements.
      */
     fun page(page: Int, elemCount: Int): ListBuilder {
-        this.page = page
+        this.page = page - 1
         this.pageCount = Math.ceil(elemCount / pageItems.toDouble()).toInt()
         return this
     }
