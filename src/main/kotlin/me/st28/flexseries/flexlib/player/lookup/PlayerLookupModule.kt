@@ -72,11 +72,13 @@ class PlayerLookupModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "player-
         if (lookupSec.getBoolean("enabled")) {
             val resolverName = lookupSec.getString("resolver")
             resolver = when (resolverName) {
-                Resolver_MCAPIca.NAME -> Resolver_MCAPIca()
+                Resolver.RESOLVER_Mojang -> Resolver_Mojang()
+                Resolver.RESOLVER_MCAPIca -> Resolver_MCAPIca()
                 else -> throw IllegalArgumentException("Invalid lookup resolver '$resolverName'")
             }
 
-            LogHelper.info(this, "Lookup enabled, using resolver: $resolverName")
+            resolver.loadConfig(lookupSec.getConfigurationSection(resolver.name))
+            LogHelper.info(this, "Lookup enabled, using resolver: ${resolver.name}")
         }
     }
 
