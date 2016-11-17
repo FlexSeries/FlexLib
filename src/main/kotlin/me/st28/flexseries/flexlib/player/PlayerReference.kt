@@ -45,13 +45,21 @@ class PlayerReference {
 
     constructor(uuid: UUID) {
         this.uuid = uuid
-        this.name = FlexPlugin.getGlobalModule(PlayerLookupModule::class)!!.getName(uuid) ?: throw UnknownPlayerException(uuid)
+        this.name = Bukkit.getPlayer(uuid)?.name
+            ?: FlexPlugin.getGlobalModule(PlayerLookupModule::class)!!.getName(uuid)
+            ?: uuid.toString()
     }
 
     constructor(name: String) {
         val lookup = FlexPlugin.getGlobalModule(PlayerLookupModule::class)!!
-        this.uuid = lookup.getUuid(name) ?: throw UnknownPlayerException(name)
-        this.name = lookup.getName(uuid) ?: throw UnknownPlayerException(name) // Shouldn't happen?
+        val player = Bukkit.getPlayerExact(name)
+
+        this.uuid = player?.uniqueId
+                ?: lookup.getUuid(name)
+                ?: throw UnknownPlayerException(name)
+        this.name = player?.name
+                ?: lookup.getName(uuid)
+                ?: uuid.toString() // Shouldn't happen?
     }
 
     override fun toString(): String {

@@ -76,16 +76,17 @@ internal class Resolver_MCAPIca : Resolver {
             val obj = json.parse(recv).asJsonArray.get(0).asJsonObject
             return CacheEntry(UUID.fromString(obj.get("uuid_formatted").asString), obj.get("name").asString)
         } catch (ex: Exception) {
+            ex.printStackTrace()
             return null
         }
     }
 
     override fun lookup(uuid: UUID): CacheEntry? {
-        return lookup_impl("https://mcapi.ca/name/uuid/${uuid.toString().replace("-", "")}")
+        return lookup_impl("https://mcapi.ca/profile/${uuid.toString().replace("-", "")}")
     }
 
     override fun lookup(name: String): CacheEntry? {
-        return lookup_impl("https://mcapi.ca/uuid/player/$name")
+        return lookup_impl("https://mcapi.ca/profile/$name")
     }
 
 }
