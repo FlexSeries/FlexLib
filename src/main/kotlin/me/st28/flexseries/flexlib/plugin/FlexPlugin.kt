@@ -60,7 +60,7 @@ abstract class FlexPlugin : JavaPlugin() {
 
     private var autosaveRunnable: BukkitRunnable? = null
 
-    override fun onLoad() {
+    final override fun onLoad() {
         commandMap = FlexCommandMap(this)
         status = PluginStatus.LOADING
 
@@ -71,7 +71,7 @@ abstract class FlexPlugin : JavaPlugin() {
         handleLoad()
     }
 
-    override fun onEnable() {
+    final override fun onEnable() {
         val startTime = System.currentTimeMillis()
 
         status = PluginStatus.ENABLING
@@ -120,7 +120,7 @@ abstract class FlexPlugin : JavaPlugin() {
         )
     }
 
-    override fun reloadConfig() {
+    final override fun reloadConfig() {
         super.reloadConfig()
 
         if (!hasConfig) {
@@ -193,7 +193,7 @@ abstract class FlexPlugin : JavaPlugin() {
         }
     }
 
-    override fun onDisable() {
+    final override fun onDisable() {
         status = PluginStatus.DISABLING
 
         saveAll(false, true)
@@ -202,6 +202,16 @@ abstract class FlexPlugin : JavaPlugin() {
             handleDisable()
         } catch (ex: Exception) {
             LogHelper.severe(this, "An exception occurred while disabling", ex)
+        }
+
+        for (module in modules.values.reversed()) {
+            if (module.status.isEnabled()) {
+                try {
+                    module.disable()
+                } catch (ex: Exception) {
+                    LogHelper.severe(this, "An exception occurred while disabling module '${module.name}'", ex)
+                }
+            }
         }
     }
 

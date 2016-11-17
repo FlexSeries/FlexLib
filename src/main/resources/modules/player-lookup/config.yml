@@ -10,6 +10,9 @@ storage:
 lookup:
   enabled: true
   resolver: 'MCAPI_ca'
+  Mojang:
+    connect timeout: 5000
+    read timeout: 5000
   MCAPI_ca:
     connect timeout: 5000
     read timeout: 5000

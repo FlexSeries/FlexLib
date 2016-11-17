@@ -16,45 +16,89 @@
  */
 package me.st28.flexseries.flexlib.player.lookup
 
+import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import me.st28.flexseries.flexlib.util.UuidUtils
 import org.bukkit.configuration.ConfigurationSection
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.*
 
-internal interface Resolver {
-
-    fun getName(): String
-
-    fun loadConfig(config: ConfigurationSection)
-
-    fun lookup(uuid: UUID): CacheEntry?
-
-    fun lookup(name: String): CacheEntry?
-
-}
-
-internal class Resolver_MCAPIca : Resolver {
+internal abstract class Resolver(val name: String) {
 
     companion object {
 
-        val NAME: String = "MCAPI_ca"
-
         val json: JsonParser = JsonParser()
 
+        val RESOLVER_Mojang = "Mojang"
+        val RESOLVER_MCAPIca = "MCAPI_ca"
+
     }
 
-    private var connectTimeout: Int = 0
-    private var readTimeout: Int = 0
 
-    override fun getName(): String {
-        return NAME
+    protected var connectTimeout: Int = 0
+    protected var readTimeout: Int = 0
+
+    open fun loadConfig(config: ConfigurationSection?) {
+        connectTimeout = config?.getInt("connect timeout", 5000) ?: 5000
+        readTimeout = config?.getInt("read timeout", 5000) ?: 5000
     }
 
-    override fun loadConfig(config: ConfigurationSection) {
-        connectTimeout = config.getInt("connect timeout", 5000)
-        readTimeout = config.getInt("read timeout", 5000)
+    abstract fun lookup(uuid: UUID): CacheEntry?
+
+    abstract fun lookup(name: String): CacheEntry?
+
+}
+
+internal class Resolver_Mojang : Resolver(RESOLVER_Mojang) {
+
+    private fun lookup_impl(inUrl: String): JsonObject? {
+        try {
+            val url = URL(inUrl)
+            val connection = url.openConnection()
+            val http = connection as HttpURLConnection
+
+            http.connectTimeout = connectTimeout
+            http.readTimeout = readTimeout
+            http.connect()
+
+            var recv = ""
+            http.inputStream.use {
+                while (it.available() > 0) {
+                    recv += it.read().toChar()
+                }
+            }
+
+            return json.parse(recv).asJsonArray.get(0).asJsonObject
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+            return null
+        }
     }
+
+    override fun lookup(uuid: UUID): CacheEntry? {
+        val obj = lookup_impl("https://sessionserver.mojang.com/session/minecraft/profile/${uuid.toString().replace("-", "")}")
+            ?: return null
+
+        return CacheEntry(
+                uuid,
+                obj["name"].asString
+        )
+    }
+
+    override fun lookup(name: String): CacheEntry? {
+        val obj = lookup_impl("https://api.mojang.com/users/profiles/minecraft/$name")
+            ?: return null
+
+        return CacheEntry(
+                UuidUtils.fromString(obj["id"].asString),
+                obj["name"].asString
+        )
+    }
+
+}
+
+internal class Resolver_MCAPIca : Resolver(RESOLVER_MCAPIca) {
 
     private fun lookup_impl(inUrl: String): CacheEntry? {
         try {
@@ -76,16 +120,17 @@ internal class Resolver_MCAPIca : Resolver {
             val obj = json.parse(recv).asJsonArray.get(0).asJsonObject
             return CacheEntry(UUID.fromString(obj.get("uuid_formatted").asString), obj.get("name").asString)
         } catch (ex: Exception) {
+            ex.printStackTrace()
             return null
         }
     }
 
     override fun lookup(uuid: UUID): CacheEntry? {
-        return lookup_impl("https://mcapi.ca/name/uuid/${uuid.toString().replace("-", "")}")
+        return lookup_impl("https://mcapi.ca/profile/${uuid.toString().replace("-", "")}")
     }
 
     override fun lookup(name: String): CacheEntry? {
-        return lookup_impl("https://mcapi.ca/uuid/player/$name")
+        return lookup_impl("https://mcapi.ca/profile/$name")
     }
 
 }

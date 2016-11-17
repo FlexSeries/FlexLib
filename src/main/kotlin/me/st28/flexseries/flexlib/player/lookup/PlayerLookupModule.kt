@@ -21,13 +21,16 @@ import com.google.common.cache.CacheBuilder
 import me.st28.flexseries.flexlib.FlexLib
 import me.st28.flexseries.flexlib.logging.LogHelper
 import me.st28.flexseries.flexlib.plugin.FlexModule
+import org.bukkit.event.EventHandler
+import org.bukkit.event.Listener
+import org.bukkit.event.player.PlayerJoinEvent
 import java.util.*
 import java.util.concurrent.Callable
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 import java.util.concurrent.TimeUnit
 
-class PlayerLookupModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "player-lookup", "Player UUID and name lookup and cache") {
+class PlayerLookupModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "player-lookup", "Player UUID and name lookup and cache"), Listener {
 
     private lateinit var cache: Cache<UUID, CacheEntry>
 
@@ -69,11 +72,13 @@ class PlayerLookupModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "player-
         if (lookupSec.getBoolean("enabled")) {
             val resolverName = lookupSec.getString("resolver")
             resolver = when (resolverName) {
-                Resolver_MCAPIca.NAME -> Resolver_MCAPIca()
+                Resolver.RESOLVER_Mojang -> Resolver_Mojang()
+                Resolver.RESOLVER_MCAPIca -> Resolver_MCAPIca()
                 else -> throw IllegalArgumentException("Invalid lookup resolver '$resolverName'")
             }
 
-            LogHelper.info(this, "Lookup enabled, using resolver: $resolverName")
+            resolver.loadConfig(lookupSec.getConfigurationSection(resolver.name))
+            LogHelper.info(this, "Lookup enabled, using resolver: ${resolver.name}")
         }
     }
 
@@ -89,7 +94,7 @@ class PlayerLookupModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "player-
 
         try {
             var entry = storage.getEntry(name)
-            if (entry == null && resolver != null) {
+            if (entry == null) {
                 // Perform lookup
                 entry = resolver.lookup(name)
             }
@@ -114,7 +119,7 @@ class PlayerLookupModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "player-
         try {
             return cache.get(uuid, Callable<CacheEntry> {
                 var entry = storage.getEntry(uuid)
-                if (entry == null && resolver != null) {
+                if (entry == null) {
                     // Perform lookup
                     entry = resolver.lookup(uuid)
                 }
@@ -133,6 +138,16 @@ class PlayerLookupModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "player-
             ex.printStackTrace()
             return null
         }
+    }
+
+    @EventHandler
+    fun onPlayerJoin(e: PlayerJoinEvent) {
+        val uuid = e.player.uniqueId
+        val name = e.player.name
+
+        storage.update(uuid, name)
+        nameToUuids.put(name.toLowerCase(), uuid)
+        cache.put(uuid, CacheEntry(uuid, name))
     }
 
 }

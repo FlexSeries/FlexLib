@@ -16,13 +16,9 @@
  */
 package me.st28.flexseries.flexlib.commands
 
-import me.st28.flexseries.flexlib.command.CommandContext
-import me.st28.flexseries.flexlib.command.CommandHandler
-import org.bukkit.command.CommandSender
-
 object CommandLibTest {
 
-    @CommandHandler(
+    /*@CommandHandler(
         "hello"
     )
     fun hello(sender: CommandSender, context: CommandContext) {
@@ -50,6 +46,6 @@ object CommandLibTest {
     )
     fun hello3_def(sender: CommandSender, context: CommandContext) {
         sender.sendMessage("default subcommand")
-    }
+    }*/
 
 }

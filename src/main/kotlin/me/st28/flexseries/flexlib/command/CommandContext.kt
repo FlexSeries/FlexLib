@@ -16,65 +16,27 @@
  */
 package me.st28.flexseries.flexlib.command
 
-import me.st28.flexseries.flexlib.player.PlayerReference
 import org.bukkit.command.CommandSender
-import org.bukkit.entity.Player
-import java.util.*
-import kotlin.reflect.KClass
 
-/**
- * Holds the context in which a command was executed.
- */
-class CommandContext {
+class CommandContext(
+        val sender: CommandSender,
+        val label: String,
+        val args: Array<String>,
+        offset: Int
+) {
 
-    val command: BasicCommand
+    internal var offset: Int
 
-    val sender: CommandSender?
-        get() = if (player != null) player.online else nonPlayer
-    private val nonPlayer: CommandSender?
-    val player: PlayerReference?
-    val label: String
-    val rawArgs: Array<String>
-    val curArgs: Array<String>
-    val level: Int
-
-    private val arguments: MutableMap<String, Any?> = HashMap()
-
-    constructor(command: BasicCommand, sender: CommandSender, label: String, args: Array<String>, level: Int) {
-        this.command = command
-        if (sender is Player) {
-            this.nonPlayer = null
-            this.player = PlayerReference(sender)
-        } else {
-            this.nonPlayer = sender
-            this.player = null
-        }
-
-        this.label = label
-        this.rawArgs = args
-        this.curArgs = if (args.isEmpty()) emptyArray() else rawArgs.toList().subList(level, rawArgs.size).toTypedArray()
-        this.level = level
+    init {
+        this.offset = offset
     }
 
-    fun <T: Any> getArgument(name: String): T? {
-        return arguments.get(name) as T?
+    fun getArgs(offset: Int): Array<String> {
+        return args.copyOfRange(offset, args.size)
     }
 
-    fun <T : Any> getArgument(type: KClass<T>) : T? {
-        for (v in arguments.values) {
-            if (v == null) {
-                continue
-            }
-
-            if (v.javaClass.kotlin == type) {
-                return v as T?
-            }
-        }
-        return null
+    fun getRelativeArgs(): Array<String> {
+        return args.copyOfRange(offset, args.size)
     }
-
-    fun isArgumentSet(name: String): Boolean = arguments.containsKey(name)
-
-    fun setArgument(name: String, value: Any?) = arguments.put(name, value)
 
 }

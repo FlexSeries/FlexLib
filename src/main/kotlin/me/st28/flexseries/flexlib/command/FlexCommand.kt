@@ -16,13 +16,14 @@
  */
 package me.st28.flexseries.flexlib.command
 
+import me.st28.flexseries.flexlib.message.Message
+import me.st28.flexseries.flexlib.message.list.ListBuilder
 import me.st28.flexseries.flexlib.plugin.FlexPlugin
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
-import kotlin.reflect.KFunction
 
 /**
- * Represents a FlexLib command that is registered with Bukkit.
+ * A [BasicCommand] that is registered and called by the Bukkit command API.
  * This class is used exclusively for base commands.
  *
  * @param plugin The plugin this command is registered under.
@@ -31,50 +32,40 @@ import kotlin.reflect.KFunction
 class FlexCommand(plugin: FlexPlugin, label: String) : BasicCommand(plugin, label) {
 
     /**
-     * The Bukkit wrapper for executing this command.
+     * The Bukkit wrapper that executes this command.
      */
     internal val bukkitCommand: Command
 
     init {
         // Create the Bukkit command that executes this FlexCommand
-        bukkitCommand = object: Command(label, "(description)", "(usage)", aliases) {
-            override fun execute(sender: CommandSender, commandLabel: String, args: Array<String>): Boolean {
-                this@FlexCommand.execute(sender, commandLabel, args, 0)
+        bukkitCommand = object : Command(label, "(description)", "(usage)", aliases) {
+            override fun execute(sender: CommandSender, label: String, args: Array<String>): Boolean {
+                val ret = this@FlexCommand.execute(CommandContext(sender, label, args, 0), 0) ?: return true
+
+                if (ret is Message) {
+                    ret.sendTo(sender)
+                } else if (ret is String) {
+                    sender.sendMessage(ret)
+                } else if (ret is ListBuilder) {
+                    ret.sendTo(sender)
+                }
                 return true
             }
         }
     }
 
-    override fun setAliases(aliases: List<String>) {
-        super.setAliases(aliases)
+    /*override fun setMeta(meta: CommandHandler, isPlayerOnly: Boolean, obj: Any, handler: KFunction<Any>) {
+        super.setMeta(meta, isPlayerOnly, obj, handler)
 
-        bukkitCommand.aliases.addAll(aliases)
-    }
-
-    override fun getUsage(context: CommandContext): String {
-        val sb = StringBuilder()
-        sb.append("/").append(context.label)
-        for (ac in argumentConfig) {
-            sb.append(" ").append(ac.getUsage(context))
+        // Set Bukkit command description
+        bukkitCommand.description = if (meta.description.isEmpty()) {
+            "(no description set)"
+        } else {
+            meta.description
         }
-        return sb.toString()
-    }
 
-    override fun setMeta(meta: CommandHandler, obj: Any, handler: KFunction<Unit>) {
-        super.setMeta(meta, obj, handler)
-
-        bukkitCommand.description = if (meta.description.isEmpty()) "(no description set)" else meta.description
-        FlexCommandMap.registerBukkitCommand(plugin, this)
-
-        // Default usage message
-        if (argumentConfig.isNotEmpty()) {
-            val sb = StringBuilder()
-            sb.append("/").append(label)
-            for (ac in argumentConfig) {
-                sb.append(" ").append(ac.getUsage(null))
-            }
-            bukkitCommand.usage = sb.toString()
-        }
-    }
+        // Set Bukkit usage message
+        // TODO: Set Bukkit usage message
+    }*/
 
 }

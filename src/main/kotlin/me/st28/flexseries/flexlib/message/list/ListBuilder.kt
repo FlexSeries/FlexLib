@@ -20,10 +20,13 @@ import me.st28.flexseries.flexlib.message.MasterMessageModule
 import me.st28.flexseries.flexlib.message.Message
 import me.st28.flexseries.flexlib.message.MessageModule
 import me.st28.flexseries.flexlib.plugin.FlexPlugin
+import org.bukkit.ChatColor
 import org.bukkit.command.CommandSender
 import java.util.*
 
 class ListBuilder {
+
+    private val masterModule: MasterMessageModule
 
     private var pageItems: Int
     private var nextPageCommand: String = ""
@@ -32,13 +35,23 @@ class ListBuilder {
 
     private var page: Int = 0
     private var pageCount: Int = 0
+    private var index: Int = 0
+
+    private var emptyMessage: String = "&c&oNothing here"
 
     init {
-        pageItems = FlexPlugin.getGlobalModule(MasterMessageModule::class)!!.listPageItems
+        masterModule = FlexPlugin.getGlobalModule(MasterMessageModule::class)!!
+        pageItems = masterModule.listPageItems
     }
 
+    /**
+     * Sets the page information for the builder.
+     *
+     * @param page The page to send. Starts at 1 since this is mostly supplied by user input.
+     * @param elemCount The total number of elements.
+     */
     fun page(page: Int, elemCount: Int): ListBuilder {
-        this.page = page
+        this.page = page - 1
         this.pageCount = Math.ceil(elemCount / pageItems.toDouble()).toInt()
         return this
     }
@@ -53,6 +66,11 @@ class ListBuilder {
         return this
     }
 
+    fun emptyMessage(message: String): ListBuilder {
+        this.emptyMessage = message
+        return this
+    }
+
     fun header(name: String, vararg replacements: String): ListBuilder {
         if (messages.isNotEmpty()) {
             throw IllegalStateException("Messages have already been added")
@@ -63,7 +81,7 @@ class ListBuilder {
         val defaultHeader = module.listHeaderFormats["DEFAULT"]
 
         if (header != null) {
-            messages.add(Message.plain(header.getFormatted(page, pageCount, defaultHeader, *replacements)))
+            messages.add(Message.plain(header.getFormatted(page + 1, pageCount, defaultHeader, *replacements)))
         }
         return this
     }
@@ -80,7 +98,9 @@ class ListBuilder {
 
     fun element(type: String, vararg replacements: String): ListBuilder {
         val format = FlexPlugin.getGlobalModule(MasterMessageModule::class)!!.listElementFormats[type] ?: "Unknown format: '$type'"
-        messages.add(Message.plain(String.format(MessageModule.setupPatternReplace(format), *replacements)))
+                .replace("{INDEX}", (index + 1).toString())
+
+        messages.add(Message.processed(String.format(MessageModule.setupPatternReplace(format), *replacements)))
         return this
     }
 
@@ -91,7 +111,7 @@ class ListBuilder {
         val index = page * pageItems
         for (i in 0 until pageItems) {
             try {
-                element(type, index.toString(), *populator(index + i))
+                element(type, *populator(index + i))
             } catch (ex: IndexOutOfBoundsException) {
                 // We're done
                 break
@@ -169,6 +189,9 @@ class ListBuilder {
 
     fun sendTo(vararg sender: CommandSender) {
         val senders = sender.asList()
+        if (messages.size <= 1) {
+            message(emptyMessage)
+        }
         messages.forEach { it.sendTo(senders) }
     }
 

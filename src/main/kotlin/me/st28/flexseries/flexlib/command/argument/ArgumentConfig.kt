@@ -16,126 +16,52 @@
  */
 package me.st28.flexseries.flexlib.command.argument
 
-import me.st28.flexseries.flexlib.command.CommandContext
+import me.st28.flexseries.flexlib.command.CommandModule
+import me.st28.flexseries.flexlib.plugin.FlexPlugin
 import me.st28.flexseries.flexlib.util.GenericDataContainer
-import org.bukkit.entity.Player
-import java.util.*
+import kotlin.reflect.KParameter
+import kotlin.reflect.KType
 
+/**
+ * Stores an argument's configuration for a command.
+ */
 class ArgumentConfig : GenericDataContainer {
 
-    companion object {
-        val PATTERN_INFO: Regex = Regex("([a-zA-Z0-9-_]+) ([a-zA-Z0-9-_:]+) (always|player|nonplayer|optional)")
-        val PATTERN_INFO_AUTO: Regex = Regex("([a-zA-Z0-9-_]+) ([a-zA-Z0-9-_:]+)")
-        val PATTERN_OPTION: Regex = Regex("-([a-zA-Z0-9-_]+)(?:=([a-zA-Z0-9-_]+))?")
-
-        fun parse(raw: Array<String>, isAuto: Boolean): Array<ArgumentConfig> {
-            if (raw.size == 1 && raw[0].isEmpty()) {
-                return arrayOf()
-            }
-
-            val ret: MutableList<ArgumentConfig> = ArrayList()
-            for (i in 0 until raw.size) {
-                if (isAuto) {
-                    ret.add(ArgumentConfig(raw[i]))
-                } else {
-                    ret.add(ArgumentConfig(raw[i], i))
-                }
-            }
-            return ret.toTypedArray()
-        }
-    }
-
-    val index: Int
-    private val required: RequiredState
     val name: String
-    val type: String
+    val type: KType
+    val isRequired: Boolean
+    val default: String?
 
-    private constructor(raw: String, index: Int = -1) {
-        this.index = index
+    constructor(p: KParameter) {
+        this.name = p.name!!
+        this.type = p.type
 
-        if (index == -1) {
-            // Auto argument
-            required = RequiredState.ALWAYS
+        // Check for default raw value
+        default = (p.annotations.firstOrNull { it is Default } as Default?)?.raw
 
-            val matcher = PATTERN_INFO_AUTO.matchEntire(raw) ?: throw IllegalArgumentException("Invalid auto argument syntax '$raw'")
+        // Nullable type = not required
+        // Nullable + default = not required
+        this.isRequired = !p.type.isMarkedNullable && default == null
 
-            name = matcher.groupValues[1]
-            type = matcher.groupValues[2]
+        println("Argument")
+        println(" Name: $name")
+        println(" Type: $type")
+        println(" Required: $isRequired")
+        println(" Default: $default")
 
-            parseOptions(raw)
+        // TODO: Options
+    }
+
+    fun getUsage(): String {
+        return if (isRequired) {
+            "<$name>"
         } else {
-            // Normal argument
-            val matcher = PATTERN_INFO.matchEntire(raw) ?: throw IllegalArgumentException("Invalid argument syntax '$raw'")
-
-            name = matcher.groupValues[1]
-            type = matcher.groupValues[2]
-            required = RequiredState.valueOf(matcher.groupValues[3].toUpperCase())
-
-            parseOptions(raw)
+            "[$name]"
         }
     }
 
-    private fun parseOptions(raw: String) {
-        PATTERN_OPTION.findAll(raw).forEach {
-            var value: Any?
-
-            val rawValue: String = it.groupValues[2]
-            if (rawValue.isEmpty()) {
-                data.put(it.groupValues[1], null)
-                return
-            }
-
-            // Boolean
-            value = when(rawValue) {
-                "true" -> true
-                "false" -> false
-                else -> null
-            }
-
-            // Integer
-            if (value == null) {
-                try {
-                    value = rawValue.toInt()
-                } catch (ex: NumberFormatException) { }
-            }
-
-            // Floating point
-            if (value == null) {
-                try {
-                    value = rawValue.toDouble()
-                } catch (ex: NumberFormatException) { }
-            }
-
-            // Default to string if value hasn't been set yet at this point
-            data.put(it.groupValues[1], value ?: rawValue)
-        }
-    }
-
-    fun getUsage(context: CommandContext?): String {
-        return String.format(if (isRequired(context)) "<%s>" else "[%s]", name)
-    }
-
-    fun isRequired(context: CommandContext?): Boolean {
-        if (context == null) {
-            return required != RequiredState.OPTIONAL
-        }
-
-        return when (required) {
-            RequiredState.ALWAYS -> true
-            RequiredState.PLAYER -> context.sender is Player
-            RequiredState.NONPLAYER -> context.sender !is Player
-            RequiredState.OPTIONAL -> false
-        }
+    fun getParser(): ArgumentParser<Any>? {
+        return FlexPlugin.getGlobalModule(CommandModule::class)!!.getArgumentParser(type)
     }
 
 }
-
-enum class RequiredState {
-
-    ALWAYS,
-    PLAYER,
-    NONPLAYER,
-    OPTIONAL
-
-}
-

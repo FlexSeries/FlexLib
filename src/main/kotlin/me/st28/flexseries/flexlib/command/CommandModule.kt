@@ -17,52 +17,49 @@
 package me.st28.flexseries.flexlib.command
 
 import me.st28.flexseries.flexlib.FlexLib
-import me.st28.flexseries.flexlib.command.argument.*
+import me.st28.flexseries.flexlib.command.argument.ArgumentParser
+import me.st28.flexseries.flexlib.command.argument.IntParser
+import me.st28.flexseries.flexlib.command.argument.PlayerParser
+import me.st28.flexseries.flexlib.command.argument.StringParser
+import me.st28.flexseries.flexlib.logging.LogHelper
 import me.st28.flexseries.flexlib.plugin.FlexModule
 import me.st28.flexseries.flexlib.plugin.FlexPlugin
+import org.bukkit.entity.Player
+import org.bukkit.event.EventHandler
+import org.bukkit.event.Listener
+import org.bukkit.event.player.PlayerQuitEvent
 import java.util.*
 import kotlin.reflect.KClass
+import kotlin.reflect.KType
+import kotlin.reflect.defaultType
 
-/**
+/***
  * The main command manager for the FlexLib command framework.
  */
-class CommandModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "commands", "Manages the FlexLib command framework") {
+class CommandModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "commands", "Manages the FlexLib command framework"), Listener {
 
-    val commands: MutableMap<KClass<out FlexPlugin>, MutableMap<String, FlexCommand>> = HashMap()
+    internal val commands: MutableMap<KClass<out FlexPlugin>, MutableMap<String, FlexCommand>> = HashMap()
 
-    //val sessions: MutableMap<String, MutableMap<String, CommandSession>> = HashMap()
+    internal val argumentParsers: MutableMap<String, ArgumentParser<Any>> = HashMap()
+
+    // Sender identifier, < command UUID -> session >
+    internal val sessions: MutableMap<String, MutableMap<UUID, CommandSession>> = HashMap()
 
     override fun handleEnable() {
-        ArgumentResolver.register(null, "boolean", BooleanResolver)
-        ArgumentResolver.register(null, "integer", IntegerResolver)
-        //ArgumentResolver.register(null, "long", LongResolver)
-        ArgumentResolver.register(null, "float", FloatResolver)
-        ArgumentResolver.register(null, "double", DoubleResolver)
-        ArgumentResolver.register(null, "player", PlayerResolver)
-        ArgumentResolver.register(null, "string", StringResolver)
-        //ArgumentResolver.register(null, "session", SessionResolver)
-        ArgumentResolver.register(null, "flexplugin", FlexPluginResolver)
-        ArgumentResolver.register(null, "flexmodule", FlexModuleResolver)
+        registerArgumentParser(Int::class, IntParser)
+        registerArgumentParser(Player::class, PlayerParser)
+        registerArgumentParser(String::class, StringParser)
     }
 
-    fun getCommand(plugin: KClass<out FlexPlugin>, command: String): BasicCommand? {
+    fun getBaseCommand(plugin: KClass<out FlexPlugin>, command: String): FlexCommand? {
         if (!commands.containsKey(plugin)) {
             return null
         }
-
-        val path = command.split(" ")
-
-        var found: BasicCommand? = commands[plugin]!![path[0].toLowerCase()]
-        for (i in 1 until path.size) {
-            found = found!!.subcommands[path[i].toLowerCase()]
-            if (found == null) {
-                break
-            }
-        }
-        return found
+        return commands[plugin]!![command]
     }
 
-    fun registerCommand(plugin: KClass<out FlexPlugin>, command: FlexCommand) {
+    fun registerCommand(command: FlexCommand) {
+        val plugin = command.plugin.javaClass.kotlin
         if (!commands.containsKey(plugin)) {
             commands.put(plugin, HashMap())
         }
@@ -70,19 +67,54 @@ class CommandModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "commands", "
         commands[plugin]!!.put(command.label.toLowerCase(), command)
     }
 
-    /*fun getSession(plugin: KClass<out FlexPlugin>, sender: CommandSender, id: String, create: Boolean): CommandSession? {
-        val key = "${plugin.java.canonicalName}#$id"
-        val subKey = "${sender.javaClass.canonicalName}#${sender.name}"
-
-        if (!sessions.containsKey(key)) {
-            sessions.put(key, HashMap())
+    /**
+     * Registers an [ArgumentParser].
+     *
+     * @param type The class the parser handles.
+     * @param parser The parser for the specified class type.
+     * @return True if the parser was successfully registered.
+     *         False if there already is a parser registered for the specified type.
+     */
+    fun <T: Any> registerArgumentParser(type: KClass<T>, parser: ArgumentParser<T>): Boolean {
+        val key = type.defaultType.toString()
+        if (argumentParsers.containsKey(key)) {
+            return false
         }
 
-        val subMap = sessions[key]!!
-        if (!subMap.containsKey(subKey) && create) {
-            subMap.put(subKey, CommandSession())
+        argumentParsers.put(key, parser)
+        return true
+    }
+
+    fun getArgumentParser(type: KType): ArgumentParser<Any>? {
+        return argumentParsers[type.toString().replace("?", "")]
+    }
+
+    /**
+     * Creates a session for the specified command and sender.
+     *
+     * @return The newly created session.
+     *         Null if a session already exists.
+     */
+    internal fun createSession(command: BasicCommand, context: CommandContext): CommandSession? {
+        val identifier = (context.sender as? Player)?.uniqueId?.toString() ?: "CONSOLE"
+        val pSessions = sessions.getOrPut(identifier, { HashMap() })
+
+        if (pSessions[command.uuid]?.running ?: false) {
+            return null
         }
-        return subMap[subKey]
-    }*/
+
+        pSessions.put(command.uuid, CommandSession(plugin, context))
+        return pSessions[command.uuid]!!
+    }
+
+    @EventHandler
+    fun onPlayerQuit(e: PlayerQuitEvent) {
+        val sessions = this.sessions.remove(e.player.uniqueId.toString()) ?: return
+
+        LogHelper.debug(this, "Cancelling command sessions for ${e.player.name}")
+        for (v in sessions.values) {
+            v.running = false
+        }
+    }
 
 }
