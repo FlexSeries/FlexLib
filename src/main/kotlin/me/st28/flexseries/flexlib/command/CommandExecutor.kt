@@ -138,7 +138,7 @@ internal class CommandExecutor {
         session.offset = offset
 
         val args = Stack<String>()
-        args.addAll(context.getRelativeArgs())
+        args.addAll(context.getRelativeArgs().reversed())
 
         // Make sure enough arguments were provided.
         if (args.size < getRequiredArgs()) {
@@ -220,6 +220,7 @@ internal class CommandExecutor {
                                 handleNextArgument(session, context, args, curArg)
                             }
                         }
+
                         return
                     }
 
@@ -229,7 +230,8 @@ internal class CommandExecutor {
         } else {
             // Enough arguments provided
 
-            val consumed = args.take(parser.consumed)
+            val consumed = args.takeLast(parser.consumed)
+
             val parsed = try {
                 parser.parse(context, ac, consumed.toTypedArray())
             } catch (ex: ArgumentParseException) {
@@ -244,8 +246,6 @@ internal class CommandExecutor {
                 } else {
                     // Attempt to resolve argument asynchronously
 
-                    // Replace consumed arguments first
-                    args.addAll(consumed.asReversed())
                     SchedulerUtils.runAsync(command.plugin) {
                         handleNextArgument(session, context, args, curArg)
                     }
@@ -253,6 +253,9 @@ internal class CommandExecutor {
 
                 return
             }
+
+            // Drop consumed arguments
+            kotlin.repeat(parser.consumed) { args.pop() }
 
             session.params.add(parsed)
         }

@@ -124,7 +124,11 @@ open class BasicCommand {
 
             // TODO: Show usage and description
             //return executors.joinToString("\n") { it.getUsage(context) }
-            return showHelp(context) // Default to help command
+            if (subcommands.isEmpty()) {
+                return executors.joinToString("\n") { it.getUsage(context) }
+            } else {
+                return showHelp(context) // Default to help command
+            }
         } else if (applicable.size == 1) {
             // Easy, only one applicable command executor was found
             return applicable[0].execute(context, offset)
@@ -140,9 +144,9 @@ open class BasicCommand {
         val builder = ListBuilder()
 
         val page: Int = try {
-            Integer.parseInt(context.getArgs(context.offset + 1)[0]) - 1
+            Integer.parseInt(context.getArgs(context.offset + 1)[0])
         } catch (ex: Exception) {
-            0
+            1
         }
 
         val rawPath: MutableList<String> = ArrayList()

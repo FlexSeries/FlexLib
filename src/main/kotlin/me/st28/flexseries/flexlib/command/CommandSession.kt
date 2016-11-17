@@ -67,7 +67,7 @@ internal class CommandSession {
     fun cancelWith(message: Message) {
         running = false
         SchedulerUtils.runSync(plugin) {
-            sender?.sendMessage(message)
+            getSender()?.sendMessage(message)
         }
     }
 
