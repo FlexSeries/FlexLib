@@ -96,6 +96,13 @@ object PermissionHelper {
         return vaultChat!!.getPrimaryGroup(player)
     }
 
+    /**
+     * @return A list of registered groups, ordered from least to most important.
+     */
+    fun getGroupOrder(): List<String> {
+        return ArrayList(groupEntries.keys)
+    }
+
     fun getTopGroup(player: Player, groups: List<String>, defaultGroup: String? = null): String {
         val reversed = groupEntries.keys.reversed()
         for (group in reversed) {
