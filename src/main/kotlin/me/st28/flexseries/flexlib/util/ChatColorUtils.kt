@@ -49,3 +49,7 @@ object ChatColorUtils {
 fun String.translateColorCodes(ch: Char = '&'): String {
     return ChatColor.translateAlternateColorCodes(ch, this)
 }
+
+fun String.stripColorCode(ch: Char): String {
+    return ChatColor.stripColor(translateColorCodes(ch))
+}
