@@ -110,6 +110,9 @@ class CommandModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "commands", "
     @EventHandler
     fun onPlayerQuit(e: PlayerQuitEvent) {
         val sessions = this.sessions.remove(e.player.uniqueId.toString()) ?: return
+        if (sessions.isEmpty()) {
+            return
+        }
 
         LogHelper.debug(this, "Cancelling command sessions for ${e.player.name}")
         for (v in sessions.values) {
