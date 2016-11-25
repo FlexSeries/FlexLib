@@ -50,7 +50,7 @@ open class BasicCommand {
     /**
      * Sets the aliases for this command and updates them for the parent command, if applicable.
      */
-    internal fun setAliases(aliases: List<String>) {
+    open fun setAliases(aliases: List<String>) {
         this.aliases.clear()
         this.aliases.addAll(aliases)
         parent?.registerSubcommand(this)

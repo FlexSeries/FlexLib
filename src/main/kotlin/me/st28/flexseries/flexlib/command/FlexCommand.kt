@@ -38,34 +38,36 @@ class FlexCommand(plugin: FlexPlugin, label: String) : BasicCommand(plugin, labe
 
     init {
         // Create the Bukkit command that executes this FlexCommand
-        bukkitCommand = object : Command(label, "(description)", "(usage)", aliases) {
-            override fun execute(sender: CommandSender, label: String, args: Array<String>): Boolean {
-                val ret = this@FlexCommand.execute(CommandContext(sender, label, args, 0), 0) ?: return true
-
-                if (ret is Message) {
-                    ret.sendTo(sender)
-                } else if (ret is String) {
-                    sender.sendMessage(ret)
-                } else if (ret is ListBuilder) {
-                    ret.sendTo(sender)
-                }
-                return true
-            }
-        }
+        bukkitCommand = WrappedBukkitCommand()
     }
 
-    /*override fun setMeta(meta: CommandHandler, isPlayerOnly: Boolean, obj: Any, handler: KFunction<Any>) {
-        super.setMeta(meta, isPlayerOnly, obj, handler)
+    override fun setAliases(aliases: List<String>) {
+        super.setAliases(aliases)
 
-        // Set Bukkit command description
-        bukkitCommand.description = if (meta.description.isEmpty()) {
-            "(no description set)"
-        } else {
-            meta.description
+        bukkitCommand.aliases.clear()
+        bukkitCommand.aliases.addAll(aliases)
+
+        // Re-register with Bukkit
+        FlexCommandMap.bukkit_commandMap.register(plugin.name.toLowerCase(), bukkitCommand)
+    }
+
+    internal inner class WrappedBukkitCommand : Command(label, "(description)", "(usage)", aliases) {
+
+        val flexCommand: FlexCommand = this@FlexCommand
+
+        override fun execute(sender: CommandSender, label: String, args: Array<String>): Boolean {
+            val ret = this@FlexCommand.execute(CommandContext(sender, label, args, 0), 0) ?: return true
+
+            if (ret is Message) {
+                ret.sendTo(sender)
+            } else if (ret is String) {
+                sender.sendMessage(ret)
+            } else if (ret is ListBuilder) {
+                ret.sendTo(sender)
+            }
+            return true
         }
 
-        // Set Bukkit usage message
-        // TODO: Set Bukkit usage message
-    }*/
+    }
 
 }

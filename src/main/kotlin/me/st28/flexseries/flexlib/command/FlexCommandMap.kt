@@ -19,11 +19,9 @@ package me.st28.flexseries.flexlib.command
 import me.st28.flexseries.flexlib.logging.LogHelper
 import me.st28.flexseries.flexlib.plugin.FlexPlugin
 import org.bukkit.Bukkit
-import org.bukkit.command.Command
 import org.bukkit.command.CommandMap
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
-import java.lang.reflect.Method
 import java.util.*
 import kotlin.reflect.KFunction
 import kotlin.reflect.declaredMemberFunctions
@@ -34,27 +32,27 @@ import kotlin.reflect.defaultType
  */
 class FlexCommandMap(val plugin: FlexPlugin) {
 
-    private companion object {
+    internal companion object {
 
-        var bukkit_commandMap: CommandMap? = null
-        var bukkit_registerMethod: Method? = null
+        val bukkit_commandMap: CommandMap
+        //val bukkit_registerMethod: Method
+
+        init {
+            val pluginManager = Bukkit.getPluginManager()
+            val commandMap = pluginManager.javaClass.getDeclaredField("commandMap")
+            commandMap.isAccessible = true
+
+            bukkit_commandMap = commandMap.get(pluginManager) as CommandMap
+            //bukkit_registerMethod = bukkit_commandMap.javaClass.getDeclaredMethod("register", String::class.java, Command::class.java)
+        }
 
         /**
          * Registers a FlexCommand's Bukkit command with Bukkit's plugin manager via reflection.
          */
         private fun registerBukkitCommand(plugin: FlexPlugin, command: FlexCommand) {
-            val pluginManager = Bukkit.getPluginManager()
-
             try {
-                if (bukkit_registerMethod == null) {
-                    val commandMap = pluginManager.javaClass.getDeclaredField("commandMap")
-                    commandMap.isAccessible = true
-
-                    bukkit_commandMap = commandMap.get(pluginManager) as CommandMap
-                    bukkit_registerMethod = bukkit_commandMap!!.javaClass.getDeclaredMethod("register", String::class.java, Command::class.java)
-                }
-
-                bukkit_registerMethod!!.invoke(bukkit_commandMap!!, plugin.name, command.bukkitCommand)
+                //bukkit_registerMethod.invoke(bukkit_commandMap, plugin.name.toLowerCase(), command.bukkitCommand)
+                bukkit_commandMap.register(plugin.name.toLowerCase(), command.bukkitCommand)
             } catch (ex: Exception) {
                 LogHelper.severe(plugin, "An exception occurred while registering command with Bukkit", ex)
             }
@@ -173,6 +171,22 @@ class FlexCommandMap(val plugin: FlexPlugin) {
 
             // TODO: 4) Set default
         }
+    }
+
+    fun getCommand(path: String): BasicCommand? {
+        val split = ("${plugin.name.toLowerCase()}:$path").split(" ")
+        var found: BasicCommand = (bukkit_commandMap.getCommand(split[0]) as? FlexCommand.WrappedBukkitCommand)?.flexCommand
+                ?: return null
+
+        for ((index, name) in split.withIndex()) {
+            if (index == 0) {
+                continue
+            }
+
+            found = found.subcommands[name] ?: return null
+        }
+
+        return found
     }
 
 }
