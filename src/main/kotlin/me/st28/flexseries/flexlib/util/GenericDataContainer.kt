@@ -28,4 +28,6 @@ open class GenericDataContainer {
 
     fun set(name: String, value: Any?) = data.put(name, value)
 
+    fun remove(name: String): Any? = data.remove(name)
+
 }
