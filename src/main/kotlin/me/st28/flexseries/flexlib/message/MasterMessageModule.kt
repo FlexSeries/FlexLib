@@ -27,12 +27,8 @@ class MasterMessageModule : FlexModule<FlexLib> {
 
     internal companion object {
 
-        //val MOOD_PATTERN: Pattern = Pattern.compile("\\{mood=(\\S+?)\\}")
         val MOOD_PATTERN: Pattern = Pattern.compile("\\{#(\\S+?)#\\}")
-        //val OBJECT_PATTERN: Pattern = Pattern.compile("\\{o=(\\S+?)\\}")
         val OBJECT_PATTERN: Pattern = Pattern.compile("\\{\\$(\\S+?)\\$\\}")
-        //val OBJECT_VALUE_PATTERN: Pattern = Pattern.compile("\\{o=(\\S+?)\\}(.+?)\\{/\\}")
-        //val OBJECT_VALUE_PATTERN: Pattern = Pattern.compile("\\{o=(\\S+?)\\}(.+?)\\{\$\\}")
         val OBJECT_VALUE_PATTERN: Pattern = Pattern.compile("\\{\\$(\\S+?) (.+?) \\$\\}")
         val OBJECT_SPLIT_PATTERN: Pattern = Pattern.compile("\\{,\\}")
 
@@ -152,6 +148,10 @@ class MasterMessageModule : FlexModule<FlexLib> {
         }
 
         return stage3.toString()
+    }
+
+    fun registerElementFormat(name: String, format: String) {
+        listElementFormats.put(name, format)
     }
 
 }
