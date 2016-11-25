@@ -25,7 +25,7 @@ interface PermissionNode {
         // I'm not sure if it's really worth caching variable nodes?
         //private val variableNodes: MutableMap<String, PermissionNode> = HashMap()
 
-        fun buildVariableName(mainPerm: PermissionNode, vararg variables: String): PermissionNode {
+        fun buildVariableNode(mainPerm: PermissionNode, vararg variables: String): PermissionNode {
             val node = "${mainPerm.node}.${variables.joinToString(separator = ".")}".toLowerCase()
 
             /*if (variableNodes.containsKey(node)) {
