@@ -17,10 +17,7 @@
 package me.st28.flexseries.flexlib.command
 
 import me.st28.flexseries.flexlib.FlexLib
-import me.st28.flexseries.flexlib.command.argument.ArgumentParser
-import me.st28.flexseries.flexlib.command.argument.IntParser
-import me.st28.flexseries.flexlib.command.argument.PlayerParser
-import me.st28.flexseries.flexlib.command.argument.StringParser
+import me.st28.flexseries.flexlib.command.argument.*
 import me.st28.flexseries.flexlib.logging.LogHelper
 import me.st28.flexseries.flexlib.plugin.FlexModule
 import me.st28.flexseries.flexlib.plugin.FlexPlugin
@@ -28,6 +25,7 @@ import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerQuitEvent
+import java.math.BigDecimal
 import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
@@ -47,6 +45,8 @@ class CommandModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "commands", "
 
     override fun handleEnable() {
         registerArgumentParser(Int::class, IntParser)
+        registerArgumentParser(Double::class, DoubleParser)
+        registerArgumentParser(BigDecimal::class, BigDecimalParser)
         registerArgumentParser(Player::class, PlayerParser)
         registerArgumentParser(String::class, StringParser)
     }

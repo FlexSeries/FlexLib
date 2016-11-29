@@ -6,8 +6,8 @@ error:
     unknown: '&cUnknown command {$input {1} $}'
 
   input_not_boolean: '&cInput must be true or false.'
-  input_not_decimal: '&cInput must be a number.'
   input_not_integer: '&cInput must be an integer.'
+  input_not_number: '&cInput must be a number.'
   input_too_small_decimal: '&cInput must be {1} or greater.'
   input_too_small_integer: '&cInput must be {1} or greater.'
   input_too_large_decimal: '&cInput must be {1} or less.'

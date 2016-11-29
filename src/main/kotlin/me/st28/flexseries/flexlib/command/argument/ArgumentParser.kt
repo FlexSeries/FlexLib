@@ -22,6 +22,7 @@ import me.st28.flexseries.flexlib.plugin.FlexPlugin
 import me.st28.flexseries.flexlib.util.UuidUtils
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
+import java.math.BigDecimal
 import java.util.*
 import kotlin.reflect.KClass
 
@@ -101,11 +102,36 @@ object StringParser : ArgumentParser<String>() {
 object IntParser : ArgumentParser<Int>() {
 
     override fun parse(context: CommandContext, config: ArgumentConfig, raw: Array<String>): Int? {
-        try {
-            return Integer.valueOf(raw[0])
+        return try {
+            raw[0].toInt()
         } catch (ex: NumberFormatException) {
             throw ArgumentParseException("error.input_not_integer")
         }
+    }
+
+}
+
+object DoubleParser : ArgumentParser<Double>() {
+
+    override fun parse(context: CommandContext, config: ArgumentConfig, raw: Array<String>): Double? {
+        return try {
+            raw[0].toDouble()
+        } catch (ex: NumberFormatException) {
+            throw ArgumentParseException("error.input_not_number")
+        }
+    }
+
+}
+
+object BigDecimalParser : ArgumentParser<BigDecimal>() {
+
+    override fun parse(context: CommandContext, config: ArgumentConfig, raw: Array<String>): BigDecimal? {
+        val numerical = try {
+            raw[0].toDouble()
+        } catch (ex: NumberFormatException) {
+            throw ArgumentParseException("error.input_not_number")
+        }
+        return BigDecimal.valueOf(numerical)
     }
 
 }
