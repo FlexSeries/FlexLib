@@ -20,6 +20,7 @@ import me.st28.flexseries.flexlib.logging.LogHelper
 import me.st28.flexseries.flexlib.plugin.FlexModule
 import me.st28.flexseries.flexlib.plugin.FlexPlugin
 import me.st28.flexseries.flexlib.plugin.storage.flatfile.YamlFileManager
+import org.apache.commons.lang.StringEscapeUtils
 import java.io.File
 import java.util.*
 import java.util.regex.Pattern
@@ -38,6 +39,8 @@ class MessageModule<out T : FlexPlugin>(plugin: T) : FlexModule<T>(plugin, "mess
 
     private val messages: MutableMap<String, String> = HashMap()
 
+    private val tags: MutableMap<String, String> = HashMap()
+
     override fun handleReload(isFirstReload: Boolean) {
         if (isFirstReload) {
             return
@@ -51,12 +54,39 @@ class MessageModule<out T : FlexPlugin>(plugin: T) : FlexModule<T>(plugin, "mess
             messageFile.reload()
         }
 
-        for ((key, value) in messageFile.config.getValues(true).entries) {
+        for ((key, value) in messageFile.config.getValues(true)) {
             if (value is String) {
-                messages.put(key, value)
+                val curValue = StringEscapeUtils.unescapeJava(value)
+
+                // Check if key is a tag
+                if (key == "tag") {
+                    tags.put("", curValue)
+                    continue
+                } else if (key.endsWith(".tag")) {
+                    tags.put(key.replace(".tag", ""), curValue)
+                    continue
+                }
+
+                messages.put(key, curValue)
             }
         }
-        LogHelper.info(this, "Loaded ${messages.size} message(s)")
+        LogHelper.info(this, "Loaded ${messages.size} message(s) and ${tags.size} tag(s)")
+    }
+
+    private fun getMessageTag(name: String): String {
+        var tag: String?
+        var curKey = name
+        var lastIndex: Int
+        do {
+            lastIndex = curKey.lastIndexOf(".")
+            curKey = curKey.substring(0, lastIndex)
+
+            // Check if the tag exists
+            tag = tags[curKey]
+        } while (lastIndex != -1)
+
+        // Try base tag, otherwise return empty string
+        return tag ?: tags[""] ?: ""
     }
 
     fun getMessage(name: String, vararg replacements: Any?): Message {
@@ -67,7 +97,8 @@ class MessageModule<out T : FlexPlugin>(plugin: T) : FlexModule<T>(plugin, "mess
         } else {
             message = name
         }
-        return Message(message, *replacements)
+
+        return Message(message.replace("{TAG}", getMessageTag(name)), *replacements)
     }
 
 }
