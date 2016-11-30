@@ -22,19 +22,14 @@ import me.st28.flexseries.flexlib.plugin.FlexPlugin
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 
-object FlexPluginCommands {
+object CmdFlexPlugin {
 
     @CommandHandler(
         "flexreload",
-        description = "Reloads a FlexPlugin",
+        description = "Reloads a FlexPlugin or specified module",
         permission = "flexlib.reload"
-        /*args = arrayOf(
-            "plugin flexplugin always",
-            "module flexmodule optional"
-        ),*/
-        //permission = "{flexplugin}.reload"
     )
-    fun reload(sender: CommandSender, plugin: String): Message {
+    fun reload(sender: CommandSender, plugin: String, module: String?): Message {
         val found = Bukkit.getPluginManager().plugins.firstOrNull { it.name.equals(plugin, true) }
             ?: return Message.getGlobal("error.plugin_not_found", plugin)
 
@@ -42,8 +37,22 @@ object FlexPluginCommands {
             return Message.getGlobal("error.plugin_not_flexplugin", found.name)
         }
 
-        found.reloadAll()
-        return Message.getGlobal("notice.plugin_reloaded", found.name)
+        val foundModule = if (module == null) {
+            null
+        } else {
+            found.modules.values.firstOrNull { it.name.equals(module, true) }
+        }
+
+        return if (foundModule == null) {
+            // Reload plugin
+            found.reloadAll()
+            Message.getGlobal("notice.plugin_reloaded", found.name)
+        } else {
+            // Reload module
+
+            foundModule.reload()
+            Message.getGlobal("notice.module_reloaded", found.name, foundModule.name)
+        }
     }
 
 }

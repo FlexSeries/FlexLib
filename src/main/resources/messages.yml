@@ -29,3 +29,7 @@ error:
   string_too_short: '&cInput must be {1} characters or more.'
   string_too_long: '&cInput must be {1} characters or less.'
   string_outside_range: '&cInput must be {1}-{2} characters in length.'
+
+notice:
+  module_reloaded: '{#notice#}Successfully reloaded module {$item {1}::{2} $}'
+  plugin_reloaded:
