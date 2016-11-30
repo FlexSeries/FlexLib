@@ -103,8 +103,12 @@ class CommandModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "commands", "
             return null
         }
 
-        pSessions.put(command.uuid, CommandSession(plugin, context))
+        pSessions.put(command.uuid, CommandSession(plugin, context, command))
         return pSessions[command.uuid]!!
+    }
+
+    internal fun endSession(session: CommandSession) {
+        sessions[session.module_sender]?.remove(session.module_command)?.running = false
     }
 
     @EventHandler

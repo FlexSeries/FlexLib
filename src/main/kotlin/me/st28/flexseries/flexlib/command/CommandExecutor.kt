@@ -142,15 +142,13 @@ internal class CommandExecutor {
 
         // Permission check
         if (permission.isNotEmpty() && !context.sender.hasPermission(permission)) {
-            Message.getGlobal("error.no_permission").sendTo(context.sender)
-            return
+            return session.cancelWith(Message.getGlobal("error.no_permission"))
         }
 
         // Make sure enough arguments were provided.
         if (args.size < getRequiredArgs()) {
             // Not enough arguments, show usage
-            Message.getGlobal("error.command_usage", getUsage(context)).sendTo(context.sender)
-            return
+            return session.cancelWith(Message.getGlobal("error.command_usage", getUsage(context)))
         }
 
         if (arguments.isEmpty()) {

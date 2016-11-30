@@ -41,7 +41,11 @@ internal class CommandSession {
 
     val params: MutableList<Any?> = ArrayList()
 
-    constructor(plugin: FlexPlugin, context: CommandContext) {
+    /* For internal use by CommandModule */
+    internal val module_sender: String
+    internal val module_command: UUID
+
+    constructor(plugin: FlexPlugin, context: CommandContext, command: BasicCommand) {
         this.plugin = plugin
 
         this.label = context.label
@@ -54,6 +58,9 @@ internal class CommandSession {
             playerUuid = null
             this.sender = context.sender
         }
+
+        module_sender = (context.sender as? Player)?.uniqueId?.toString() ?: "CONSOLE"
+        module_command = command.uuid
     }
 
     fun getSender(): CommandSender? {
@@ -68,6 +75,7 @@ internal class CommandSession {
         running = false
         SchedulerUtils.runSync(plugin) {
             getSender()?.sendMessage(message)
+            FlexPlugin.getGlobalModule(CommandModule::class)!!.endSession(this)
         }
     }
 
