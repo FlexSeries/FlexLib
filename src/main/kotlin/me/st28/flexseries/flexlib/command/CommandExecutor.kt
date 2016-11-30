@@ -140,6 +140,12 @@ internal class CommandExecutor {
         val args = Stack<String>()
         args.addAll(context.getRelativeArgs().reversed())
 
+        // Permission check
+        if (permission.isNotEmpty() && !context.sender.hasPermission(permission)) {
+            Message.getGlobal("error.no_permission").sendTo(context.sender)
+            return
+        }
+
         // Make sure enough arguments were provided.
         if (args.size < getRequiredArgs()) {
             // Not enough arguments, show usage
