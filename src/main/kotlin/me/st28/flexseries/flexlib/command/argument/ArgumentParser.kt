@@ -30,7 +30,9 @@ import kotlin.reflect.KClass
  * @param consumed The number of raw arguments consumed by this parser. Default = 1
  * @param async True if this parser implements [parseAsync].
  */
-abstract class ArgumentParser<out T : Any>(val consumed: Int = 1, val async: Boolean = false) {
+abstract class ArgumentParser<out T : Any>(val consumed: Int = 1,
+                                           val defaultMinArgs: Int = -1,
+                                           val async: Boolean = false) {
 
    companion object {
 

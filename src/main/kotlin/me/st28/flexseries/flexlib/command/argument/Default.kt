@@ -22,4 +22,15 @@ package me.st28.flexseries.flexlib.command.argument
  */
 @Target(AnnotationTarget.VALUE_PARAMETER)
 @Retention(AnnotationRetention.RUNTIME)
-annotation class Default(val raw: String = "")
+annotation class Default(
+        /**
+         * The raw value that will be parsed as the default input.
+         */
+        val value: String = "",
+
+        /**
+         * The minimum user arguments required for the argument.
+         * Only used for parsers that consume more than one argument.
+         */
+        val minArgs: Int = -1
+)

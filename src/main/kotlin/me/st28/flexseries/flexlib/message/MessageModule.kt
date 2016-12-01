@@ -79,10 +79,14 @@ class MessageModule<out T : FlexPlugin>(plugin: T) : FlexModule<T>(plugin, "mess
         var lastIndex: Int
         do {
             lastIndex = curKey.lastIndexOf(".")
-            curKey = curKey.substring(0, lastIndex)
 
             // Check if the tag exists
             tag = tags[curKey]
+
+            // Update curKey
+            if (lastIndex != -1) {
+                curKey = curKey.substring(0, lastIndex)
+            }
         } while (lastIndex != -1)
 
         // Try base tag, otherwise return empty string

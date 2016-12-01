@@ -25,19 +25,19 @@ import kotlin.reflect.KType
 /**
  * Stores an argument's configuration for a command.
  */
-class ArgumentConfig : GenericDataContainer {
+class ArgumentConfig(p: KParameter) : GenericDataContainer() {
 
     val name: String
     val type: KType
     val isRequired: Boolean
-    val default: String?
+    val default: Default?
 
-    constructor(p: KParameter) {
+    init {
         this.name = p.name!!
         this.type = p.type
 
         // Check for default raw value
-        default = (p.annotations.firstOrNull { it is Default } as Default?)?.raw
+        default = (p.annotations.firstOrNull { it is Default } as Default?)
 
         // Nullable type = not required
         // Nullable + default = not required
@@ -47,7 +47,10 @@ class ArgumentConfig : GenericDataContainer {
         println(" Name: $name")
         println(" Type: $type")
         println(" Required: $isRequired")
-        println(" Default: $default")
+        if (default != null) {
+            println(" Default: ${default.value}")
+            println(" Default min args: ${default.minArgs}")
+        }
 
         // TODO: Options
     }

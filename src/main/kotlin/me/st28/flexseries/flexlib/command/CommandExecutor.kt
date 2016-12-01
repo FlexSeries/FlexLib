@@ -137,8 +137,10 @@ internal class CommandExecutor {
 
         session.offset = offset
 
-        val args = Stack<String>()
-        args.addAll(context.getRelativeArgs().reversed())
+        val args = ArrayDeque<String>()
+        args.addAll(context.getRelativeArgs())
+
+        println("Using args: ${args.joinToString(", ")}")
 
         // Permission check
         if (permission.isNotEmpty() && !context.sender.hasPermission(permission)) {
@@ -165,7 +167,7 @@ internal class CommandExecutor {
      *
      * @param session The session for the command.
      */
-    private fun handleNextArgument(session: CommandSession, context: CommandContext, args: Stack<String>, curArg: Int) {
+    private fun handleNextArgument(session: CommandSession, context: CommandContext, args: Deque<String>, curArg: Int) {
         // Check to see if command execution has been canceled
         if (!session.running) {
             return
@@ -179,20 +181,49 @@ internal class CommandExecutor {
 
         if (args.size < parser.consumed) {
             // Not enough arguments
+
             if (!ac.isRequired) {
                 // Argument isn't required
 
                 // Get default argument or just add null to the params list
                 if (ac.default != null) {
-                    // Detect synchronous or asynchronous
-                    try {
-                        if (async) {
-                            session.params.add(parser.parseAsync(context, ac, arrayOf(ac.default)))
-                        } else {
-                            session.params.add(parser.parse(context, ac, arrayOf(ac.default)))
+                    val minArgs = if (ac.default.minArgs == -1) {
+                        parser.defaultMinArgs
+                    } else {
+                        ac.default.minArgs
+                    }
+
+                    if (args.size >= minArgs) {
+                        // Enough arguments to fulfill default parser
+
+                        val argsWithDefault: MutableList<String> = ArrayList()
+
+                        // 1) Add user-given argument(s)
+                        argsWithDefault.addAll(args.take(parser.consumed - parser.defaultMinArgs))
+
+                        // 2) If there's not enough arguments to fulfill the parser's consumed count,
+                        //    add the last of the default values
+                        if (argsWithDefault.size < parser.consumed) {
+                            argsWithDefault.addAll(ac.default.value.split(" ").takeLast(parser.consumed - parser.defaultMinArgs))
+
+                            // 3) Fill the rest if the consumed count hasn't been met yet
+                            if (argsWithDefault.size < parser.consumed) {
+                                kotlin.repeat(parser.consumed - argsWithDefault.size) {
+                                    argsWithDefault.add("")
+                                }
+                            }
                         }
-                    } catch (ex: ArgumentParseException) {
-                        return session.cancelWith(ex.errorMessage)
+
+                        // Detect synchronous or asynchronous
+                        try {
+                            if (async) {
+                                session.params.add(parser.parseAsync(context, ac, argsWithDefault.toTypedArray()))
+                            } else {
+                                session.params.add(parser.parse(context, ac, argsWithDefault.toTypedArray()))
+                            }
+                        } catch (ex: ArgumentParseException) {
+                            return session.cancelWith(ex.errorMessage)
+                        }
                     }
                 } else {
                     session.params.add(null)
@@ -206,9 +237,9 @@ internal class CommandExecutor {
                     // Detect synchronous or asynchronous
                     try {
                         if (async) {
-                            parsed = parser.parseAsync(context, ac, arrayOf(ac.default))
+                            parsed = parser.parseAsync(context, ac, arrayOf(ac.default.value))
                         } else {
-                            parsed = parser.parse(context, ac, arrayOf(ac.default))
+                            parsed = parser.parse(context, ac, arrayOf(ac.default.value))
                         }
                     } catch (ex: ArgumentParseException) {
                         return session.cancelWith(ex.errorMessage)
@@ -234,7 +265,7 @@ internal class CommandExecutor {
         } else {
             // Enough arguments provided
 
-            val consumed = args.takeLast(parser.consumed)
+            val consumed = args.take(parser.consumed)
 
             val parsed = try {
                 parser.parse(context, ac, consumed.toTypedArray())
