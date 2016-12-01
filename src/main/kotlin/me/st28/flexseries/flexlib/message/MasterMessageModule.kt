@@ -104,7 +104,10 @@ class MasterMessageModule : FlexModule<FlexLib> {
         val matcherStage1 = OBJECT_VALUE_PATTERN.matcher(message)
         var offsetStage1 = 0
         while (matcherStage1.find()) {
-            var format = objectFormats[matcherStage1.group(1)]!!
+            val formatName = matcherStage1.group(1)
+            var format = objectFormats[formatName]
+                    ?: "(unknown format '$formatName')"
+
             val replacement = matcherStage1.group(2)
 
             val split = OBJECT_SPLIT_PATTERN.split(replacement)
@@ -150,6 +153,16 @@ class MasterMessageModule : FlexModule<FlexLib> {
         return stage3.toString()
     }
 
+    /**
+     * Registers an object format.
+     */
+    fun registerObjectFormat(name: String, format: String) {
+        objectFormats.put(name, format)
+    }
+
+    /**
+     * Registers a list element format.
+     */
     fun registerElementFormat(name: String, format: String) {
         listElementFormats.put(name, format)
     }
