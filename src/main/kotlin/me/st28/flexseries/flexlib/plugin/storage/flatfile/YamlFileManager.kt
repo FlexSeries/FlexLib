@@ -24,13 +24,13 @@ import java.io.File
 /**
  * Helper class for reading and writing YAML files.
  */
-class YamlFileManager {
+class YamlFileManager(filePath: String) {
 
     val file: File
     var config: FileConfiguration
         private set
 
-    constructor(filePath: String) {
+    init {
         file = File(filePath)
         if (!file.exists()) {
             file.parentFile.mkdirs()
@@ -47,13 +47,19 @@ class YamlFileManager {
         if (!file.exists()) {
             file.parentFile.mkdirs()
             file.createNewFile()
-            save()
         }
         config = YamlConfiguration.loadConfiguration(file)
     }
 
     fun save() {
         config.save(file)
+    }
+
+    /**
+     * Clears the configuration.
+     */
+    fun clear() {
+        config = YamlConfiguration()
     }
 
     /**
