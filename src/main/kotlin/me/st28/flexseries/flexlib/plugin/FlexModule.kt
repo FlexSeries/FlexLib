@@ -133,9 +133,7 @@ abstract class FlexModule<out T : FlexPlugin>(
         // Setup default config
         plugin.getResource("modules/$name/config.yml")?.use {
             InputStreamReader(it).use {
-                config.addDefaults(YamlConfiguration.loadConfiguration(it))
-                config.options().copyDefaults(false)
-                configFile!!.save()
+                configFile!!.copyDefaults(YamlConfiguration.loadConfiguration(it))
             }
         }
 
@@ -186,7 +184,7 @@ abstract class FlexModule<out T : FlexPlugin>(
         if (hasConfig) {
             // Create data folder if it doesn't exist.
             dataFolder
-            configFile!!.save()
+            configFile!!.reload()
         }
     }
 

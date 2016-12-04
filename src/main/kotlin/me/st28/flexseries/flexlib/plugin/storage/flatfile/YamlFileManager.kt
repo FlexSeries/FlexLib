@@ -32,13 +32,9 @@ class YamlFileManager(filePath: String) {
 
     init {
         file = File(filePath)
-        if (!file.exists()) {
-            file.parentFile.mkdirs()
-            file.createNewFile()
-        }
-        config = YamlConfiguration.loadConfiguration(file)
-        save()
+        config = YamlConfiguration()
         reload()
+        save()
     }
 
     constructor(file: File) : this(file.path)
@@ -47,6 +43,7 @@ class YamlFileManager(filePath: String) {
         if (!file.exists()) {
             file.parentFile.mkdirs()
             file.createNewFile()
+            save()
         }
         config = YamlConfiguration.loadConfiguration(file)
     }
@@ -70,7 +67,7 @@ class YamlFileManager(filePath: String) {
     }
 
     fun copyDefaults(other: Configuration) {
-        config.addDefaults(other)
+        config.defaults = other
         config.options().copyDefaults(true)
         save()
     }
