@@ -202,22 +202,22 @@ abstract class FlexPlugin : JavaPlugin() {
         server.pluginManager.callEvent(PluginReloadedEvent(this))
     }
 
-    fun saveAll(async: Boolean) {
-        modules.filterValues { it.status.isEnabled }.forEach { it.value.save(async) }
-
+    internal fun save(async: Boolean) {
         try {
             handleSave(async)
         } catch (ex: Exception) {
             LogHelper.severe(this, "An exception occurred while saving", ex)
         }
+    }
 
-        if (hasConfig) {
-            saveConfig()
-        }
+    fun saveAll(async: Boolean) {
+        modules.filterValues { it.status.isEnabled }.forEach { it.value.save(async) }
+
+        save(async)
     }
 
     final override fun onDisable() {
-        saveAll(false)
+        save(false)
 
         try {
             handleDisable()
