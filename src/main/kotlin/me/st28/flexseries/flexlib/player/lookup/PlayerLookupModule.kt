@@ -40,8 +40,6 @@ class PlayerLookupModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "player-
     private lateinit var storage: Storage
 
     override fun handleEnable() {
-        val config = getConfig()
-
         val maxSize = config.getLong("cache.max size", -1)
         val timeout = config.getLong("cache.timeout", 600)
 

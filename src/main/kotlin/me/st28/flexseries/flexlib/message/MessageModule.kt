@@ -41,11 +41,7 @@ class MessageModule<out T : FlexPlugin>(plugin: T) : FlexModule<T>(plugin, "mess
 
     private val tags: MutableMap<String, String> = HashMap()
 
-    override fun handleReload(isFirstReload: Boolean) {
-        if (isFirstReload) {
-            return
-        }
-
+    override fun handleReload() {
         messages.clear()
 
         val messageFile = YamlFileManager(plugin.dataFolder.path + File.separator + "messages.yml")

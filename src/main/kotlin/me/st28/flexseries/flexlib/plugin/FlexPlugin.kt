@@ -30,6 +30,15 @@ import java.io.File
 import java.util.*
 import kotlin.reflect.KClass
 
+/**
+ * Represents a plugin using FlexLib's plugin and module framework.
+ *
+ * Notes:
+ * - handleLoad should be used to register modules.
+ * - handleEnable should be used to register commands.
+ * - In most cases, handleDisable, handleConfigReload, and handleSave shouldn't need to be called due
+ *   to most functionality being implemented in modules rather than the main plugin file.
+ */
 abstract class FlexPlugin : JavaPlugin() {
 
     companion object {
@@ -76,8 +85,7 @@ abstract class FlexPlugin : JavaPlugin() {
 
     }
 
-    var status: PluginStatus = PluginStatus.PENDING
-        private set
+    private var isAcceptingModuleRegistrations: Boolean = true
 
     var hasConfig = false
         private set
@@ -87,14 +95,14 @@ abstract class FlexPlugin : JavaPlugin() {
     lateinit var commandMap: FlexCommandMap
         private set
 
-    val modules: MutableMap<KClass<in FlexModule<*>>, FlexModule<*>> = LinkedHashMap()
+    internal val modules: MutableMap<KClass<in FlexModule<*>>, FlexModule<*>> = LinkedHashMap()
 
     private var autosaveRunnable: BukkitRunnable? = null
 
     final override fun onLoad() {
         commandMap = FlexCommandMap(this)
-        status = PluginStatus.LOADING
 
+        // Register a message module for the plugin if a messages.yml file was found in the jar.
         if (getResource("messages.yml") != null) {
             registerModule(MessageModule(this))
         }
@@ -103,9 +111,10 @@ abstract class FlexPlugin : JavaPlugin() {
     }
 
     final override fun onEnable() {
-        val startTime = System.currentTimeMillis()
+        // Prevent any new modules from being registered with the plugin
+        isAcceptingModuleRegistrations = false
 
-        status = PluginStatus.ENABLING
+        val startTime = System.currentTimeMillis()
 
         /* Register self as listener where applicable */
         if (this is Listener) {
@@ -128,27 +137,22 @@ abstract class FlexPlugin : JavaPlugin() {
         }
 
         /* Load modules */
-        for (module in modules.values) {
-            module.enable()
-        }
+        modules.values.forEach { it.enable() }
 
         /* Handle implementation specific enable tasks */
         try {
-            handleReload(true)
             handleEnable()
-            handleReload(false)
+            handleReload()
         } catch (ex: Exception) {
-            status = PluginStatus.ENABLED_ERROR
             LogHelper.severe(this, "An exception occurred while enabling, functionality may be reduced.", ex)
         }
 
-        status = PluginStatus.ENABLED
-        LogHelper.info(this, String.format("%s v%s by %s ENABLED (%dms)",
-            name,
-            description.version,
-            description.authors,
-            System.currentTimeMillis() - startTime)
-        )
+        LogHelper.info(this, "%s v%s by %s ENABLED (%dms)".format(
+                name,
+                description.version,
+                description.authors,
+                System.currentTimeMillis() - startTime
+        ))
     }
 
     final override fun reloadConfig() {
@@ -162,7 +166,7 @@ abstract class FlexPlugin : JavaPlugin() {
 
         autosaveRunnable?.cancel()
 
-        var autosaveInterval = config.getInt("autosave interval", 0)
+        val autosaveInterval = config.getInt("autosave interval", 0)
         if (autosaveInterval == 0) {
             autosaveRunnable = null
             LogHelper.warning(this, "Autosaving disabled. It is recommended to enable it to help prevent data loss!")
@@ -182,39 +186,27 @@ abstract class FlexPlugin : JavaPlugin() {
 
     fun reloadAll() {
         try {
-            status = PluginStatus.RELOADING
-
             reloadConfig()
-
-            for (module in modules.values) {
-                if (module.status.isEnabled()) {
-                    module.reload()
-                }
-            }
-
-            handleReload(false)
-
-            status = PluginStatus.ENABLED
-            server.pluginManager.callEvent(PluginReloadedEvent(this))
         } catch (ex: Exception) {
-            status = PluginStatus.ENABLED_ERROR
-            throw RuntimeException("An exception occurred while reloading", ex)
+            LogHelper.severe(this, "An exception occurred while reloading config.yml", ex)
         }
-    }
 
-    fun saveAll(async: Boolean, finalSave: Boolean = false) {
-        for (module in modules.values) {
-            if (module.status.isEnabled()) {
-                try {
-                    module.save(async, finalSave)
-                } catch (ex: Exception) {
-                    LogHelper.severe(this, "An exception occurred while saving module '${module.name}'", ex)
-                }
-            }
-        }
+        modules.filterValues { it.status.isEnabled }.forEach { it.value.reload() }
 
         try {
-            handleSave(async, finalSave)
+            handleReload()
+        } catch (ex: Exception) {
+            LogHelper.severe(this, "An exception occurred while handling custom reload tasks", ex)
+        }
+
+        server.pluginManager.callEvent(PluginReloadedEvent(this))
+    }
+
+    fun saveAll(async: Boolean) {
+        modules.filterValues { it.status.isEnabled }.forEach { it.value.save(async) }
+
+        try {
+            handleSave(async)
         } catch (ex: Exception) {
             LogHelper.severe(this, "An exception occurred while saving", ex)
         }
@@ -225,9 +217,7 @@ abstract class FlexPlugin : JavaPlugin() {
     }
 
     final override fun onDisable() {
-        status = PluginStatus.DISABLING
-
-        saveAll(false, true)
+        saveAll(false)
 
         try {
             handleDisable()
@@ -235,15 +225,8 @@ abstract class FlexPlugin : JavaPlugin() {
             LogHelper.severe(this, "An exception occurred while disabling", ex)
         }
 
-        for (module in modules.values.reversed()) {
-            if (module.status.isEnabled()) {
-                try {
-                    module.disable()
-                } catch (ex: Exception) {
-                    LogHelper.severe(this, "An exception occurred while disabling module '${module.name}'", ex)
-                }
-            }
-        }
+        // Disable modules in reverse order
+        modules.values.reversed().filter { it.status.isEnabled }.forEach { it.disable() }
     }
 
     /**
@@ -252,10 +235,11 @@ abstract class FlexPlugin : JavaPlugin() {
      * @param module The module to register.
      * @return True if the module was successfully registered.
      *         False if the module is already registered.
+     *
      * @throws IllegalStateException Thrown if the plugin is not in its loading state.
      */
     protected fun registerModule(module: FlexModule<*>) : Boolean {
-        if (status != PluginStatus.LOADING) {
+        if (!isAcceptingModuleRegistrations) {
             throw IllegalStateException("No longer accepting module registrations")
         }
 
@@ -269,24 +253,58 @@ abstract class FlexPlugin : JavaPlugin() {
         return true
     }
 
-    fun <T: FlexModule<*>> getModule(module: KClass<in T>) : T? {
+    fun <T : FlexModule<*>> getModule(module: KClass<in T>) : T? {
         return modules[module] as T?
     }
 
-    // ------------------------------------------------------------------------------------------ //
-    // Implementation Methods Below                                                               //
-    // ------------------------------------------------------------------------------------------ //
+    /**
+     * Overloaded operator to allow for retrieving a plugin module by its class as a subscript.
+     * Ex. `plugin[MessageModule::class]`
+     *
+     * This method will perform a null check and should only be used if the module is known to be
+     * registered under this plugin.
+     */
+    operator fun <T : FlexModule<*>> get(module: KClass<in T>): T {
+        return getModule(module)!!
+    }
 
+
+    // ========================================================================================== //
+    // Implementation-specific Methods                                                            //
+    // ========================================================================================== //
+
+    /**
+     * In most cases, should only be used to register modules.
+     *
+     * @see [JavaPlugin.onLoad]
+     */
     protected open fun handleLoad() { }
 
+    /**
+     * In most cases, should only be used to register commands.
+     *
+     * @see JavaPlugin.onEnable
+     */
     protected open fun handleEnable() { }
 
+    /**
+     * @see JavaPlugin.reloadConfig
+     */
     protected open fun handleConfigReload(config: FileConfiguration) { }
 
-    protected open fun handleReload(isFirstReload: Boolean) { }
+    /**
+     * Handles plugin-specific reload tasks.
+     */
+    protected open fun handleReload() { }
 
-    protected open fun handleSave(async: Boolean, isFinalSave: Boolean) { }
+    /**
+     * Handles plugin-specific save tasks.
+     */
+    protected open fun handleSave(async: Boolean) { }
 
+    /**
+     * @see JavaPlugin.onDisable
+     */
     protected open fun handleDisable() { }
 
 }

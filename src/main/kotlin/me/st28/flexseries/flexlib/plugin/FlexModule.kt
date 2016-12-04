@@ -19,6 +19,7 @@ package me.st28.flexseries.flexlib.plugin
 import me.st28.flexseries.flexlib.logging.LogHelper
 import me.st28.flexseries.flexlib.plugin.storage.flatfile.YamlFileManager
 import org.apache.commons.lang.Validate
+import org.bukkit.configuration.ConfigurationSection
 import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.event.HandlerList
@@ -28,28 +29,83 @@ import java.io.InputStream
 import java.io.InputStreamReader
 import java.util.regex.Pattern
 
-abstract class FlexModule<out T : FlexPlugin>(plugin: T, name: String, description: String) {
+/**
+ * Represents a module of a FlexPlugin.
+ *
+ * Module lifestyle:
+ * 1) Module is registered under a FlexPlugin
+ * 2) Assuming the module is disabled due to the configuration, the module is enabled.
+ * 3) handleEnable is called, followed by handleReload
+ *     - Each module is reloaded immediately after being enabled.
+ *
+ * Other notes:
+ * - If an implementation implements Bukkit's Listener interface, the module will automatically be
+ *   registered as a Listener.
+ * - Modules will not enable if an exception is encountered during handleEnable, but they will still
+ *   enable (with [hasError] = true) if an exception is encountered during handleReload.
+ * - Modules will also fail to enable if the configuration has invalid YAML syntax.
+ * - Modules (and any related commands, etc.) should be able to function at least partially if a
+ *   reload fails, and they should be able to recover if valid configuration is given on next reload.
+ * - FlexPlugins can enable or disable plugins while the server is running. Because of this, implementations
+ *   should take care to **cleanup fully** on disable to help prevent memory leaks.
+ */
+abstract class FlexModule<out T : FlexPlugin>(
+        val plugin: T,
+        val name: String,
+        val description: String)
+{
 
     companion object {
+
         val NAME_PATTERN: Pattern = Pattern.compile("[a-zA-Z0-9-_]+")
+
     }
 
-    val plugin: T
-    val name: String
-    val description: String
-    var status: ModuleStatus = ModuleStatus.PENDING
-        private set
+    /**
+     * The status of the module.
+     */
+    var status: ModuleStatus = ModuleStatus.DISABLED
+        internal set
 
+    /**
+     * True if the module encountered errors while enabling, reloading, or disabling.
+     */
+    var hasError: Boolean = false
+        internal set
+
+    /**
+     * The data folder for the module.
+     * Located at plugins/(Plugin name)/(Module name)
+     */
     var dataFolder: File
+        get() {
+            if (!field.exists()) {
+                field.mkdirs()
+            }
+            return field
+        }
         private set
 
-    private lateinit var configFile: YamlFileManager
+    /**
+     * The configuration file for the module.
+     */
+    private var hasConfig: Boolean = false
+    private val configFile: YamlFileManager? = null
+        get() {
+            if (field == null) {
+                field = YamlFileManager(plugin.dataFolder.path + File.separator + "config-$name.yml")
+                hasConfig = true
+            }
+            return field
+        }
+
+    /**
+     * The primary configuration section for this module.
+     */
+    protected val config: FileConfiguration
+        get() = configFile!!.config
 
     init {
-        this.plugin = plugin
-        this.name = name
-        this.description = description
-
         Validate.isTrue(NAME_PATTERN.matcher(name).matches(), "Name must be alphanumeric with only dashes and underscores")
 
         dataFolder = File(plugin.dataFolder.path + File.separator + name)
@@ -57,41 +113,47 @@ abstract class FlexModule<out T : FlexPlugin>(plugin: T, name: String, descripti
 
     /**
      * Enables the module.
+     *
+     * @return True if the module was successfully enabled.
+     *         False if the module encountered errors while loading.
+     *
+     * @throws IllegalStateException Thrown if the module is already enabled.
      */
-    fun enable(): Boolean {
-        when (status) {
-            ModuleStatus.PENDING,
-            ModuleStatus.DISABLED,
-            ModuleStatus.DISABLED_DEPENDENCY,
-            ModuleStatus.DISABLED_ERROR
-            -> { }
-            else -> return false
+    internal fun enable(): Boolean {
+        if (status == ModuleStatus.DISABLED_CONFIG) {
+            throw IllegalStateException("Module '$name' is disabled via configuration and cannot be enabled.")
+        } else if (status.isEnabled) {
+            throw IllegalStateException("Module '$name' is already enabled")
         }
 
+        hasError = false
+
         val startTime = System.currentTimeMillis()
-        status = ModuleStatus.LOADING
 
-        configFile = YamlFileManager(plugin.dataFolder.path + File.separator + "config-$name.yml")
-        if (configFile.isEmpty()) {
-            val config = configFile.config
-
-            val def = plugin.getResource("modules/$name/config.yml")
-            if (def != null) {
-                config.addDefaults(YamlConfiguration.loadConfiguration(InputStreamReader(def)))
-                config.options().copyDefaults(true)
-                configFile.save()
+        // Setup default config
+        plugin.getResource("modules/$name/config.yml")?.use {
+            InputStreamReader(it).use {
+                config.addDefaults(YamlConfiguration.loadConfiguration(it))
+                config.options().copyDefaults(false)
+                configFile!!.save()
             }
         }
 
         try {
-            configFile.reload()
-            handleReload(true)
+            // Reload configuration file
+            reloadConfig()
+
             handleEnable()
-            handleReload(false)
         } catch (ex: Exception) {
-            status = ModuleStatus.DISABLED_ERROR
-            throw RuntimeException("An exception occurred while enabling module '$name'", ex)
+            status = ModuleStatus.DISABLED
+            hasError = true
+            LogHelper.severe(this, "An exception occurred while enabling module '$name'", ex)
+            return false
         }
+
+        status = ModuleStatus.ENABLED
+
+        handleReload()
 
         // Register as listener where applicable
         if (this is Listener) {
@@ -99,86 +161,132 @@ abstract class FlexModule<out T : FlexPlugin>(plugin: T, name: String, descripti
             LogHelper.debug(this, "Registered listener")
         }
 
-        status = ModuleStatus.ENABLED
-        LogHelper.info(this, String.format("Module enabled (%dms)", System.currentTimeMillis() - startTime))
-        return true
+        LogHelper.info(this, "Module enabled (%dms)".format(System.currentTimeMillis() - startTime))
+        return hasError
     }
 
-    fun reload() {
-        status = ModuleStatus.RELOADING
-
-        if (!dataFolder.exists()) {
-            dataFolder.mkdirs()
-        }
-
-        configFile.reload()
-
+    internal fun reload() {
         try {
-            handleReload(false)
+            reloadConfig()
+            handleReload()
         } catch (ex: Exception) {
-            status = ModuleStatus.ENABLED_ERROR
-            throw RuntimeException("An exception occurred while reloading module '$name'", ex)
+            hasError = true
+            LogHelper.severe(this, "An exception occurred while reloading module '$name'", ex)
+            return
         }
 
+        hasError = false
         status = ModuleStatus.ENABLED
     }
 
-    fun save(async: Boolean, isFinalSave: Boolean = false) {
-        handleSave(async, isFinalSave)
+    /**
+     * Reloads the configuration file.
+     */
+    internal fun reloadConfig() {
+        if (hasConfig) {
+            // Create data folder if it doesn't exist.
+            dataFolder
+            configFile!!.save()
+        }
     }
 
-    fun disable() {
-        status = ModuleStatus.UNLOADING
+    /**
+     * Saves the module.
+     */
+    internal fun save(async: Boolean) {
+        try {
+            handleSave(async)
+        } catch (ex: Exception) {
+            hasError = true
+            LogHelper.severe(this, "An exception occurred while saving module '$name'", ex)
+        }
+    }
 
+    /**
+     * Disables the module.
+     */
+    internal fun disable() {
         // Unregister self as listener where applicable
         if (this is Listener) {
             HandlerList.unregisterAll(this)
             LogHelper.debug(this, "Unregistered listener")
         }
 
+        // Final save
+        save(false)
+
+        // Disable
         try {
-            handleSave(false, true)
-            configFile.save()
             handleDisable()
         } catch (ex: Exception) {
-            status = ModuleStatus.DISABLED_ERROR
-            throw RuntimeException("An exception occurred while disabling module '$name'", ex)
+            status = ModuleStatus.DISABLED
+            hasError = true
+            LogHelper.severe(this, "An exception occurred while disabling module '$name'", ex)
+            return
         }
 
         status = ModuleStatus.DISABLED
+        hasError = false
         LogHelper.debug(this, "Module disabled")
     }
 
-    fun getConfig(): FileConfiguration {
-        return configFile.config
-    }
 
+    // ========================================================================================== //
+    // API Methods                                                                                //
+    // ========================================================================================== //
+
+    /**
+     * @return A resource with the given name located under this module's folder in the plugin jar.
+     */
     fun getResource(name: String): InputStream {
         return plugin.getResource("modules/${this.name}/$name")
     }
 
+
+    // ========================================================================================== //
+    // Implementation-specific Methods                                                            //
+    // ========================================================================================== //
+
     /**
      * Handles module-specific enable tasks.
+     *
+     * Should consist of tasks that should only occur once throughout the lifespan of a module, such as:
+     * - Initializing a database connection pool
+     * - Initializing variables
      */
     protected open fun handleEnable() { }
 
     /**
      * Handles module-specific reload tasks.
-     * @param isFirstReload True if this method is being called for the first time for a module.
-     *                      The first reload will be called prior to the plugin being enabled.
+     *
+     * Should consist of tasks that are affected by configuration (in general). The configuration is
+     * always reloaded immediately prior to this method being called, so new configuration values
+     * will be present when this method is executed.
      */
-    protected open fun handleReload(isFirstReload: Boolean) { }
+    protected open fun handleReload() { }
 
     /**
      * Handles module-specific save tasks.
+     *
+     * In an effort to allow plugins and modules to have autosaving functionality, this method should
+     * save asynchronously where possible (assuming [async] is true).
+     *
      * @param async True if the module should save data asynchronously (where applicable).
-     * @param isFinalSave True if the method is being called for the final time before the plugin is
-     *                    disabled.
+     *              Will be true in many cases, except when the plugin is disabling all modules.
      */
-    protected open fun handleSave(async: Boolean, isFinalSave: Boolean) { }
+    protected open fun handleSave(async: Boolean) { }
 
     /**
      * Handles module-specific disable tasks.
+     *
+     * handleSave is always called prior to this, so this method shouldn't need to handle saving any
+     * data.
+     *
+     * This method may be called when [hasError] = true, so care should be taken to avoid using any
+     * uninitialized variables, among other things.
+     *
+     * Should consist of cleanup tasks that should only occur at the end of a module's lifespan, such as:
+     * - Closing database connections
      */
     protected open fun handleDisable() { }
 

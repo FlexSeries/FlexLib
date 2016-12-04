@@ -42,10 +42,7 @@ class FlexLib : FlexPlugin() {
         commandMap.register(NewCommandTest)
     }
 
-    override fun handleReload(isFirstReload: Boolean) {
-        if (isFirstReload) {
-            return
-        }
+    override fun handleReload() {
         PermissionHelper.reload(config.getConfigurationSection("permission helper"))
     }
 

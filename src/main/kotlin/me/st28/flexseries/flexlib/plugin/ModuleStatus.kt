@@ -16,28 +16,27 @@
  */
 package me.st28.flexseries.flexlib.plugin
 
+/**
+ * Represents the status of a [FlexModule].
+ */
 enum class ModuleStatus {
 
-    PENDING,
-
-    LOADING,
-
+    /**
+     * The module is disabled.
+     */
     DISABLED,
 
-    DISABLED_ERROR,
+    /**
+     * The module is disabled due to the plugin's configuration.
+     */
+    DISABLED_CONFIG,
 
-    DISABLED_DEPENDENCY,
+    /**
+     * The module is enabled
+     */
+    ENABLED;
 
-    ENABLED,
-
-    ENABLED_ERROR,
-
-    RELOADING,
-
-    UNLOADING;
-
-    fun isEnabled(): Boolean {
-        return this == ENABLED || this == ENABLED_ERROR
-    }
+    val isEnabled: Boolean
+        get() = this == ENABLED
 
 }

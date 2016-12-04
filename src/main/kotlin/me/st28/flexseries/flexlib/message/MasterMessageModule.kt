@@ -23,7 +23,7 @@ import me.st28.flexseries.flexlib.plugin.FlexModule
 import java.util.*
 import java.util.regex.Pattern
 
-class MasterMessageModule : FlexModule<FlexLib> {
+class MasterMessageModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "messages-master", "Main message formatting module") {
 
     internal companion object {
 
@@ -43,15 +43,7 @@ class MasterMessageModule : FlexModule<FlexLib> {
     internal val listElementFormats: MutableMap<String, String> = HashMap()
     internal val listHeaderFormats: MutableMap<String, ListHeader> = HashMap()
 
-    constructor(plugin: FlexLib) : super(plugin, "messages-master", "Main message formatting module")
-
-    override fun handleReload(isFirstReload: Boolean) {
-        if (isFirstReload) {
-            return
-        }
-
-        val config = getConfig()
-
+    override fun handleReload() {
         /* Load mood formats */
         moodFormats.clear()
         val moodSec = config.getConfigurationSection("format.mood")
