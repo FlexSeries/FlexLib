@@ -26,7 +26,6 @@ import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.event.Listener
 import org.bukkit.plugin.java.JavaPlugin
 import org.bukkit.scheduler.BukkitRunnable
-import sun.rmi.runtime.Log
 import java.io.File
 import java.util.*
 import kotlin.reflect.KClass
@@ -35,11 +34,43 @@ abstract class FlexPlugin : JavaPlugin() {
 
     companion object {
 
-        fun <T : FlexModule<*>> getGlobalModule(module: KClass<T>): T? {
+        /**
+         * Retrieves a global module.
+         * This method performs a null check.
+         *
+         * @throws NullPointerException Thrown if the module is not registered under FlexLib.
+         */
+        fun <T : FlexModule<*>> getGlobalModule(module: KClass<T>): T {
+            return JavaPlugin.getPlugin(FlexLib::class.java)!!.getModule(module)!!
+        }
+
+        /**
+         * Retrieves a global module.
+         *
+         * @return The found module.
+         *         Null if the module is not registered under FlexLib.
+         */
+        fun <T : FlexModule<*>> getGlobalModuleSafe(module: KClass<T>): T? {
             return JavaPlugin.getPlugin(FlexLib::class.java)!!.getModule(module)
         }
 
-        fun <T : FlexModule<*>> getPluginModule(plugin: KClass<out FlexPlugin>, module: KClass<in T>) : T? {
+        /**
+         * Retrieves a plugin module.
+         * This method performs a null check.
+         *
+         * @throws NullPointerException Thrown if the module is not registered under the plugin.
+         */
+        fun <T : FlexModule<*>> getPluginModule(plugin: KClass<out FlexPlugin>, module: KClass<in T>) : T {
+            return JavaPlugin.getPlugin(plugin.java)!!.getModule(module)!!
+        }
+
+        /**
+         * Retrieves a plugin module.
+         *
+         * @return The found module.
+         *         Null if the module is not registered under the plugin.
+         */
+        fun <T : FlexModule<*>> getPluginModuleSafe(plugin: KClass<out FlexPlugin>, module: KClass<T>): T? {
             return JavaPlugin.getPlugin(plugin.java)!!.getModule(module)
         }
 

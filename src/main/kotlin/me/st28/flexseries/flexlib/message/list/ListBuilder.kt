@@ -76,7 +76,7 @@ class ListBuilder {
             throw IllegalStateException("Messages have already been added")
         }
 
-        val module = FlexPlugin.getGlobalModule(MasterMessageModule::class)!!
+        val module = FlexPlugin.getGlobalModule(MasterMessageModule::class)
         val header = module.listHeaderFormats[name]
         val defaultHeader = module.listHeaderFormats["DEFAULT"]
 
@@ -97,7 +97,7 @@ class ListBuilder {
     }
 
     fun element(type: String, vararg replacements: String): ListBuilder {
-        val format = FlexPlugin.getGlobalModule(MasterMessageModule::class)!!.listElementFormats[type] ?: "Unknown format: '$type'"
+        val format = FlexPlugin.getGlobalModule(MasterMessageModule::class).listElementFormats[type] ?: "Unknown format: '$type'"
                 .replace("{INDEX}", (index + 1).toString())
 
         messages.add(Message.processed(String.format(MessageModule.setupPatternReplace(format), *replacements)))

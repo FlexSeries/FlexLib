@@ -64,7 +64,7 @@ class ArgumentConfig(p: KParameter) : GenericDataContainer() {
     }
 
     fun getParser(): ArgumentParser<Any>? {
-        return FlexPlugin.getGlobalModule(CommandModule::class)!!.getArgumentParser(type)
+        return FlexPlugin.getGlobalModule(CommandModule::class).getArgumentParser(type)
     }
 
 }

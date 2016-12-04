@@ -129,7 +129,7 @@ internal class CommandExecutor {
 
     fun execute(context: CommandContext, offset: Int) {
         // Get session
-        val session = FlexPlugin.getGlobalModule(CommandModule::class)!!.createSession(command, context)
+        val session = FlexPlugin.getGlobalModule(CommandModule::class).createSession(command, context)
         if (session == null) {
             Message.getGlobal("error.command.already_executing").sendTo(context.sender)
             return
@@ -181,6 +181,8 @@ internal class CommandExecutor {
 
         if (args.size < parser.consumed) {
             // Not enough arguments
+
+            println("NOT ENOUGH ARGUMENTS GIVEN")
 
             if (!ac.isRequired) {
                 // Argument isn't required
@@ -265,6 +267,8 @@ internal class CommandExecutor {
         } else {
             // Enough arguments provided
 
+            println("ENOUGH ARGUMENTS PROVIDED")
+
             val consumed = args.take(parser.consumed)
 
             val parsed = try {
@@ -344,6 +348,8 @@ internal class CommandExecutor {
             sender.sendMessage(ret)
         } else if (ret is ListBuilder) {
             ret.sendTo(sender)
+        } else if (ret is Unit) {
+            // Ignore
         } else if (ret != null) {
             LogHelper.warning(command.plugin, "Unknown command return type '${ret.javaClass.kotlin.qualifiedName}'")
         }

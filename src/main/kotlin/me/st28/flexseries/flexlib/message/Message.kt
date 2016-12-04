@@ -21,7 +21,6 @@ import me.st28.flexseries.flexlib.FlexLib
 import me.st28.flexseries.flexlib.player.PlayerReference
 import me.st28.flexseries.flexlib.plugin.FlexPlugin
 import org.bukkit.command.CommandSender
-import java.util.*
 import kotlin.reflect.KClass
 
 class Message {
@@ -29,12 +28,8 @@ class Message {
     companion object {
 
         fun get(plugin: KClass<out FlexPlugin>, name: String, vararg replacements: Any?): Message {
-            val module = FlexPlugin.getPluginModule(plugin, MessageModule::class)
-            if (module == null) {
-                return Message(name, replacements)
-            } else {
-                return module.getMessage(name, *replacements)
-            }
+            return FlexPlugin.getPluginModuleSafe(plugin, MessageModule::class)?.getMessage(name, *replacements)
+                ?: Message(name, replacements)
         }
 
         fun getGlobal(name: String, vararg replacements: Any?): Message {
@@ -45,8 +40,18 @@ class Message {
             return Message(message)
         }
 
-        fun processed(message: String): Message {
-            return Message(FlexPlugin.getGlobalModule(MasterMessageModule::class)!!.processMessage(message))
+        fun processed(message: String, vararg replacements: String): Message {
+            return Message(processedRaw(message, replacements))
+        }
+
+        fun processedRaw(message: String, vararg replacements: Any?): String {
+            return FlexPlugin.getGlobalModule(MasterMessageModule::class).processMessage(message).format(*replacements)
+        }
+
+        fun processedObjectRaw(type: String, vararg replacements: Any?): String {
+            val format = FlexPlugin.getGlobalModule(MasterMessageModule::class).listElementFormats[type] ?: "Unknown format: '$type'"
+
+            return processedRaw(MessageModule.setupPatternReplace(format), *replacements)
         }
 
     }

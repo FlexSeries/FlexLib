@@ -57,7 +57,7 @@ class ListHeader {
     private fun getFinalizedFormat(newCenter: String, defaultHeader: ListHeader?): String {
         val centerLength = ChatColor.stripColor(newCenter).length
 
-        val sideLength = Math.max(1, (FlexPlugin.getGlobalModule(MasterMessageModule::class)!!.listLineLength - centerLength / 2)).toInt()
+        val sideLength = Math.max(1, (FlexPlugin.getGlobalModule(MasterMessageModule::class).listLineLength - centerLength / 2))
 
         val sb = StringBuilder()
 
