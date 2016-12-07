@@ -25,6 +25,7 @@ import me.st28.flexseries.flexlib.plugin.FlexPlugin
 import me.st28.flexseries.flexlib.util.SchedulerUtils
 import me.st28.flexseries.flexlib.util.toInt
 import org.bukkit.Bukkit
+import org.bukkit.entity.Player
 import java.util.*
 import kotlin.reflect.KFunction
 import kotlin.reflect.defaultType
@@ -137,6 +138,12 @@ internal class CommandExecutor(
     }
 
     fun execute(context: CommandContext, offset: Int) {
+        // Player check
+        if (isPlayerOnly && context.sender !is Player) {
+            Message.getGlobal("error.must_be_player").sendTo(context.sender)
+            return
+        }
+
         // Get session
         val session = FlexPlugin.getGlobalModule(CommandModule::class).createSession(command, context)
         if (session == null) {
