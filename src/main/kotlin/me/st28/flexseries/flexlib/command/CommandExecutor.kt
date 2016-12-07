@@ -168,7 +168,7 @@ internal class CommandExecutor(
             finishExecution(session)
         } else {
             // Get arguments
-            handleNextArgument0(session, context, args, 0)
+            handleNextArgument(session, context, args, 0)
         }
     }
 
@@ -180,7 +180,7 @@ internal class CommandExecutor(
      * @param args The user-provided arguments.
      * @param curArg The current argument config we're working with.
      */
-    private fun handleNextArgument0(session: CommandSession, context: CommandContext, args: Deque<String>, curArg: Int) {
+    private fun handleNextArgument(session: CommandSession, context: CommandContext, args: Deque<String>, curArg: Int) {
         /// 1) Check to see if command execution has been canceled, and return if so
         if (!session.running) {
             return
@@ -196,108 +196,54 @@ internal class CommandExecutor(
         val parser = ac.getParser()
                 ?: return session.cancelWith(Message.getGlobal("error.command.unknown_argument_type", ac.type))
 
-        var actualConsumed: Int = 0
-        val parsed = if (args.size < parser.consumed) {
-            /*
-             * ===== Section A =====
-             *
-             * Not enough arguments were given by the user.
-             *
-             * Here we do one of two things:
-             * 1. Get the default value from the parser if ac has the default annotation.
-             *   a. If the default value is null, we will rerun this method asynchronously to parse
-             *       the default value asynchronously.
-             *   b. If this is run asynchronously and the default value is null, we do not ignore
-             *       any ArgumentParseExceptions.
-             * 2. Otherwise, do one of the following based on whether the argument is required:
-             *   a. Optional: Add null
-             *   b. Required: Show usage message
-             *
-             */
+        val consumed: MutableList<String> = ArrayList()
+        var actualConsumed: Int = 0 // The number of arguments taken from the input args list
+
+        if (args.size < parser.consumed) {
+            // Not enough arguments were given by the user
 
             if (ac.default != null) {
-                /// A: 1.a
+                // Argument has default annotation, attempt to get default arguments
 
                 val minArgs = ac.minArgs
 
                 if (args.size >= minArgs) {
                     // Enough arguments to fulfill default parser
+                    consumed.addAll(args.take(parser.consumed - parser.defaultMinArgs))
+                    actualConsumed = consumed.size
 
-                    val argsWithDefault: MutableList<String> = ArrayList()
+                    if (consumed.size < parser.consumed) {
+                        consumed.addAll(ac.default.value.split(" ").takeLast(parser.consumed - parser.defaultMinArgs))
 
-                    // 1) Add user-given argument(s)
-                    argsWithDefault.addAll(args.take(parser.consumed - parser.defaultMinArgs))
-                    actualConsumed = argsWithDefault.size
-
-                    // 2) If there's not enough arguments to fulfill the parser's consumed count,
-                    //    add the last of the default values
-                    if (argsWithDefault.size < parser.consumed) {
-                        argsWithDefault.addAll(ac.default.value.split(" ").takeLast(parser.consumed - parser.defaultMinArgs))
-
-                        // 3) Fill the rest if the consumed count hasn't been met yet
-                        if (argsWithDefault.size < parser.consumed) {
-                            kotlin.repeat(parser.consumed - argsWithDefault.size) {
-                                argsWithDefault.add("")
+                        // Fill the rest if the consumed count hasn't been met yet
+                        if (consumed.size < parser.consumed) {
+                            kotlin.repeat(parser.consumed - consumed.size) {
+                                consumed.add("")
                             }
                         }
                     }
-
-                    // Detect synchronous or asynchronous
-                    try {
-                        if (async) {
-                            parser.parseAsync(context, ac, argsWithDefault.toTypedArray())
-                        } else {
-                            parser.parse(context, ac, argsWithDefault.toTypedArray())
-                        }
-                    } catch (ex: ArgumentParseException) {
-                        if (!async && !ac.isRequired) {
-                            // Ignore
-                            null
-                        } else {
-                            return session.cancelWith(ex.errorMessage)
-                        }
-                    }
-                } else {
-                    // TODO: Show usage?
-                    null
                 }
-            } else {
-                null
             }
-
-            /*if (parsed == null && parser.async && !async) {
-                /// A: 1a
-
-                SchedulerUtils.runAsync(command.plugin) {
-                    handleNextArgument0(session, context, args, curArg)
-                }
-                return
-            }
-
-            if (parsed == null && ac.isRequired) {
-                /// A: 2b
-
-                // TODO: Show usage message
-                throw RuntimeException("TODO: USAGE MESSAGE")
-            }
-
-            /// A: 2a
-            session.params.add(parsed)*/
-
-            /* ===== SECTION A ===== */
-            //return
         } else {
-            /*
-             * ===== Section B =====
-             *
-             * Enough arguments were given by the user.
-             *
-             */
+            // Enough arguments were given by the user
 
-            // Consume required number of arguments
-            val consumed = args.take(parser.consumed)
+            consumed.addAll(args.take(parser.consumed))
             actualConsumed = parser.consumed
+        }
 
+        /*
+         * The only time we will return here is if all the following conditions are met:
+         * - Our argument count is less than the number of arguments the parser consumes
+         * - Argument is required
+         */
+        if (consumed.size < parser.consumed && ac.isRequired) {
+            // TODO: Show usage
+            throw RuntimeException("TODO: SHOW USAGE")
+        }
+
+        val parsed = if (consumed.isEmpty()) {
+            null
+        } else {
             try {
                 if (async) {
                     parser.parseAsync(context, ac, consumed.toTypedArray())
@@ -313,7 +259,7 @@ internal class CommandExecutor(
         // re-run asynchronously.
         if (parsed == null && parser.async && !async) {
             SchedulerUtils.runAsync(command.plugin) {
-                handleNextArgument0(session, context, args, curArg)
+                handleNextArgument(session, context, args, curArg)
             }
             return
         }
@@ -336,159 +282,10 @@ internal class CommandExecutor(
                 finishExecution(session)
             } else {
                 // Execute next argument
-                handleNextArgument0(session, context, args, curArg + 1)
-            }
-        }
-    }
-
-    /**
-     * Handles an argument config at a time.
-     *
-     * @param session The session for the command.
-     */
-    /*private fun handleNextArgument(session: CommandSession, context: CommandContext, args: Deque<String>, curArg: Int) {
-        // Check to see if command execution has been canceled
-        if (!session.running) {
-            return
-        }
-
-        val async = !Bukkit.isPrimaryThread()
-
-        val ac = arguments[curArg]
-
-        val parser = ac.getParser() ?: return session.cancelWith(Message.getGlobal("error.command.unknown_argument_type", ac.type))
-
-        if (args.size < parser.consumed) {
-            // Not enough arguments
-
-            println("NOT ENOUGH ARGUMENTS GIVEN")
-
-            if (!ac.isRequired) {
-                // Argument isn't required
-
-                println("ARGUMENT NOT REQUIRED")
-
-                // Get default argument or just add null to the params list
-                if (ac.default != null) {
-                    val minArgs = ac.minArgs
-
-                    if (args.size >= minArgs) {
-                        // Enough arguments to fulfill default parser
-
-                        val argsWithDefault: MutableList<String> = ArrayList()
-
-                        // 1) Add user-given argument(s)
-                        argsWithDefault.addAll(args.take(parser.consumed - parser.defaultMinArgs))
-
-                        // 2) If there's not enough arguments to fulfill the parser's consumed count,
-                        //    add the last of the default values
-                        if (argsWithDefault.size < parser.consumed) {
-                            argsWithDefault.addAll(ac.default.value.split(" ").takeLast(parser.consumed - parser.defaultMinArgs))
-
-                            // 3) Fill the rest if the consumed count hasn't been met yet
-                            if (argsWithDefault.size < parser.consumed) {
-                                kotlin.repeat(parser.consumed - argsWithDefault.size) {
-                                    argsWithDefault.add("")
-                                }
-                            }
-                        }
-
-                        // Detect synchronous or asynchronous
-                        try {
-                            if (async) {
-                                session.params.add(parser.parseAsync(context, ac, argsWithDefault.toTypedArray()))
-                            } else {
-                                session.params.add(parser.parse(context, ac, argsWithDefault.toTypedArray()))
-                            }
-                        } catch (ex: ArgumentParseException) {
-                            return session.cancelWith(ex.errorMessage)
-                        }
-                    }
-                } else {
-                    session.params.add(null)
-                }
-            } else {
-                // Argument is required
-
-                println("ARGUMENT REQUIRED")
-
-                if (ac.default != null) {
-                    val parsed: Any?
-
-                    // Detect synchronous or asynchronous
-                    try {
-                        if (async) {
-                            parsed = parser.parseAsync(context, ac, arrayOf(ac.default.value))
-                        } else {
-                            parsed = parser.parse(context, ac, arrayOf(ac.default.value))
-                        }
-                    } catch (ex: ArgumentParseException) {
-                        return session.cancelWith(ex.errorMessage)
-                    }
-
-                    if (parsed == null) {
-                        // If default is null and this is async
-                        if (async) {
-                            println("MISSING REQUIRED ARGUMENT")
-                        } else {
-                            // Attempt to resolve argument asynchronously
-                            SchedulerUtils.runAsync(command.plugin) {
-                                handleNextArgument(session, context, args, curArg)
-                            }
-                        }
-
-                        return
-                    }
-
-                    session.params.add(parsed)
-                }
-            }
-        } else {
-            // Enough arguments provided
-
-            println("ENOUGH ARGUMENTS PROVIDED")
-
-            val consumed = args.take(parser.consumed)
-
-            val parsed = try {
-                parser.parse(context, ac, consumed.toTypedArray())
-            } catch (ex: ArgumentParseException) {
-                return session.cancelWith(ex.errorMessage)
-            }
-
-            if (parsed == null && ac.isRequired) {
-                println("NULL PARSED")
-
-                if (parser.async) {
-                    println("MISSING REQUIRED ARGUMENT")
-                } else {
-                    // Attempt to resolve argument asynchronously
-
-                    SchedulerUtils.runAsync(command.plugin) {
-                        handleNextArgument(session, context, args, curArg)
-                    }
-                }
-
-                return
-            }
-
-            // Drop consumed arguments
-            kotlin.repeat(parser.consumed) { args.pop() }
-
-            session.params.add(parsed)
-        }
-
-        // Finish command execution or handle next argument synchronously
-        SchedulerUtils.runSync(command.plugin) {
-            if (curArg + 1 == arguments.size) {
-                // We're done with argument config
-                finishExecution(session)
-            } else {
-                // Execute next argument
                 handleNextArgument(session, context, args, curArg + 1)
             }
         }
-    }*/
+    }
 
     /**
      * Finishes the execution of the command.
