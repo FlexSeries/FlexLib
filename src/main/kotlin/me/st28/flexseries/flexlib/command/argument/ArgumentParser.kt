@@ -27,12 +27,21 @@ import java.util.*
 import kotlin.reflect.KClass
 
 /**
+ * Notes
+ * - Parsers that consume more than one argument can operate with less than the number of consumed
+ *   arguments assuming [defaultMinArgs] is greater than zero.
+ *
  * @param consumed The number of raw arguments consumed by this parser. Default = 1
+ * @param defaultMinArgs The default number of minimum arguments this parser consumes (for parsers
+ *                       that consume more than one argument). Default = 0 (required = consumed)
  * @param async True if this parser implements [parseAsync].
  */
-abstract class ArgumentParser<out T : Any>(val consumed: Int = 1,
-                                           val defaultMinArgs: Int = -1,
-                                           val async: Boolean = false) {
+abstract class ArgumentParser<out T : Any>(
+        val consumed: Int = 1,
+        val defaultMinArgs: Int = 0,
+        val async: Boolean = false,
+        val defaultLabels: Array<String>? = null)
+{
 
    companion object {
 
@@ -42,7 +51,7 @@ abstract class ArgumentParser<out T : Any>(val consumed: Int = 1,
         * @see CommandModule.registerArgumentParser
         */
        fun <T: Any> register(type: KClass<T>, parser: ArgumentParser<T>): Boolean {
-           return FlexPlugin.getGlobalModule(CommandModule::class)!!.registerArgumentParser(type, parser)
+           return FlexPlugin.getGlobalModule(CommandModule::class).registerArgumentParser(type, parser)
        }
 
    }

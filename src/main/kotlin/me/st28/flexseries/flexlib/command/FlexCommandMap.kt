@@ -169,7 +169,11 @@ class FlexCommandMap(val plugin: FlexPlugin) {
 
             println("Registering executor in subcmd ${subcmd.label}")
 
-            // TODO: 4) Set default
+            // 4) Set default
+            if (meta.isDefault) {
+                subcmd.parent?.defaultSubcommand = subcmd.label
+                println("Default subcommand: ${subcmd.label}")
+            }
         }
     }
 

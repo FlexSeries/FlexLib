@@ -36,7 +36,7 @@ open class BasicCommand {
 
     /* Parent and child commands */
     internal var parent: BasicCommand? = null
-    private var defaultSubcommand: String = ""
+    internal var defaultSubcommand: String? = null
     internal val subcommands: MutableMap<String, BasicCommand> = HashMap()
     internal val reverseSubcommands: MutableList<Triple<Int, String, BasicCommand>> = ArrayList() // Offset, label, command
 
@@ -54,7 +54,6 @@ open class BasicCommand {
         this.aliases.clear()
         this.aliases.addAll(aliases)
         parent?.registerSubcommand(this)
-        // TODO: Call this method somewhere
     }
 
     /**
@@ -108,27 +107,34 @@ open class BasicCommand {
             }
         }*/
 
-        // 3) If this is a dummy command (doesn't have any logic on its own), then attempt to run
-        //    its default subcommand
-        //if ()
-        // TODO: Run default subcommand
 
-        // 4) Find appropriate CommandExecutor and run this command's logic.
-        val applicable = executors.filter { curArgs.size >= it.getRequiredArgs() }
+        // 3) Find appropriate CommandExecutor and run this command's logic.
+        val applicable = executors.filter {
+            println("Cmd: ${it.getUsage()} req args: ${it.getRequiredArgs()}")
+            curArgs.size >= it.getRequiredArgs()
+        }
         println("Cur arg count: ${curArgs.size}")
         println("Executors: ${executors.size}")
         println("Applicable executors: ${applicable.size}")
 
         if (applicable.isEmpty()) {
-            // No executors found
+            // No executors found (dummy command)
+
+            if (subcommands.isEmpty()) {
+                // If no subcommands, show usage
+                return executors.joinToString("\n") { it.getUsage(context) }
+            }
+
+            // There are subcommands, try default subcommand if set
+            val foundDefault = subcommands[defaultSubcommand]
+            if (foundDefault != null) {
+                return foundDefault.execute(context, offset)
+            }
+
+            // Default to help command
+            return showHelp(context)
 
             // TODO: Show usage and description
-            //return executors.joinToString("\n") { it.getUsage(context) }
-            if (subcommands.isEmpty()) {
-                return executors.joinToString("\n") { it.getUsage(context) }
-            } else {
-                return showHelp(context) // Default to help command
-            }
         } else if (applicable.size == 1) {
             // Easy, only one applicable command executor was found
             return applicable[0].execute(context, offset)
@@ -161,11 +167,17 @@ open class BasicCommand {
 
         val fullHelp: MutableList<Pair<String, String>> = ArrayList()
 
-        for (subcmd in subcommands.values) {
-            for (executor in subcmd.executors) {
-                fullHelp.add(Pair(executor.getUsage(), if (executor.description.isEmpty()) "(no description set)" else executor.description))
-            }
+        // Helper function
+        val addEntry = fun (executor: CommandExecutor) {
+            fullHelp.add(Pair(executor.getUsage(context), if (executor.description.isEmpty())
+                        "(no description set)" else executor.description))
         }
+
+        // Add own executors
+        executors.forEach(addEntry)
+
+        // Add subcommand executors
+        subcommands.values.forEach { it.executors.forEach(addEntry) }
 
         builder.page(page, fullHelp.count())
 

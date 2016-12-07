@@ -49,7 +49,8 @@ class Message {
         }
 
         fun processedObjectRaw(type: String, vararg replacements: Any?): String {
-            val format = FlexPlugin.getGlobalModule(MasterMessageModule::class).listElementFormats[type] ?: "Unknown format: '$type'"
+            val format = FlexPlugin.getGlobalModule(MasterMessageModule::class).objectFormats[type]
+                    ?: "Unknown format: '$type'"
 
             return processedRaw(MessageModule.setupPatternReplace(format), *replacements)
         }

@@ -30,7 +30,21 @@ annotation class Default(
 
         /**
          * The minimum user arguments required for the argument.
-         * Only used for parsers that consume more than one argument.
+         * This is used for parsers that can provide default output based on less than the required
+         * number of given arguments.
          */
         val minArgs: Int = -1
+)
+
+/**
+ * Provides additional information for parameters that use [ArgumentParser]s that consume more than
+ * one raw argument from the user.
+ */
+@Target(AnnotationTarget.VALUE_PARAMETER)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class MultiArg(
+        /**
+         * The labels for arguments two or more. Argument parsers provide default values for this.
+         */
+        val labels: Array<String> = arrayOf()
 )

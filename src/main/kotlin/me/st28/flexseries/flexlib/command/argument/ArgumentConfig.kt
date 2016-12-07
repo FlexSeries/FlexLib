@@ -24,24 +24,62 @@ import kotlin.reflect.KType
 
 /**
  * Stores an argument's configuration for a command.
+ *
+ * An argument is considered "required" when one or more of the following conditions is met:
+ * - The argument type is not nullable
+ * - Default annotation is set
  */
 class ArgumentConfig(p: KParameter) : GenericDataContainer() {
 
     val name: String
     val type: KType
-    val isRequired: Boolean
+
+    /* Annotations */
     val default: Default?
+    val multiArg: MultiArg?
+
+    private val isMarkedNullable: Boolean
+    val isRequired: Boolean
+        get() {
+            return !isMarkedNullable && default == null
+            /*return if (default == null) {
+                return !isMarkedNullable
+            } else {
+                //minArgs < getParser()!!.consumed
+                val parser = getParser()!!
+                if (parser.consumed == 1) {
+                    false
+                } else {
+                    minArgs < getParser()!!.defaultMinArgs
+                }
+            }*/
+        }
+
+    internal val minArgs: Int
+        get() {
+            if (default != null) {
+                return if (default.minArgs != -1) {
+                    default.minArgs
+                } else {
+                    getParser()!!.defaultMinArgs
+                }
+            }
+
+            // Irrelevant
+            return 0
+        }
 
     init {
         this.name = p.name!!
         this.type = p.type
 
-        // Check for default raw value
+        // Get annotations
         default = (p.annotations.firstOrNull { it is Default } as Default?)
+        multiArg = (p.annotations.firstOrNull { it is MultiArg } as MultiArg?)
 
         // Nullable type = not required
         // Nullable + default = not required
-        this.isRequired = !p.type.isMarkedNullable && default == null
+        this.isMarkedNullable = p.type.isMarkedNullable
 
         println("Argument")
         println(" Name: $name")
@@ -56,6 +94,52 @@ class ArgumentConfig(p: KParameter) : GenericDataContainer() {
     }
 
     fun getUsage(): String {
+        val parser = getParser()!!
+
+        // If the parser consumes more than one, we have a more complicated usage message to build
+        if (parser.consumed > 1) {
+            val sb = StringBuilder()
+
+            for (i in 0 until parser.consumed) {
+                val isOptional = i >= minArgs
+
+                if (i > 0) {
+                    sb.append(" ")
+                }
+
+                sb.append(if (isOptional) {
+                    "["
+                } else {
+                    "<"
+                })
+
+                sb.append(if (i == 0) {
+                    // First iteration = base label
+                    name
+                } else {
+                    if (multiArg != null && multiArg.labels.size >= i) {
+                        // Get label from multiArg
+                        multiArg.labels[i - 1]
+                    } else if (parser.defaultLabels != null && parser.defaultLabels.size >= i) {
+                        // Get label from parser
+                        parser.defaultLabels[i - 1]
+                    } else {
+                        // Generic label name
+                        "arg$i"
+                    }
+                })
+
+                sb.append(if (isOptional) {
+                    "]"
+                } else {
+                    ">"
+                })
+            }
+
+            return sb.toString()
+        }
+
+        // Parser only consumes one argument, simple usage message
         return if (isRequired) {
             "<$name>"
         } else {

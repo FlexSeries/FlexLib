@@ -23,6 +23,7 @@ import me.st28.flexseries.flexlib.message.Message
 import me.st28.flexseries.flexlib.message.list.ListBuilder
 import me.st28.flexseries.flexlib.plugin.FlexPlugin
 import me.st28.flexseries.flexlib.util.SchedulerUtils
+import me.st28.flexseries.flexlib.util.toInt
 import org.bukkit.Bukkit
 import java.util.*
 import kotlin.reflect.KFunction
@@ -31,7 +32,14 @@ import kotlin.reflect.defaultType
 /**
  * An executor for a command.
  */
-internal class CommandExecutor {
+internal class CommandExecutor(
+        meta: CommandHandler,
+        isPlayerOnly: Boolean,
+        command: BasicCommand,
+        obj: Any,
+        function: KFunction<Any>,
+        reverseCount: Int = 0)
+{
 
     private val command: BasicCommand
     private val obj: Any
@@ -49,7 +57,7 @@ internal class CommandExecutor {
 
     private val arguments: MutableList<ArgumentConfig> = ArrayList()
 
-    constructor(meta: CommandHandler, isPlayerOnly: Boolean, command: BasicCommand, obj: Any, function: KFunction<Any>, reverseCount: Int = 0) {
+    init {
         println("Creating executor...")
 
         this.command = command
@@ -93,22 +101,19 @@ internal class CommandExecutor {
     fun getUsage(context: CommandContext? = null): String {
         // TODO: Get labels from context
 
-        val labels = Stack<String>()
-        var base: BasicCommand = command
-        while (base.parent != null) {
-            base = base.parent!!
-            labels.add(base.label)
-        }
+        val labels: MutableList<String> = ArrayList()
 
-        val sb = StringBuilder(labels.joinToString(" ", prefix = "/"))
+        var cur: BasicCommand = command
+        do {
+            if (cur is FlexCommand && context != null) {
+                labels.add(context.label)
+            } else {
+                labels.add(cur.label)
+            }
+            cur = cur.parent ?: break
+        } while (true)
 
-        // Add reverse parameters
-        for (i in 0 until reverseCount) {
-            sb.append(" ").append(arguments[i].getUsage())
-        }
-
-        // Add label
-        sb.append(" ").append(command.label)
+        val sb = StringBuilder(labels.reversed().joinToString(" ", prefix = "/"))
 
         // Add parameters
         for (i in reverseCount until arguments.size) {
@@ -119,12 +124,28 @@ internal class CommandExecutor {
     }
 
     fun getRequiredArgs(): Int {
-        return arguments
+        return arguments.sumBy {
+            val parser = it.getParser()!!
+
+            if (parser.consumed == 1) {
+                return it.isRequired.toInt()
+            }
+
+            //return parser.consumed - it.minArgs
+            return it.minArgs
+        }
+
+        /*return arguments
                 .filter { it.isRequired }
                 .sumBy {
-                    it.getParser()?.consumed ?: 1
-                    // Should this throw an error if the parser isn't found?
-                }
+                    val parser = it.getParser()
+                    return@sumBy if (parser != null) {
+                        return parser.consumed - (it.default?.minArgs ?: parser.defaultMinArgs)
+                    } else {
+                        // Should this throw an error if the parser isn't found?
+                        1
+                    }
+                }*/
     }
 
     fun execute(context: CommandContext, offset: Int) {
@@ -141,6 +162,7 @@ internal class CommandExecutor {
         args.addAll(context.getRelativeArgs())
 
         println("Using args: ${args.joinToString(", ")}")
+        println("Required arg count: ${getRequiredArgs()}")
 
         // Permission check
         if (permission.isNotEmpty() && !context.sender.hasPermission(permission)) {
@@ -187,13 +209,11 @@ internal class CommandExecutor {
             if (!ac.isRequired) {
                 // Argument isn't required
 
+                println("ARGUMENT NOT REQUIRED")
+
                 // Get default argument or just add null to the params list
                 if (ac.default != null) {
-                    val minArgs = if (ac.default.minArgs == -1) {
-                        parser.defaultMinArgs
-                    } else {
-                        ac.default.minArgs
-                    }
+                    val minArgs = ac.minArgs
 
                     if (args.size >= minArgs) {
                         // Enough arguments to fulfill default parser
@@ -232,6 +252,8 @@ internal class CommandExecutor {
                 }
             } else {
                 // Argument is required
+
+                println("ARGUMENT REQUIRED")
 
                 if (ac.default != null) {
                     val parsed: Any?

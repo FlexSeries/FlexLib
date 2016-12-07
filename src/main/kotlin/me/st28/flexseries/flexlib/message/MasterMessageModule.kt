@@ -35,7 +35,7 @@ class MasterMessageModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "messag
     }
 
     private val moodFormats: MutableMap<String, String> = HashMap()
-    private val objectFormats: MutableMap<String, String> = HashMap()
+    internal val objectFormats: MutableMap<String, String> = HashMap()
 
     internal var listPageItems: Int = 0
     internal var listLineLength: Int = 0

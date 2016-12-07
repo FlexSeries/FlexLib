@@ -41,6 +41,11 @@ annotation class CommandHandler (
     val permission: String = "",
 
     /**
+     * True indicates that the command handler is the default for the parent.
+     */
+    val isDefault: Boolean = false,
+
+    /**
      * True indicates that the command handler is a placeholder and contains no logic.
      */
     val dummy: Boolean = false

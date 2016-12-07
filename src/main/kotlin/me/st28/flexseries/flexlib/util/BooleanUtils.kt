@@ -31,3 +31,14 @@ object BooleanUtils {
     }
 
 }
+
+/**
+ * @return 1 for true, 0 for false.
+ */
+fun Boolean.toInt(): Int {
+    return if (this == true) {
+        1
+    } else {
+        0
+    }
+}
