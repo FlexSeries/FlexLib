@@ -128,24 +128,12 @@ internal class CommandExecutor(
             val parser = it.getParser()!!
 
             if (parser.consumed == 1) {
-                return it.isRequired.toInt()
+                return@sumBy it.isRequired.toInt()
             }
 
             //return parser.consumed - it.minArgs
-            return it.minArgs
+            return@sumBy it.minArgs
         }
-
-        /*return arguments
-                .filter { it.isRequired }
-                .sumBy {
-                    val parser = it.getParser()
-                    return@sumBy if (parser != null) {
-                        return parser.consumed - (it.default?.minArgs ?: parser.defaultMinArgs)
-                    } else {
-                        // Should this throw an error if the parser isn't found?
-                        1
-                    }
-                }*/
     }
 
     fun execute(context: CommandContext, offset: Int) {
