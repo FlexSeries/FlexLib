@@ -51,5 +51,9 @@ interface PermissionNode {
 
 }
 
+fun PermissionNode.withVariables(vararg variables: String): PermissionNode {
+    return PermissionNode.buildVariableNode(this, *variables)
+}
+
 // Extension method
 fun Permissible.hasPermission(perm: PermissionNode): Boolean = this.hasPermission(perm.node)
