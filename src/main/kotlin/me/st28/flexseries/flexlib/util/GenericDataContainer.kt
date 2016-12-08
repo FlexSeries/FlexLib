@@ -24,7 +24,9 @@ open class GenericDataContainer {
 
     fun isSet(name: String): Boolean = data.containsKey(name)
 
-    fun <T> get(name: String, defaultValue: T? = null) : T? = data.get(name) as T? ?: defaultValue
+    fun <T> get(name: String, defaultValue: (() -> T)? = null) : T? {
+        return data[name] as T ?: defaultValue?.invoke() ?: null
+    }
 
     fun set(name: String, value: Any?) = data.put(name, value)
 
