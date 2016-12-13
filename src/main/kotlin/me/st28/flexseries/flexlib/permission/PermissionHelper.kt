@@ -103,7 +103,7 @@ object PermissionHelper {
         return ArrayList(groupEntries.keys)
     }
 
-    fun getTopGroup(player: Player, groups: List<String>, defaultGroup: String? = null): String {
+    fun getTopGroup(player: Player, groups: Collection<String>, defaultGroup: String? = null): String {
         val reversed = groupEntries.keys.reversed()
         for (group in reversed) {
             val entry = groupEntries[group]!!
