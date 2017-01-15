@@ -16,16 +16,22 @@
  */
 package me.st28.flexseries.flexlib.message
 
-import com.stealthyone.mcb.mcml.MCMLBuilder
+import com.stealthyone.mcml2.BukkitItemJsonSerializer
+import com.stealthyone.mcml2.McmlParser
 import me.st28.flexseries.flexlib.FlexLib
 import me.st28.flexseries.flexlib.player.PlayerReference
 import me.st28.flexseries.flexlib.plugin.FlexPlugin
+import me.st28.flexseries.flexlib.util.translateColorCodes
+import net.md_5.bungee.api.chat.BaseComponent
+import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.command.CommandSender
 import kotlin.reflect.KClass
 
-class Message {
+class Message(message: String, vararg replacements: Any?) {
 
     companion object {
+
+        private val parser: McmlParser = McmlParser(BukkitItemJsonSerializer)
 
         fun get(plugin: KClass<out FlexPlugin>, name: String, vararg replacements: Any?): Message {
             return FlexPlugin.getPluginModuleSafe(plugin, MessageModule::class)?.getMessage(name, *replacements)
@@ -57,35 +63,21 @@ class Message {
 
     }
 
-    private val message: String
-    private val replacements: Array<out Any?>
+    private val components: Array<out BaseComponent> = parser.parse(message.translateColorCodes(), replacements)
 
-    constructor(message: String, vararg replacements: Any? = emptyArray()) {
-        this.message = message
-        this.replacements = replacements
-    }
-
-    fun getProcessedMessage(): String = String.format(message, replacements)
-
-    fun sendTo(player: PlayerReference, vararg replacements: Any?) {
+    fun sendTo(player: PlayerReference) {
         val online = player.online
         if (online != null) {
-            sendTo(online, *replacements)
+            player.online?.spigot()?.sendMessage(*components)
         }
     }
 
-    fun sendTo(sender: CommandSender, vararg replacements: Any?) {
-        sendTo(arrayListOf(sender), *replacements)
+    fun sendTo(sender: CommandSender) {
+        sendTo(arrayListOf(sender))
     }
 
-    fun sendTo(senders: Collection<CommandSender>, vararg replacements: Any?) {
-        val replacementCount = this.replacements.size + replacements.size
-        if (replacementCount == 0) {
-            MCMLBuilder(message).toFancyMessage().send(senders)
-            return
-        }
-
-        MCMLBuilder(message.format(*this.replacements)).toFancyMessage().send(senders)
+    fun sendTo(senders: Collection<CommandSender>) {
+        senders.forEach { components.send(it) }
     }
 
 }
@@ -93,4 +85,12 @@ class Message {
 // Extension method
 fun CommandSender.sendMessage(message: Message) {
     message.sendTo(this)
+}
+
+fun Array<out BaseComponent>.send(player: PlayerReference) {
+    player.online?.spigot()?.sendMessage(*this)
+}
+
+fun Array<out BaseComponent>.send(sender: CommandSender) {
+    sender.sendMessage(TextComponent(*this).toLegacyText())
 }

@@ -22,7 +22,7 @@ import me.st28.flexseries.flexlib.plugin.FlexPlugin
 import me.st28.flexseries.flexlib.plugin.storage.flatfile.YamlFileManager
 import org.apache.commons.lang.StringEscapeUtils
 import java.io.File
-import java.util.*
+import java.util.HashMap
 import java.util.regex.Pattern
 
 class MessageModule<out T : FlexPlugin>(plugin: T) : FlexModule<T>(plugin, "messages", "Manages a plugin's messages") {
@@ -30,9 +30,14 @@ class MessageModule<out T : FlexPlugin>(plugin: T) : FlexModule<T>(plugin, "mess
     companion object {
 
         val PATTERN_VARIABLE: Pattern = Pattern.compile("\\{([0-9]+)\\}")
+        val PATTERN_VARIABLE_REVERSE: Pattern = Pattern.compile("%([0-9]+)\\\$s")
 
         fun setupPatternReplace(input: String): String {
             return PATTERN_VARIABLE.matcher(input).replaceAll("%$1\\\$s")
+        }
+
+        fun reversePatternReplace(input: String): String {
+            return PATTERN_VARIABLE_REVERSE.matcher(input).replaceAll("{$1}")
         }
 
     }
@@ -92,8 +97,8 @@ class MessageModule<out T : FlexPlugin>(plugin: T) : FlexModule<T>(plugin, "mess
     fun getMessage(name: String, vararg replacements: Any?): Message {
         val message: String
         if (messages.containsKey(name)) {
-            val masterManager = FlexPlugin.getGlobalModule(MasterMessageModule::class)!!
-            message = masterManager.processMessage(setupPatternReplace(messages[name]!!))
+            val masterManager = FlexPlugin.getGlobalModule(MasterMessageModule::class)
+            message = reversePatternReplace(masterManager.processMessage(setupPatternReplace(messages[name]!!)))
         } else {
             message = name
         }

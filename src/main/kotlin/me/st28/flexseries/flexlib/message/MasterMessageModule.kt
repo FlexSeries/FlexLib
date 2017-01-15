@@ -97,8 +97,7 @@ class MasterMessageModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "messag
         var offsetStage1 = 0
         while (matcherStage1.find()) {
             val formatName = matcherStage1.group(1)
-            var format = objectFormats[formatName]
-                    ?: "(unknown format '$formatName')"
+            var format = objectFormats[formatName] ?: "(unknown format '$formatName')"
 
             val replacement = matcherStage1.group(2)
 
