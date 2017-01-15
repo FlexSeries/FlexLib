@@ -51,7 +51,7 @@ class PlayerLookupModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "player-
             builder.maximumSize(maxSize)
         }
 
-        cache = builder.removalListener {
+        cache = builder.removalListener<UUID, CacheEntry> {
             nameToUuids.remove((it.value as CacheEntry).name)
         }.build()
 
@@ -115,7 +115,7 @@ class PlayerLookupModule(plugin: FlexLib) : FlexModule<FlexLib>(plugin, "player-
 
     fun getName(uuid: UUID): String? {
         try {
-            return cache.get(uuid, Callable<CacheEntry> {
+            return cache.get(uuid, {
                 var entry = storage.getEntry(uuid)
                 if (entry == null) {
                     // Perform lookup
