@@ -25,6 +25,7 @@ import me.st28.flexseries.flexlib.util.translateColorCodes
 import net.md_5.bungee.api.chat.BaseComponent
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.command.CommandSender
+import org.bukkit.entity.Player
 import kotlin.reflect.KClass
 
 class Message(message: String, vararg replacements: Any?) {
@@ -92,5 +93,9 @@ fun Array<out BaseComponent>.send(player: PlayerReference) {
 }
 
 fun Array<out BaseComponent>.send(sender: CommandSender) {
-    sender.sendMessage(TextComponent(*this).toLegacyText())
+    if (sender is Player) {
+        sender.spigot().sendMessage(*this)
+    } else {
+        sender.sendMessage(TextComponent(*this).toLegacyText())
+    }
 }
