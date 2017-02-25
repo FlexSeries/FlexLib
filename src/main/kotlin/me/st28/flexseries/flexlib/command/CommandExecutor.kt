@@ -59,8 +59,6 @@ internal class CommandExecutor(
     private val arguments: MutableList<ArgumentConfig> = ArrayList()
 
     init {
-        println("Creating executor...")
-
         this.command = command
         this.obj = obj
         this.function = function
@@ -77,21 +75,16 @@ internal class CommandExecutor(
         // - Skip second if it is a CommandContext
         for ((index, p) in function.parameters.withIndex()) {
             if (p.name == null) {
-                println("Skipping null parameter name")
                 continue
             }
 
             // Skip first CommandSender/Player
             if (index == 1) {
-                println("Skipping CommandSender/Player")
                 continue
             } else if (index == 2 && p.type == CommandContext::class.defaultType) {
-                println("Skipping CommandContext")
                 tempRequiresContext = true
                 continue
             }
-
-            println("Found parameter: $p")
 
             arguments.add(ArgumentConfig(p))
         }
@@ -155,9 +148,6 @@ internal class CommandExecutor(
 
         val args = ArrayDeque<String>()
         args.addAll(context.getRelativeArgs())
-
-        println("Using args: ${args.joinToString(", ")}")
-        println("Required arg count: ${getRequiredArgs()}")
 
         // Permission check
         if (permission.isNotEmpty() && !context.sender.hasPermission(permission)) {

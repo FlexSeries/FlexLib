@@ -99,8 +99,6 @@ open class BasicCommand {
                 continue
             }
 
-            println("Reverse subcommand: ${curArgs[cOffset]}")
-
             if (curArgs[cOffset] == cLabel) {
                 // Matching subcommand found, attempt to execute
                 return command.execute(context, offset + 1)
@@ -110,12 +108,8 @@ open class BasicCommand {
 
         // 3) Find appropriate CommandExecutor and run this command's logic.
         val applicable = executors.filter {
-            println("Cmd: ${it.getUsage()} req args: ${it.getRequiredArgs()}")
             curArgs.size >= it.getRequiredArgs()
         }
-        println("Cur arg count: ${curArgs.size}")
-        println("Executors: ${executors.size}")
-        println("Applicable executors: ${applicable.size}")
 
         if (applicable.isEmpty()) {
             // No executors found (dummy command)
@@ -140,7 +134,6 @@ open class BasicCommand {
             return applicable[0].execute(context, offset)
         } else {
             // More complicated, more than one applicable command executor was found
-            println("> 1 COMMAND EXECUTOR FOUND")
             // TODO: Handle
             return null
         }

@@ -65,7 +65,6 @@ class FlexCommandMap(val plugin: FlexPlugin) {
      * command handlers.
      */
     fun register(obj: Any) {
-        println("Looking for command handlers in object: ${obj.javaClass.canonicalName}")
         val commandModule = FlexPlugin.getGlobalModule(CommandModule::class)!!
         outer@ for (f in obj.javaClass.kotlin.declaredMemberFunctions) {
             val meta: CommandHandler = f.annotations.find { it is CommandHandler } as CommandHandler? ?: continue
@@ -73,7 +72,6 @@ class FlexCommandMap(val plugin: FlexPlugin) {
             // Parameter 0 of the function is the instance of the class (object in this case)
 
             // 1) Determine if function is player only based on the first parameter.
-            println("Registering function '${f.name}'")
 
             // 2) Determine if function is player only based on the first parameter. Otherwise, it
             //    must be a CommandSender.
@@ -86,8 +84,6 @@ class FlexCommandMap(val plugin: FlexPlugin) {
                 }
             }
 
-            println(" Is player only: $playerOnly")
-
             // 3) Get base command (or create and register it if it doesn't exist)
             val commandPath: Stack<String> = Stack()
             commandPath.addAll(meta.command.split(" ").reversed())
@@ -97,14 +93,11 @@ class FlexCommandMap(val plugin: FlexPlugin) {
                 continue@outer
             }
 
-            println(" Command path: $commandPath")
             val baseLabel = commandPath.pop()
 
             var base = commandModule.getBaseCommand(plugin.javaClass.kotlin, baseLabel)
             if (base == null) {
                 // Base doesn't exist, create and register it with the command module.
-                println(" Base command doesn't exist. Creating...")
-
                 base = FlexCommand(plugin, baseLabel)
                 commandModule.registerCommand(base)
                 registerBukkitCommand(plugin, base)
@@ -114,15 +107,9 @@ class FlexCommandMap(val plugin: FlexPlugin) {
             var subcmd: BasicCommand = base
             var offset = 0
             while (commandPath.isNotEmpty()) {
-                println("Command path not empty")
-
                 val curLabel = commandPath.pop()
-                println(" curLabel: $curLabel")
-
                 // Check for reverse subcommands
                 if (curLabel == "%") {
-                    println(" Command is reverse")
-
                     // Find offset
                     while (commandPath.peek() == "%") {
                         ++offset
@@ -167,12 +154,9 @@ class FlexCommandMap(val plugin: FlexPlugin) {
             //subcmd.setMeta(meta, playerOnly, obj, f as KFunction<Any>)
             subcmd.executors.add(CommandExecutor(meta, playerOnly, subcmd, obj, f as KFunction<Any>, offset))
 
-            println("Registering executor in subcmd ${subcmd.label}")
-
             // 4) Set default
             if (meta.isDefault) {
                 subcmd.parent?.defaultSubcommand = subcmd.label
-                println("Default subcommand: ${subcmd.label}")
             }
         }
     }

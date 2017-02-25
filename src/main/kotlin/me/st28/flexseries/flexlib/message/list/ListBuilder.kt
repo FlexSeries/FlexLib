@@ -97,8 +97,8 @@ class ListBuilder {
     }
 
     fun element(type: String, vararg replacements: String): ListBuilder {
-        val format = FlexPlugin.getGlobalModule(MasterMessageModule::class).listElementFormats[type] ?: "Unknown format: '$type'"
-                .replace("{INDEX}", (index + 1).toString())
+        val format = FlexPlugin.getGlobalModule(MasterMessageModule::class).listElementFormats[type]
+                ?: "Unknown format: '$type'"
 
         messages.add(Message.processed(String.format(MessageModule.setupPatternReplace(format), *replacements)))
         return this
@@ -111,7 +111,7 @@ class ListBuilder {
         val index = page * pageItems
         for (i in 0 until pageItems) {
             try {
-                element(type, *populator(index + i))
+                element(type, (index + 1 + i).toString(), *populator(index + i))
             } catch (ex: IndexOutOfBoundsException) {
                 // We're done
                 break

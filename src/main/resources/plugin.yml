@@ -1,8 +1,8 @@
 name: ${project.name}
 version: ${project.version}
 description: '${project.description}'
-depend: [KotlinRuntime, Vault]
-softdepend: []
+depend: [Vault]
+softdepend: [KotlinRuntime]
 authors: [${project.authors}]
 website: ${project.url}
 main: ${project.mainClass}

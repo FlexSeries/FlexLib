@@ -39,7 +39,7 @@ class FlexLib : FlexPlugin() {
 
         //commandMap.register(CommandLibTest)
         commandMap.register(CmdFlexPlugin)
-        commandMap.register(NewCommandTest)
+        //commandMap.register(NewCommandTest)
     }
 
     override fun handleReload() {
