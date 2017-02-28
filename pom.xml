@@ -83,7 +83,7 @@
         <dependency>
             <groupId>com.stealthyone</groupId>
             <artifactId>mcml2</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.1</version>
         </dependency>
 
         <dependency>
