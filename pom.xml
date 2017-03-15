@@ -22,7 +22,7 @@
         <project.mainClass>${project.groupId}.${project.artifactId}.${project.name}</project.mainClass>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.build.javaVersion>1.8</project.build.javaVersion>
-        <kotlin.version>1.1.0-rc-91</kotlin.version>
+        <kotlin.version>1.1.0</kotlin.version>
     </properties>
 
     <scm>
@@ -59,13 +59,6 @@
             <url>http://nexus.hc.to/content/repositories/pub_releases</url>
         </repository>
     </repositories>
-
-    <pluginRepositories>
-        <pluginRepository>
-            <id>kotlin-1.1-eap-repo</id>
-            <url>http://dl.bintray.com/kotlin/kotlin-eap-1.1</url>
-        </pluginRepository>
-    </pluginRepositories>
 
     <dependencies>
         <dependency>
