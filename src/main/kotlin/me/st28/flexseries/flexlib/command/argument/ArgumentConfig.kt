@@ -81,15 +81,6 @@ class ArgumentConfig(p: KParameter) : GenericDataContainer() {
         // Nullable + default = not required
         this.isMarkedNullable = p.type.isMarkedNullable
 
-        println("Argument")
-        println(" Name: $name")
-        println(" Type: $type")
-        println(" Required: $isRequired")
-        if (default != null) {
-            println(" Default: ${default.value}")
-            println(" Default min args: ${default.minArgs}")
-        }
-
         // TODO: Options
     }
 
