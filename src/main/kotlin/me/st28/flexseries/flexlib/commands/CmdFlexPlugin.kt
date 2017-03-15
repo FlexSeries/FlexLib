@@ -49,8 +49,37 @@ object CmdFlexPlugin {
             Message.getGlobal("notice.plugin_reloaded", found.name)
         } else {
             // Reload module
-
             foundModule.reload()
+            Message.getGlobal("notice.module_reloaded", found.name, foundModule.name)
+        }
+    }
+
+    @CommandHandler(
+            "flexsave",
+            description = "Saves a FlexPlugin or specified module",
+            permission = "flexlib.save"
+    )
+    fun save(sender: CommandSender, plugin: String, module: String?): Message {
+        val found = Bukkit.getPluginManager().plugins.firstOrNull { it.name.equals(plugin, true) }
+                ?: return Message.getGlobal("error.plugin_not_found", plugin)
+
+        if (found !is FlexPlugin) {
+            return Message.getGlobal("error.plugin_not_flexplugin", found.name)
+        }
+
+        val foundModule = if (module == null) {
+            null
+        } else {
+            found.modules.values.firstOrNull { it.name.equals(module, true) }
+        }
+
+        return if (foundModule == null) {
+            // Save plugin
+            found.saveAll(true)
+            Message.getGlobal("notice.plugin_reloaded", found.name)
+        } else {
+            // Save module
+            foundModule.save(true)
             Message.getGlobal("notice.module_reloaded", found.name, foundModule.name)
         }
     }
